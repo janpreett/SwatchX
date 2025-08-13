@@ -2,7 +2,7 @@ import { Container, Group, Text, Anchor } from '@mantine/core';
 
 export function Footer() {
   return (
-    <Container fluid bg="gray.0" py="md" mt="xl">
+    <Container fluid py="md" mt="xl" style={{ borderTop: '1px solid var(--mantine-color-gray-3)' }}>
       <Container size="lg">
         <Group justify="space-between" align="center">
           <Text size="sm" c="dimmed">

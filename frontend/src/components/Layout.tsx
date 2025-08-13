@@ -18,7 +18,7 @@ export function Layout({ children }: LayoutProps) {
   };
 
   return (
-    <AppShell header={{ height: 60 }} footer={{ height: 60 }} padding="md">
+    <AppShell header={{ height: 60 }} padding="md">
       <AppShell.Header>
         <Container fluid h="100%">
           <Group h="100%" justify="space-between">
@@ -76,11 +76,8 @@ export function Layout({ children }: LayoutProps) {
 
       <AppShell.Main>
         {children}
-      </AppShell.Main>
-
-      <AppShell.Footer>
         <Footer />
-      </AppShell.Footer>
+      </AppShell.Main>
     </AppShell>
   );
 }
