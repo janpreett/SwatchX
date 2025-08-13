@@ -58,12 +58,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
       throw new Error('Passwords do not match');
     }
 
-    const result = await authService.signup({ 
+    // Create account but don't automatically log in
+    await authService.signup({ 
       email, 
       password, 
       confirm_password: confirmPassword 
     });
-    setUser(result.user);
+    // Don't set user state - let them login manually
   };
 
   const logout = () => {

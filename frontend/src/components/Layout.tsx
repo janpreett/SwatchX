@@ -18,17 +18,31 @@ export function Layout({ children }: LayoutProps) {
   };
 
   return (
-    <AppShell header={{ height: 60 }} padding="md">
+    <AppShell 
+      header={{ height: 60 }} 
+      footer={{ height: 60 }} 
+      padding="md"
+    >
       <AppShell.Header>
         <Container fluid h="100%">
-          <Group h="100%" justify="space-between">
+          <Group h="100%" justify="space-between" px="md">
             {/* Logo/Brand */}
             <Group>
               <Text 
-                size="xl" 
+                size="xl"
                 fw={700} 
                 variant="gradient"
                 gradient={{ from: 'blue', to: 'cyan', deg: 90 }}
+                hiddenFrom="sm"
+              >
+                SwatchX
+              </Text>
+              <Text 
+                size="2rem"
+                fw={700} 
+                variant="gradient"
+                gradient={{ from: 'blue', to: 'cyan', deg: 90 }}
+                visibleFrom="sm"
               >
                 SwatchX
               </Text>
@@ -42,7 +56,7 @@ export function Layout({ children }: LayoutProps) {
                     <Avatar size={32} radius="xl" color="blue">
                       <IconUser size="1rem" />
                     </Avatar>
-                    <Text fw={500} size="sm" lh={1} mr={3}>
+                    <Text fw={500} size="sm" lh={1} mr={3} visibleFrom="sm">
                       {user?.email}
                     </Text>
                     <IconChevronDown size="0.8rem" stroke={1.5} />
@@ -76,8 +90,11 @@ export function Layout({ children }: LayoutProps) {
 
       <AppShell.Main>
         {children}
-        <Footer />
       </AppShell.Main>
+
+      <AppShell.Footer>
+        <Footer />
+      </AppShell.Footer>
     </AppShell>
   );
 }

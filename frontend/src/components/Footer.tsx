@@ -2,14 +2,14 @@ import { Container, Group, Text, Anchor } from '@mantine/core';
 
 export function Footer() {
   return (
-    <Container fluid py="md" mt="xl" style={{ borderTop: '1px solid var(--mantine-color-gray-3)' }}>
+    <Container fluid h="100%" py="xs">
       <Container size="lg">
-        <Group justify="space-between" align="center">
+        <Group justify="space-between" align="center" h="100%">
           <Text size="sm" c="dimmed">
             © 2025 SwatchX. All rights reserved.
           </Text>
           
-          <Group gap="lg">
+          <Group gap="sm" visibleFrom="sm">
             <Anchor size="sm" c="dimmed" href="#" underline="hover">
               Privacy Policy
             </Anchor>

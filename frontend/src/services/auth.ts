@@ -98,7 +98,7 @@ class AuthService {
     }
 
     const result: AuthResponse = await response.json();
-    this.setToken(result.access_token);
+    // Don't store token for signup - let user login manually
     return result;
   }
 

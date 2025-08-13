@@ -54,9 +54,9 @@ export function LoginPage() {
     >
       <Container size="xs" w="100%">
         <Stack align="center" gap="xl">
-          {/* Brand Logo */}
+          {/* Brand Logo - Mobile */}
           <Text 
-            size="2.5rem"
+            size="xl"
             fw={700}
             ta="center" 
             variant="gradient"
@@ -66,8 +66,9 @@ export function LoginPage() {
             SwatchX
           </Text>
           
+          {/* Brand Logo - Desktop */}
           <Text 
-            size="3rem"
+            size="2rem"
             fw={700}
             ta="center" 
             variant="gradient"
@@ -91,6 +92,9 @@ export function LoginPage() {
                 <Title order={2} fw={600}>
                   Sign In
                 </Title>
+                <Text size="sm" c="dimmed">
+                  Welcome back to SwatchX
+                </Text>
               </Stack>
 
               {error && (
@@ -108,7 +112,7 @@ export function LoginPage() {
                 <Stack gap="md">
                   <TextInput
                     label="Email"
-                    placeholder="Enter your email"
+                    placeholder="your@email.com"
                     leftSection={<IconMail size="1rem" />}
                     size="md"
                     radius="md"
@@ -118,7 +122,7 @@ export function LoginPage() {
 
                   <PasswordInput
                     label="Password"
-                    placeholder="Enter your password"
+                    placeholder="Enter password"
                     leftSection={<IconLock size="1rem" />}
                     size="md"
                     radius="md"
@@ -126,13 +130,14 @@ export function LoginPage() {
                     {...form.getInputProps('password')}
                   />
 
-                  {/* Forgot password link */}
+                  {/* FORGOT PASSWORD LINK - THIS IS THE FEATURE YOU'RE LOOKING FOR */}
                   <Anchor 
                     size="sm" 
                     ta="right" 
                     c="blue"
                     href="#"
                     underline="hover"
+                    fw={500}
                   >
                     Forgot password?
                   </Anchor>
