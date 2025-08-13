@@ -31,6 +31,9 @@ ENV/
 *.sqlite
 *.sqlite3
 
+# Data directory (local development)
+backend/data/
+
 # Environment variables
 .env
 .env.local
