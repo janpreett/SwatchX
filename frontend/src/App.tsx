@@ -5,6 +5,7 @@ import { ProtectedRoute } from './components/ProtectedRoute';
 import { LoginPage } from './pages/LoginPage';
 import { SignupPage } from './pages/SignupPage';
 import { HomePage } from './pages/HomePage';
+import { NotFoundPage } from './pages/NotFoundPage';
 import '@mantine/core/styles.css';
 
 function App() {
@@ -29,6 +30,9 @@ function App() {
             
             {/* Default redirect */}
             <Route path="/" element={<Navigate to="/home" replace />} />
+            
+            {/* 404 page */}
+            <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </Router>
       </AuthProvider>
