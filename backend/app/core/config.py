@@ -1,4 +1,5 @@
 from pydantic_settings import BaseSettings
+from pydantic import ConfigDict
 from typing import Optional
 import os
 import sys
@@ -33,8 +34,9 @@ class Settings(BaseSettings):
         db_path = data_dir / 'swatchx.db'
         return f"sqlite:///{db_path}"
     
-    class Config:
-        env_file = ".env"
-        extra = "ignore"  # Allow extra fields for backward compatibility
+    model_config = ConfigDict(
+        env_file=".env",
+        extra="ignore"  # Allow extra fields for backward compatibility
+    )
 
 settings = Settings()
