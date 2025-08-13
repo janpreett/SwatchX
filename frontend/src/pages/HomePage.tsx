@@ -5,7 +5,7 @@ import { Layout } from '../components/Layout';
 export function HomePage() {
   return (
     <Layout>
-      <Container size="xl" py="xl">
+      <Container fluid py="xl">
         {/* Hero Section */}
         <Stack gap="xl" align="center" py="xl">
           <Center>

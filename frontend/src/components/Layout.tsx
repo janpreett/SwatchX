@@ -19,7 +19,7 @@ export function Layout({ children }: LayoutProps) {
   return (
     <AppShell header={{ height: 60 }} padding="md">
       <AppShell.Header>
-        <Container size="xl" h="100%">
+        <Container fluid h="100%">
           <Group h="100%" justify="space-between">
             {/* Logo/Brand */}
             <Group>
