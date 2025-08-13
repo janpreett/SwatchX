@@ -40,10 +40,10 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
         raise credentials_exception
     return user
 
-@router.post("/signup", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/signup", response_model=Token, status_code=status.HTTP_201_CREATED)
 def create_user(user: UserCreate, db: Session = Depends(get_db)):
-    # Check if user already exists
-    db_user = get_user(db, email=user.email)
+    # Check if user already exists (case-insensitive)
+    db_user = get_user(db, email=user.email.lower())
     if db_user:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -53,18 +53,28 @@ def create_user(user: UserCreate, db: Session = Depends(get_db)):
     # Create new user
     hashed_password = get_password_hash(user.password)
     db_user = User(
-        email=user.email,
+        email=user.email.lower(),
         hashed_password=hashed_password
     )
     db.add(db_user)
     db.commit()
     db.refresh(db_user)
     
-    return db_user
+    # Create access token
+    access_token_expires = timedelta(minutes=settings.access_token_expire_minutes)
+    access_token = create_access_token(
+        data={"sub": db_user.email}, expires_delta=access_token_expires
+    )
+    
+    return {
+        "access_token": access_token, 
+        "token_type": "bearer",
+        "user": db_user
+    }
 
 @router.post("/login", response_model=Token)
-def login_user(user: UserLogin, db: Session = Depends(get_db)):
-    user_obj = authenticate_user(db, user.email, user.password)
+def login_user(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
+    user_obj = authenticate_user(db, form_data.username.lower(), form_data.password)
     if not user_obj:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -75,7 +85,11 @@ def login_user(user: UserLogin, db: Session = Depends(get_db)):
     access_token = create_access_token(
         data={"sub": user_obj.email}, expires_delta=access_token_expires
     )
-    return {"access_token": access_token, "token_type": "bearer"}
+    return {
+        "access_token": access_token, 
+        "token_type": "bearer",
+        "user": user_obj
+    }
 
 @router.get("/me", response_model=UserResponse)
 def read_current_user(current_user: User = Depends(get_current_user)):
