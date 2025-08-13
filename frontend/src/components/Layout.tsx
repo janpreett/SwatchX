@@ -2,6 +2,7 @@ import { AppShell, Group, Text, Avatar, Menu, UnstyledButton, Container } from '
 import { IconLogout, IconUser, IconChevronDown, IconSettings, IconUserCircle } from '@tabler/icons-react';
 import { useAuth } from '../hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
+import { Footer } from './Footer';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -17,7 +18,7 @@ export function Layout({ children }: LayoutProps) {
   };
 
   return (
-    <AppShell header={{ height: 60 }} padding="md">
+    <AppShell header={{ height: 60 }} footer={{ height: 60 }} padding="md">
       <AppShell.Header>
         <Container fluid h="100%">
           <Group h="100%" justify="space-between">
@@ -76,6 +77,10 @@ export function Layout({ children }: LayoutProps) {
       <AppShell.Main>
         {children}
       </AppShell.Main>
+
+      <AppShell.Footer>
+        <Footer />
+      </AppShell.Footer>
     </AppShell>
   );
 }
