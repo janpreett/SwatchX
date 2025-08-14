@@ -8,6 +8,7 @@ import { SignupPage } from './pages/SignupPage';
 import { HomePage } from './pages/HomePage';
 import { DashboardPage } from './pages/DashboardPage';
 import { ExpenseFormPage } from './pages/ExpenseFormPage';
+import { ExpenseTablePage } from './pages/ExpenseTablePage';
 import { NotFoundPage } from './pages/NotFoundPage';
 import '@mantine/core/styles.css';
 
@@ -46,6 +47,15 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <ExpenseFormPage />
+                  </ProtectedRoute>
+                } 
+              />
+
+              <Route 
+                path="/tables/:category" 
+                element={
+                  <ProtectedRoute>
+                    <ExpenseTablePage />
                   </ProtectedRoute>
                 } 
               />
