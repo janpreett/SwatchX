@@ -173,35 +173,99 @@ export function DashboardPage() {
 
           {/* Summary Cards */}
           <SimpleGrid cols={{ base: 1, sm: 2, lg: 4 }} spacing="lg">
-            <Paper p="xl" radius="md" shadow="sm">
+            <Paper 
+              p="xl" 
+              radius="md" 
+              shadow="sm" 
+              style={{ 
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = 'translateY(-2px)';
+                e.currentTarget.style.boxShadow = '0 8px 24px rgba(0, 0, 0, 0.12)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.12)';
+              }}
+            >
               <Stack gap="sm">
                 <Text size="md" c="dimmed" fw={500}>Total Expenses</Text>
-                <Text size="3xl" fw={700} c="blue">${totals.thisMonth.toFixed(2)}</Text>
-                <Text size="sm" c="green">This month</Text>
+                <Text size="3.5xl" fw={700} c="blue">${totals.thisMonth.toFixed(2)}</Text>
+                <Text size="md" c="green" fw={500}>This month</Text>
               </Stack>
             </Paper>
             
-            <Paper p="xl" radius="md" shadow="sm">
+            <Paper 
+              p="xl" 
+              radius="md" 
+              shadow="sm"
+              style={{ 
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = 'translateY(-2px)';
+                e.currentTarget.style.boxShadow = '0 8px 24px rgba(0, 0, 0, 0.12)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.12)';
+              }}
+            >
               <Stack gap="sm">
                 <Text size="md" c="dimmed" fw={500}>Fuel Costs</Text>
-                <Text size="3xl" fw={700} c="teal">${totals.fuel.toFixed(2)}</Text>
-                <Text size="sm" c="dimmed">Diesel & DEF</Text>
+                <Text size="3.5xl" fw={700} c="teal">${totals.fuel.toFixed(2)}</Text>
+                <Text size="md" c="dimmed" fw={500}>Diesel & DEF</Text>
               </Stack>
             </Paper>
             
-            <Paper p="xl" radius="md" shadow="sm">
+            <Paper 
+              p="xl" 
+              radius="md" 
+              shadow="sm"
+              style={{ 
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = 'translateY(-2px)';
+                e.currentTarget.style.boxShadow = '0 8px 24px rgba(0, 0, 0, 0.12)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.12)';
+              }}
+            >
               <Stack gap="sm">
                 <Text size="md" c="dimmed" fw={500}>Vehicle Repairs</Text>
-                <Text size="3xl" fw={700} c="orange">${totals.repairs.toFixed(2)}</Text>
-                <Text size="sm" c="dimmed">Trucks & Trailers</Text>
+                <Text size="3.5xl" fw={700} c="orange">${totals.repairs.toFixed(2)}</Text>
+                <Text size="md" c="dimmed" fw={500}>Trucks & Trailers</Text>
               </Stack>
             </Paper>
             
-            <Paper p="xl" radius="md" shadow="sm">
+            <Paper 
+              p="xl" 
+              radius="md" 
+              shadow="sm"
+              style={{ 
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = 'translateY(-2px)';
+                e.currentTarget.style.boxShadow = '0 8px 24px rgba(0, 0, 0, 0.12)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.12)';
+              }}
+            >
               <Stack gap="sm">
                 <Text size="md" c="dimmed" fw={500}>All Time Total</Text>
-                <Text size="3xl" fw={700} c="grape">${totals.total.toFixed(2)}</Text>
-                <Text size="sm" c="dimmed">All categories</Text>
+                <Text size="3.5xl" fw={700} c="grape">${totals.total.toFixed(2)}</Text>
+                <Text size="md" c="dimmed" fw={500}>All categories</Text>
               </Stack>
             </Paper>
           </SimpleGrid>
@@ -212,18 +276,37 @@ export function DashboardPage() {
             <Grid gutter="xl">
               {EXPENSE_CATEGORIES.map((category) => (
                 <Grid.Col key={category.key} span={{ base: 12, sm: 6, md: 4, lg: 3 }}>
-                  <Card shadow="sm" padding="xl" radius="md" h="100%">
+                  <Card 
+                    shadow="sm" 
+                    padding="xl" 
+                    radius="md" 
+                    h="100%"
+                    style={{ 
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease',
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.transform = 'translateY(-4px)';
+                      e.currentTarget.style.boxShadow = '0 12px 28px rgba(0, 0, 0, 0.15)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.transform = 'translateY(0)';
+                      e.currentTarget.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.12)';
+                    }}
+                  >
                     <Stack gap="lg">
                       <Group justify="space-between">
-                        <Text size="2xl" lh={1}>
+                        <Text size="3xl" lh={1}>
                           {category.icon}
                         </Text>
-                        <Badge color={category.color} variant="light" size="md">
-                          ${(totals.categoryTotals[category.key] || 0).toFixed(2)}
+                        <Badge color={category.color} variant="light" size="lg">
+                          <Text size="lg" fw={600}>
+                            ${(totals.categoryTotals[category.key] || 0).toFixed(2)}
+                          </Text>
                         </Badge>
                       </Group>
                       
-                      <Text fw={600} size="lg">
+                      <Text fw={600} size="xl">
                         {category.label}
                       </Text>
                       
@@ -231,8 +314,8 @@ export function DashboardPage() {
                         <Button
                           variant="light"
                           color={category.color}
-                          size="xs"
-                          leftSection={<IconPlus size={14} />}
+                          size="sm"
+                          leftSection={<IconPlus size={16} />}
                           onClick={() => handleAddExpense(category.key)}
                         >
                           Add
@@ -240,8 +323,8 @@ export function DashboardPage() {
                         <Button
                           variant="outline"
                           color={category.color}
-                          size="xs"
-                          leftSection={<IconTable size={14} />}
+                          size="sm"
+                          leftSection={<IconTable size={16} />}
                           onClick={() => handleViewTable(category.key)}
                         >
                           View

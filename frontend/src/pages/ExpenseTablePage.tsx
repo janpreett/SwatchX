@@ -233,14 +233,26 @@ export function ExpenseTablePage() {
   // Filter and sort expenses
   const filteredExpenses = expenses
     .filter(expense => {
+      const searchLower = searchTerm.toLowerCase();
       const matchesSearch = !searchTerm || 
-        expense.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        expense.repair_description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        expense.repairDescription?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        expense.businessUnit?.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        expense.truck?.number.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        expense.trailer?.number.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        expense.fuelStation?.name.toLowerCase().includes(searchTerm.toLowerCase());
+        // Basic expense fields
+        expense.description?.toLowerCase().includes(searchLower) ||
+        expense.repair_description?.toLowerCase().includes(searchLower) ||
+        expense.repairDescription?.toLowerCase().includes(searchLower) ||
+        expense.cost?.toString().includes(searchLower) ||
+        expense.gallons?.toString().includes(searchLower) ||
+        // Date field (format: YYYY-MM-DD and readable format)
+        expense.date?.toLowerCase().includes(searchLower) ||
+        new Date(expense.date).toLocaleDateString().toLowerCase().includes(searchLower) ||
+        // Related entity fields
+        expense.businessUnit?.name.toLowerCase().includes(searchLower) ||
+        expense.truck?.number.toLowerCase().includes(searchLower) ||
+        expense.trailer?.number.toLowerCase().includes(searchLower) ||
+        expense.fuelStation?.name.toLowerCase().includes(searchLower) ||
+        // Category and company fields
+        expense.category?.toLowerCase().includes(searchLower) ||
+        expense.company?.toLowerCase().includes(searchLower) ||
+        categoryLabels[expense.category as keyof typeof categoryLabels]?.toLowerCase().includes(searchLower);
 
       const matchesDateFilter = (() => {
         try {

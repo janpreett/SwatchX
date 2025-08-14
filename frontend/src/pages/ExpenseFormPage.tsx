@@ -37,7 +37,7 @@ export function ExpenseFormPage() {
   const { selectedCompany } = useCompany();
   const [searchParams] = useSearchParams();
   const editId = searchParams.get('edit');
-  const returnTo = searchParams.get('returnTo') || '/dashboard';
+  const returnTo = searchParams.get('returnTo') || `/tables/${category}`;
   const [initialData, setInitialData] = useState<any>(null);
   const [loading, setLoading] = useState(false);
 
