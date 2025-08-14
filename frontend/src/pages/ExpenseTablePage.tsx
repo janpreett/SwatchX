@@ -105,7 +105,7 @@ export function ExpenseTablePage() {
       try {
         const data = await expenseService.getAll();
         // Filter by category and company
-        const filteredData = data.filter(expense => 
+        const filteredData = data.filter((expense: Expense) => 
           expense.category === category && expense.company === selectedCompany
         );
         setExpenses(filteredData);
@@ -141,7 +141,8 @@ export function ExpenseTablePage() {
   };
 
   const handleEditExpense = (id: number) => {
-    navigate(`/forms/${category}?edit=${id}&returnTo=${encodeURIComponent(`/table/${category}`)}`);
+    // Open edit form, it will return to this table page when done
+    navigate(`/forms/${category}?edit=${id}&returnTo=${encodeURIComponent(window.location.pathname)}`);
   };
 
   const handleDeleteExpense = async (id: number) => {
@@ -150,7 +151,7 @@ export function ExpenseTablePage() {
         await expenseService.delete(id);
         // Reload expenses
         const data = await expenseService.getAll();
-        const filteredData = data.filter((expense: any) => 
+        const filteredData = data.filter((expense: Expense) => 
           expense.category === category && expense.company === selectedCompany
         );
         setExpenses(filteredData);
@@ -180,7 +181,7 @@ export function ExpenseTablePage() {
         await Promise.all(selectedIds.map(id => expenseService.delete(id)));
         // Reload expenses
         const data = await expenseService.getAll();
-        const filteredData = data.filter((expense: any) => 
+        const filteredData = data.filter((expense: Expense) => 
           expense.category === category && expense.company === selectedCompany
         );
         setExpenses(filteredData);
@@ -233,14 +234,25 @@ export function ExpenseTablePage() {
     .filter(expense => {
       const matchesSearch = !searchTerm || 
         expense.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        expense.repair_description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         expense.repairDescription?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         expense.businessUnit?.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         expense.truck?.number.toLowerCase().includes(searchTerm.toLowerCase()) ||
         expense.trailer?.number.toLowerCase().includes(searchTerm.toLowerCase()) ||
         expense.fuelStation?.name.toLowerCase().includes(searchTerm.toLowerCase());
 
-      const matchesDateFilter = (!dateFilter.from || new Date(expense.date) >= dateFilter.from) &&
-        (!dateFilter.to || new Date(expense.date) <= dateFilter.to);
+      const matchesDateFilter = (() => {
+        if (!dateFilter.from && !dateFilter.to) return true;
+        
+        const expenseDate = new Date(expense.date);
+        // Normalize dates to midnight for accurate comparison
+        const normalizedExpenseDate = new Date(expenseDate.getFullYear(), expenseDate.getMonth(), expenseDate.getDate());
+        
+        const fromMatch = !dateFilter.from || normalizedExpenseDate >= new Date(dateFilter.from.getFullYear(), dateFilter.from.getMonth(), dateFilter.from.getDate());
+        const toMatch = !dateFilter.to || normalizedExpenseDate <= new Date(dateFilter.to.getFullYear(), dateFilter.to.getMonth(), dateFilter.to.getDate());
+        
+        return fromMatch && toMatch;
+      })();
 
       return matchesSearch && matchesDateFilter;
     })
