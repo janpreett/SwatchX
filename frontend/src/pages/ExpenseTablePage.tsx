@@ -35,6 +35,7 @@ import {
 import { Layout } from '../components/Layout';
 import { useCompany } from '../hooks/useCompany';
 import { expenseService } from '../services/api';
+import { CATEGORY_CONFIG_MAP } from '../constants/expenseCategories';
 
 interface Expense {
   id: number;
@@ -301,6 +302,10 @@ export function ExpenseTablePage() {
 
   const totalCost = filteredExpenses.reduce((sum, expense) => sum + expense.cost, 0);
 
+  // Get required fields for this category to show as columns
+  const config = CATEGORY_CONFIG_MAP[category];
+  const requiredFields = config?.fields || ['date', 'cost'];
+
   const SortButton = ({ field, children }: { field: keyof Expense; children: React.ReactNode }) => (
     <Button 
       variant="subtle" 
@@ -458,7 +463,30 @@ export function ExpenseTablePage() {
                         />
                       </Table.Th>
                       <Table.Th><SortButton field="date">Date</SortButton></Table.Th>
-                      <Table.Th>Details</Table.Th>
+                      
+                      {/* Dynamic columns based on category */}
+                      {requiredFields.includes('businessUnit') && (
+                        <Table.Th>Business Unit</Table.Th>
+                      )}
+                      {requiredFields.includes('truck') && (
+                        <Table.Th>Truck</Table.Th>
+                      )}
+                      {requiredFields.includes('trailer') && (
+                        <Table.Th>Trailer</Table.Th>
+                      )}
+                      {requiredFields.includes('fuelStation') && (
+                        <Table.Th>Fuel Station</Table.Th>
+                      )}
+                      {requiredFields.includes('gallons') && (
+                        <Table.Th>Gallons</Table.Th>
+                      )}
+                      {requiredFields.includes('description') && (
+                        <Table.Th>Description</Table.Th>
+                      )}
+                      {requiredFields.includes('repairDescription') && (
+                        <Table.Th>Repair Description</Table.Th>
+                      )}
+                      
                       <Table.Th><SortButton field="cost">Cost</SortButton></Table.Th>
                       <Table.Th>Actions</Table.Th>
                     </Table.Tr>
@@ -475,31 +503,30 @@ export function ExpenseTablePage() {
                         <Table.Td>
                           {new Date(expense.date).toLocaleDateString()}
                         </Table.Td>
-                        <Table.Td>
-                          <Stack gap="xs">
-                            {expense.businessUnit && (
-                              <Text size="sm">Unit: {expense.businessUnit.name}</Text>
-                            )}
-                            {expense.truck && (
-                              <Text size="sm">Truck: {expense.truck.number}</Text>
-                            )}
-                            {expense.trailer && (
-                              <Text size="sm">Trailer: {expense.trailer.number}</Text>
-                            )}
-                            {expense.fuelStation && (
-                              <Text size="sm">Station: {expense.fuelStation.name}</Text>
-                            )}
-                            {expense.gallons && (
-                              <Text size="sm">Gallons: {expense.gallons}</Text>
-                            )}
-                            {expense.description && (
-                              <Text size="sm" c="dimmed">{expense.description}</Text>
-                            )}
-                            {expense.repairDescription && (
-                              <Text size="sm" c="dimmed">{expense.repairDescription}</Text>
-                            )}
-                          </Stack>
-                        </Table.Td>
+                        
+                        {/* Dynamic columns based on category */}
+                        {requiredFields.includes('businessUnit') && (
+                          <Table.Td>{expense.businessUnit?.name || '-'}</Table.Td>
+                        )}
+                        {requiredFields.includes('truck') && (
+                          <Table.Td>{expense.truck?.number || '-'}</Table.Td>
+                        )}
+                        {requiredFields.includes('trailer') && (
+                          <Table.Td>{expense.trailer?.number || '-'}</Table.Td>
+                        )}
+                        {requiredFields.includes('fuelStation') && (
+                          <Table.Td>{expense.fuelStation?.name || '-'}</Table.Td>
+                        )}
+                        {requiredFields.includes('gallons') && (
+                          <Table.Td>{expense.gallons || '-'}</Table.Td>
+                        )}
+                        {requiredFields.includes('description') && (
+                          <Table.Td>{expense.description || '-'}</Table.Td>
+                        )}
+                        {requiredFields.includes('repairDescription') && (
+                          <Table.Td>{expense.repair_description || expense.repairDescription || '-'}</Table.Td>
+                        )}
+                        
                         <Table.Td>
                           <Text fw={500}>${expense.cost.toFixed(2)}</Text>
                         </Table.Td>
