@@ -7,6 +7,7 @@ import { LoginPage } from './pages/LoginPage';
 import { SignupPage } from './pages/SignupPage';
 import { HomePage } from './pages/HomePage';
 import { DashboardPage } from './pages/DashboardPage';
+import { ExpenseFormPage } from './pages/ExpenseFormPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 import '@mantine/core/styles.css';
 
@@ -36,6 +37,15 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <DashboardPage />
+                  </ProtectedRoute>
+                } 
+              />
+
+              <Route 
+                path="/forms/:category" 
+                element={
+                  <ProtectedRoute>
+                    <ExpenseFormPage />
                   </ProtectedRoute>
                 } 
               />
