@@ -243,12 +243,17 @@ export function ExpenseForm({ category, categoryLabel, onSubmit, initialData, is
             <ActionIcon variant="light" size="lg" onClick={handleBack}>
               <IconArrowLeft size={18} />
             </ActionIcon>
-            <Box>
-              <Title order={1}>{isEditing ? 'Edit' : 'Add'} {categoryLabel}</Title>
-              <Text c="dimmed">
-                {selectedCompany} • {isEditing ? 'Update existing' : 'New'} expense entry
-              </Text>
-            </Box>
+            <Group gap="md">
+              <Text size="3xl" lh={1}>{config?.icon || '📝'}</Text>
+              <Box>
+                <Title order={1} c={config?.color || 'blue'}>
+                  {isEditing ? 'Edit' : 'Add'} {categoryLabel}
+                </Title>
+                <Text c="dimmed">
+                  {selectedCompany} • {isEditing ? 'Update existing' : 'New'} expense entry
+                </Text>
+              </Box>
+            </Group>
           </Flex>
 
           {error && (

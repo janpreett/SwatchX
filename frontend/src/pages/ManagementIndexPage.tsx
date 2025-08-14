@@ -67,23 +67,37 @@ export function ManagementIndexPage() {
           Select a category to manage your fleet data
         </Text>
 
-        <Grid>
+        <Grid gutter="xl">
           {managementOptions.map((option) => (
             <Grid.Col key={option.type} span={{ base: 12, sm: 6, md: 3 }}>
               <Card
                 shadow="sm"
-                padding="lg"
+                padding="xl"
                 radius="md"
-                withBorder
-                style={{ cursor: 'pointer', height: '100%' }}
+                h="100%"
+                style={{ 
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                }}
                 onClick={() => handleSelectManagement(option.type)}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-4px)';
+                  e.currentTarget.style.boxShadow = '0 12px 28px rgba(0, 0, 0, 0.15)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.12)';
+                }}
               >
-                <Group gap="md" mb="md">
-                  <Text size="2rem">{option.icon}</Text>
-                  <Title order={3} size="h4">{option.title}</Title>
+                <Group gap="md" mb="lg" align="flex-start">
+                  <Text size="3xl" lh={1}>{option.icon}</Text>
                 </Group>
                 
-                <Text size="sm" c="dimmed">
+                <Text fw={600} size="xl" c={option.color} mb="md">
+                  {option.title}
+                </Text>
+                
+                <Text size="md" c="dimmed" fw={500}>
                   {option.description}
                 </Text>
               </Card>
