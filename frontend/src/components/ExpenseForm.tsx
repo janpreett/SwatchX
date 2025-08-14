@@ -21,7 +21,7 @@ import { useNavigate } from 'react-router-dom';
 import { IconArrowLeft, IconAlertCircle, IconCheck, IconCalendar } from '@tabler/icons-react';
 import { Layout } from '../components/Layout';
 import { useCompany } from '../hooks/useCompany';
-import { managementService } from '../services/api';
+import { managementService } from '../services/auth';
 
 interface ExpenseFormData {
   date: Date | null;

@@ -19,7 +19,7 @@ import {
 import { useForm } from '@mantine/form';
 import { IconArrowLeft, IconAlertCircle, IconPlus, IconEdit, IconTrash } from '@tabler/icons-react';
 import { Layout } from '../components/Layout';
-import { managementService } from '../services/api';
+import { managementService } from '../services/auth';
 
 interface ManagementItem {
   id: number;

@@ -31,7 +31,7 @@ def create_expense(
     return db_expense
 
 @router.get("/expenses/", response_model=List[ExpenseSchema])
-def read_expenses(
+async def read_expenses(
     company: Optional[CompanyEnum] = None,
     category: Optional[ExpenseCategoryEnum] = None,
     skip: int = 0,
@@ -106,7 +106,7 @@ def create_business_unit(
     return db_business_unit
 
 @router.get("/business-units/", response_model=List[BusinessUnitSchema])
-def read_business_units(
+async def read_business_units(
     skip: int = 0,
     limit: int = 100,
     db: Session = Depends(get_db),
@@ -129,7 +129,7 @@ def create_truck(
     return db_truck
 
 @router.get("/trucks/", response_model=List[TruckSchema])
-def read_trucks(
+async def read_trucks(
     skip: int = 0,
     limit: int = 100,
     db: Session = Depends(get_db),
@@ -152,7 +152,7 @@ def create_trailer(
     return db_trailer
 
 @router.get("/trailers/", response_model=List[TrailerSchema])
-def read_trailers(
+async def read_trailers(
     skip: int = 0,
     limit: int = 100,
     db: Session = Depends(get_db),
@@ -175,7 +175,7 @@ def create_fuel_station(
     return db_fuel_station
 
 @router.get("/fuel-stations/", response_model=List[FuelStationSchema])
-def read_fuel_stations(
+async def read_fuel_stations(
     skip: int = 0,
     limit: int = 100,
     db: Session = Depends(get_db),

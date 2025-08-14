@@ -27,7 +27,7 @@ export interface ApiError {
 }
 
 class AuthService {
-  private getHeaders() {
+  public getHeaders() {
     const token = this.getToken();
     return {
       'Content-Type': 'application/json',
@@ -146,3 +146,69 @@ class AuthService {
 }
 
 export const authService = new AuthService();
+
+// Management data service using the same auth system
+export const managementService = {
+  async getBusinessUnits() {
+    const response = await fetch(`${API_BASE_URL}/api/v1/business-units/`, {
+      method: 'GET',
+      headers: authService.getHeaders(),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to get business units: ${response.status}`);
+    }
+    return response.json();
+  },
+
+  async getTrucks() {
+    const response = await fetch(`${API_BASE_URL}/api/v1/trucks/`, {
+      method: 'GET', 
+      headers: authService.getHeaders(),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to get trucks: ${response.status}`);
+    }
+    return response.json();
+  },
+
+  async getTrailers() {
+    const response = await fetch(`${API_BASE_URL}/api/v1/trailers/`, {
+      method: 'GET',
+      headers: authService.getHeaders(),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to get trailers: ${response.status}`);
+    }
+    return response.json();
+  },
+
+  async getFuelStations() {
+    const response = await fetch(`${API_BASE_URL}/api/v1/fuel-stations/`, {
+      method: 'GET',
+      headers: authService.getHeaders(),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to get fuel stations: ${response.status}`);
+    }
+    return response.json();
+  },
+};
+
+// Expense service using the same auth system  
+export const expenseService = {
+  async getAll() {
+    const response = await fetch(`${API_BASE_URL}/api/v1/expenses/`, {
+      method: 'GET',
+      headers: authService.getHeaders(),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to get expenses: ${response.status}`);
+    }
+    return response.json();
+  },
+};

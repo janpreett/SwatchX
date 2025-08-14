@@ -18,7 +18,7 @@ import { useNavigate } from 'react-router-dom';
 import { IconPlus, IconTable, IconSettings, IconArrowLeft } from '@tabler/icons-react';
 import { Layout } from '../components/Layout';
 import { useCompany } from '../hooks/useCompany';
-import { expenseService } from '../services/api';
+import { expenseService } from '../services/auth';
 
 const expenseCategories = [
   { key: 'truck', label: 'Truck', color: 'blue', icon: '🚛' },
