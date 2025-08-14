@@ -1,6 +1,7 @@
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
+import { useEffect, useState } from 'react';
 import { ExpenseForm } from '../components/ExpenseForm';
-import { expenseService } from '../services/api';
+import { expenseService } from '../services/auth';
 import { useCompany } from '../hooks/useCompany';
 
 interface ExpenseFormData {
@@ -32,6 +33,28 @@ export function ExpenseFormPage() {
   const { category } = useParams<{ category: string }>();
   const navigate = useNavigate();
   const { selectedCompany } = useCompany();
+  const [searchParams] = useSearchParams();
+  const editId = searchParams.get('edit');
+  const [initialData, setInitialData] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
+
+  // Load existing expense data if editing
+  useEffect(() => {
+    if (editId) {
+      const loadExpense = async () => {
+        setLoading(true);
+        try {
+          const expense = await expenseService.getById(Number(editId));
+          setInitialData(expense);
+        } catch (error) {
+          console.error('Failed to load expense:', error);
+        } finally {
+          setLoading(false);
+        }
+      };
+      loadExpense();
+    }
+  }, [editId]);
 
   if (!category || !(category in categoryLabels)) {
     navigate('/dashboard');
@@ -60,7 +83,11 @@ export function ExpenseFormPage() {
       fuel_station_id: data.fuelStationId ? Number(data.fuelStationId) : undefined,
     };
 
-    await expenseService.create(expenseData);
+    if (editId) {
+      await expenseService.update(Number(editId), expenseData);
+    } else {
+      await expenseService.create(expenseData);
+    }
   };
 
   return (
@@ -68,6 +95,9 @@ export function ExpenseFormPage() {
       category={category}
       categoryLabel={categoryLabel}
       onSubmit={handleSubmit}
+      initialData={initialData}
+      isEditing={!!editId}
+      loading={loading}
     />
   );
 }

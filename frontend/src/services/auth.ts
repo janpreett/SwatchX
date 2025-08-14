@@ -196,6 +196,110 @@ export const managementService = {
     }
     return response.json();
   },
+
+  async createBusinessUnit(data: { name: string }) {
+    const response = await fetch(`${API_BASE_URL}/api/v1/business-units/`, {
+      method: 'POST',
+      headers: authService.getHeaders(),
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to create business unit: ${response.status}`);
+    }
+    return response.json();
+  },
+
+  async createTruck(data: { number: string }) {
+    const response = await fetch(`${API_BASE_URL}/api/v1/trucks/`, {
+      method: 'POST',
+      headers: authService.getHeaders(),
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to create truck: ${response.status}`);
+    }
+    return response.json();
+  },
+
+  async createTrailer(data: { number: string }) {
+    const response = await fetch(`${API_BASE_URL}/api/v1/trailers/`, {
+      method: 'POST',
+      headers: authService.getHeaders(),
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to create trailer: ${response.status}`);
+    }
+    return response.json();
+  },
+
+  async createFuelStation(data: { name: string }) {
+    const response = await fetch(`${API_BASE_URL}/api/v1/fuel-stations/`, {
+      method: 'POST',
+      headers: authService.getHeaders(),
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to create fuel station: ${response.status}`);
+    }
+    return response.json();
+  },
+
+  async updateBusinessUnit(id: number, data: { name: string }) {
+    const response = await fetch(`${API_BASE_URL}/api/v1/business-units/${id}`, {
+      method: 'PUT',
+      headers: authService.getHeaders(),
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to update business unit: ${response.status}`);
+    }
+    return response.json();
+  },
+
+  async updateTruck(id: number, data: { number: string }) {
+    const response = await fetch(`${API_BASE_URL}/api/v1/trucks/${id}`, {
+      method: 'PUT',
+      headers: authService.getHeaders(),
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to update truck: ${response.status}`);
+    }
+    return response.json();
+  },
+
+  async updateTrailer(id: number, data: { number: string }) {
+    const response = await fetch(`${API_BASE_URL}/api/v1/trailers/${id}`, {
+      method: 'PUT',
+      headers: authService.getHeaders(),
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to update trailer: ${response.status}`);
+    }
+    return response.json();
+  },
+
+  async updateFuelStation(id: number, data: { name: string }) {
+    const response = await fetch(`${API_BASE_URL}/api/v1/fuel-stations/${id}`, {
+      method: 'PUT',
+      headers: authService.getHeaders(),
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to update fuel station: ${response.status}`);
+    }
+    return response.json();
+  },
 };
 
 // Expense service using the same auth system  
@@ -210,5 +314,55 @@ export const expenseService = {
       throw new Error(`Failed to get expenses: ${response.status}`);
     }
     return response.json();
+  },
+
+  async create(data: any) {
+    const response = await fetch(`${API_BASE_URL}/api/v1/expenses/`, {
+      method: 'POST',
+      headers: authService.getHeaders(),
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to create expense: ${response.status}`);
+    }
+    return response.json();
+  },
+
+  async update(id: number, data: any) {
+    const response = await fetch(`${API_BASE_URL}/api/v1/expenses/${id}`, {
+      method: 'PUT',
+      headers: authService.getHeaders(),
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to update expense: ${response.status}`);
+    }
+    return response.json();
+  },
+
+  async getById(id: number) {
+    const response = await fetch(`${API_BASE_URL}/api/v1/expenses/${id}`, {
+      method: 'GET',
+      headers: authService.getHeaders(),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to get expense: ${response.status}`);
+    }
+    return response.json();
+  },
+
+  async delete(id: number) {
+    const response = await fetch(`${API_BASE_URL}/api/v1/expenses/${id}`, {
+      method: 'DELETE',
+      headers: authService.getHeaders(),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to delete expense: ${response.status}`);
+    }
+    return response.status === 204 ? null : response.json();
   },
 };

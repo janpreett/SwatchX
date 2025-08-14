@@ -39,6 +39,9 @@ interface ExpenseFormProps {
   category: string;
   categoryLabel: string;
   onSubmit: (data: ExpenseFormData) => Promise<void>;
+  initialData?: any;
+  isEditing?: boolean;
+  loading?: boolean;
 }
 
 type FieldType = 'date' | 'businessUnit' | 'truck' | 'trailer' | 'repairDescription' | 'cost' | 'fuelStation' | 'gallons' | 'description';
@@ -96,7 +99,7 @@ const categoryConfigs = {
   }
 } as const;
 
-export function ExpenseForm({ category, categoryLabel, onSubmit }: ExpenseFormProps) {
+export function ExpenseForm({ category, categoryLabel, onSubmit, initialData, isEditing, loading: formLoading }: ExpenseFormProps) {
   const navigate = useNavigate();
   const { selectedCompany } = useCompany();
   const [loading, setLoading] = useState(false);
@@ -206,6 +209,23 @@ export function ExpenseForm({ category, categoryLabel, onSubmit }: ExpenseFormPr
     },
   });
 
+  // Populate form with initial data when editing
+  useEffect(() => {
+    if (initialData && isEditing) {
+      form.setValues({
+        date: initialData.date ? new Date(initialData.date) : new Date(),
+        cost: initialData.cost || '',
+        description: initialData.description || '',
+        repairDescription: initialData.repair_description || '',
+        gallons: initialData.gallons || '',
+        businessUnitId: initialData.business_unit_id?.toString() || null,
+        truckId: initialData.truck_id?.toString() || null,
+        trailerId: initialData.trailer_id?.toString() || null,
+        fuelStationId: initialData.fuel_station_id?.toString() || null,
+      });
+    }
+  }, [initialData, isEditing]);
+
   // Early return after hooks
   if (!selectedCompany) {
     navigate('/home');
@@ -253,10 +273,10 @@ export function ExpenseForm({ category, categoryLabel, onSubmit }: ExpenseFormPr
                 <IconCheck size={40} color="white" />
               </Box>
               <Title order={2} ta="center" c="green">
-                Expense Added Successfully!
+                Expense {isEditing ? 'Updated' : 'Added'} Successfully!
               </Title>
               <Text ta="center" c="dimmed">
-                Your {categoryLabel} expense has been saved for {selectedCompany}.
+                Your {categoryLabel} expense has been {isEditing ? 'updated' : 'saved'} for {selectedCompany}.
               </Text>
             </Stack>
           </Card>
@@ -275,9 +295,9 @@ export function ExpenseForm({ category, categoryLabel, onSubmit }: ExpenseFormPr
               <IconArrowLeft size={18} />
             </ActionIcon>
             <Box>
-              <Title order={1}>Add {categoryLabel}</Title>
+              <Title order={1}>{isEditing ? 'Edit' : 'Add'} {categoryLabel}</Title>
               <Text c="dimmed">
-                {selectedCompany} • New expense entry
+                {selectedCompany} • {isEditing ? 'Update existing' : 'New'} expense entry
               </Text>
             </Box>
           </Flex>
@@ -403,7 +423,7 @@ export function ExpenseForm({ category, categoryLabel, onSubmit }: ExpenseFormPr
                     loading={loading}
                     color={config?.color}
                   >
-                    Add Expense
+                    {isEditing ? 'Update' : 'Add'} Expense
                   </Button>
                 </Group>
               </Stack>

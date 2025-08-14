@@ -39,10 +39,8 @@ export function DashboardPage() {
   const [recentExpenses, setRecentExpenses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+  useEffect(() => {    
     const loadRecentExpenses = async () => {
-      if (!selectedCompany) return;
-      
       try {
         setLoading(true);
         const expenses = await expenseService.getAll();
@@ -60,7 +58,9 @@ export function DashboardPage() {
       }
     };
 
-    loadRecentExpenses();
+    if (selectedCompany) {
+      loadRecentExpenses();
+    }
   }, [selectedCompany]);
 
   if (!selectedCompany) {
@@ -167,6 +167,9 @@ export function DashboardPage() {
                   <Card shadow="sm" padding="lg" radius="md" h="100%">
                     <Stack gap="md">
                       <Group justify="space-between">
+                        <Text size="xl" lh={1}>
+                          {category.icon}
+                        </Text>
                         <Badge color={category.color} variant="light" size="sm">
                           $0.00
                         </Badge>
@@ -217,14 +220,6 @@ export function DashboardPage() {
                   <Text size="sm" c="dimmed" ta="center">
                     Start adding expenses to see recent activity here
                   </Text>
-                  <Button 
-                    variant="light" 
-                    color={selectedCompany === 'Swatch' ? 'blue' : 'cyan'}
-                    leftSection={<IconPlus size={16} />}
-                    onClick={() => navigate('/dashboard')}
-                  >
-                    Add First Expense
-                  </Button>
                 </Stack>
               ) : (
                 <Stack gap="sm">
@@ -233,7 +228,7 @@ export function DashboardPage() {
                       <Box>
                         <Text fw={600}>{expense.category?.charAt(0).toUpperCase() + expense.category?.slice(1) || 'Expense'}</Text>
                         <Text size="sm" c="dimmed">
-                          {new Date(expense.date).toLocaleDateString()} • {expense.description || 'No description'}
+                          {new Date(expense.date).toLocaleDateString()} • {expense.description || expense.repair_description || 'No description'}
                         </Text>
                       </Box>
                       <Badge color="green" variant="light">

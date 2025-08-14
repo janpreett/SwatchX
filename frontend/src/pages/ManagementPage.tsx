@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   Container,
@@ -84,6 +84,38 @@ export function ManagementPage() {
     },
   });
 
+  // Load existing items from API
+  useEffect(() => {
+    if (!type || !(type in managementConfigs)) {
+      return;
+    }
+    
+    const loadItems = async () => {
+      setLoading(true);
+      try {
+        let data;
+        if (type === 'business-units') {
+          data = await managementService.getBusinessUnits();
+        } else if (type === 'trucks') {
+          data = await managementService.getTrucks();
+        } else if (type === 'trailers') {
+          data = await managementService.getTrailers();
+        } else if (type === 'fuel-stations') {
+          data = await managementService.getFuelStations();
+        }
+        
+        setItems(data || []);
+      } catch (error) {
+        console.error('Failed to load items:', error);
+        setError('Failed to load data');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadItems();
+  }, [type]);
+
   if (!type || !(type in managementConfigs)) {
     navigate('/dashboard');
     return null;
@@ -116,31 +148,47 @@ export function ManagementPage() {
     setError(null);
 
     try {
-      // TODO: Implement API call to save item
-      console.log('Saving item:', { type, values, editingItem });
+      let updatedItem;
       
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Mock adding item to list
-      const newItem: ManagementItem = {
-        id: Date.now(),
-        [config.field]: values[config.field as keyof ManagementFormData],
-        created_at: new Date().toISOString()
-      };
-      
+      // Call appropriate API based on type and whether we're editing or creating
       if (editingItem) {
-        setItems(prev => prev.map(item => 
-          item.id === editingItem.id 
-            ? { ...item, [config.field]: values[config.field as keyof ManagementFormData] }
-            : item
-        ));
+        // Update existing item
+        if (type === 'business-units') {
+          updatedItem = await managementService.updateBusinessUnit(editingItem.id, { name: values.name || '' });
+        } else if (type === 'trucks') {
+          updatedItem = await managementService.updateTruck(editingItem.id, { number: values.number || '' });
+        } else if (type === 'trailers') {
+          updatedItem = await managementService.updateTrailer(editingItem.id, { number: values.number || '' });
+        } else if (type === 'fuel-stations') {
+          updatedItem = await managementService.updateFuelStation(editingItem.id, { name: values.name || '' });
+        }
+        
+        if (updatedItem) {
+          setItems(prev => prev.map(item => 
+            item.id === editingItem.id ? updatedItem : item
+          ));
+        }
       } else {
-        setItems(prev => [...prev, newItem]);
+        // Create new item  
+        let newItem;
+        if (type === 'business-units') {
+          newItem = await managementService.createBusinessUnit({ name: values.name || '' });
+        } else if (type === 'trucks') {
+          newItem = await managementService.createTruck({ number: values.number || '' });
+        } else if (type === 'trailers') {
+          newItem = await managementService.createTrailer({ number: values.number || '' });
+        } else if (type === 'fuel-stations') {
+          newItem = await managementService.createFuelStation({ name: values.name || '' });
+        }
+        
+        if (newItem) {
+          setItems(prev => [...prev, newItem]);
+        }
       }
       
       handleCloseModal();
     } catch (err) {
+      console.error('Failed to save item:', err);
       setError(err instanceof Error ? err.message : `Failed to save ${config.singular.toLowerCase()}`);
     } finally {
       setLoading(false);
@@ -173,7 +221,7 @@ export function ManagementPage() {
   };
 
   const handleBack = () => {
-    navigate('/dashboard');
+    navigate('/management');
   };
 
   return (

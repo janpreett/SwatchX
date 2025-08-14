@@ -31,7 +31,7 @@ import {
 } from '@tabler/icons-react';
 import { Layout } from '../components/Layout';
 import { useCompany } from '../hooks/useCompany';
-import { expenseService } from '../services/api';
+import { expenseService } from '../services/auth';
 
 interface Expense {
   id: number;
@@ -136,8 +136,7 @@ export function ExpenseTablePage() {
   };
 
   const handleEditExpense = (id: number) => {
-    // TODO: Navigate to edit form
-    console.log('Edit expense:', id);
+    navigate(`/forms/${category}?edit=${id}`);
   };
 
   const handleDeleteExpense = async (id: number) => {

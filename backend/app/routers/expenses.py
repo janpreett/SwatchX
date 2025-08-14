@@ -115,6 +115,24 @@ async def read_business_units(
     business_units = db.query(BusinessUnit).offset(skip).limit(limit).all()
     return business_units
 
+@router.put("/business-units/{business_unit_id}", response_model=BusinessUnitSchema)
+def update_business_unit(
+    business_unit_id: int,
+    business_unit: BusinessUnitCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    db_business_unit = db.query(BusinessUnit).filter(BusinessUnit.id == business_unit_id).first()
+    if not db_business_unit:
+        raise HTTPException(status_code=404, detail="Business unit not found")
+    
+    for key, value in business_unit.dict().items():
+        setattr(db_business_unit, key, value)
+    
+    db.commit()
+    db.refresh(db_business_unit)
+    return db_business_unit
+
 # Truck endpoints
 @router.post("/trucks/", response_model=TruckSchema, status_code=status.HTTP_201_CREATED)
 def create_truck(
@@ -137,6 +155,24 @@ async def read_trucks(
 ):
     trucks = db.query(Truck).offset(skip).limit(limit).all()
     return trucks
+
+@router.put("/trucks/{truck_id}", response_model=TruckSchema)
+def update_truck(
+    truck_id: int,
+    truck: TruckCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    db_truck = db.query(Truck).filter(Truck.id == truck_id).first()
+    if not db_truck:
+        raise HTTPException(status_code=404, detail="Truck not found")
+    
+    for key, value in truck.dict().items():
+        setattr(db_truck, key, value)
+    
+    db.commit()
+    db.refresh(db_truck)
+    return db_truck
 
 # Trailer endpoints
 @router.post("/trailers/", response_model=TrailerSchema, status_code=status.HTTP_201_CREATED)
@@ -161,6 +197,24 @@ async def read_trailers(
     trailers = db.query(Trailer).offset(skip).limit(limit).all()
     return trailers
 
+@router.put("/trailers/{trailer_id}", response_model=TrailerSchema)
+def update_trailer(
+    trailer_id: int,
+    trailer: TrailerCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    db_trailer = db.query(Trailer).filter(Trailer.id == trailer_id).first()
+    if not db_trailer:
+        raise HTTPException(status_code=404, detail="Trailer not found")
+    
+    for key, value in trailer.dict().items():
+        setattr(db_trailer, key, value)
+    
+    db.commit()
+    db.refresh(db_trailer)
+    return db_trailer
+
 # Fuel Station endpoints
 @router.post("/fuel-stations/", response_model=FuelStationSchema, status_code=status.HTTP_201_CREATED)
 def create_fuel_station(
@@ -183,3 +237,21 @@ async def read_fuel_stations(
 ):
     fuel_stations = db.query(FuelStation).offset(skip).limit(limit).all()
     return fuel_stations
+
+@router.put("/fuel-stations/{fuel_station_id}", response_model=FuelStationSchema)
+def update_fuel_station(
+    fuel_station_id: int,
+    fuel_station: FuelStationCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    db_fuel_station = db.query(FuelStation).filter(FuelStation.id == fuel_station_id).first()
+    if not db_fuel_station:
+        raise HTTPException(status_code=404, detail="Fuel station not found")
+    
+    for key, value in fuel_station.dict().items():
+        setattr(db_fuel_station, key, value)
+    
+    db.commit()
+    db.refresh(db_fuel_station)
+    return db_fuel_station
