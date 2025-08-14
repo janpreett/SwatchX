@@ -131,10 +131,10 @@ class ExpenseUpdate(BaseModel):
 
 class Expense(ExpenseBase):
     id: int
-    business_unit: Optional[BusinessUnit] = None
+    businessUnit: Optional[BusinessUnit] = None
     truck: Optional[Truck] = None
     trailer: Optional[Trailer] = None
-    fuel_station: Optional[FuelStation] = None
+    fuelStation: Optional[FuelStation] = None
     created_at: datetime
     updated_at: Optional[datetime] = None
     

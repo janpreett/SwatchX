@@ -18,7 +18,8 @@ import {
   Checkbox,
 } from '@mantine/core';
 import { useForm } from '@mantine/form';
-import { IconArrowLeft, IconAlertCircle, IconPlus, IconEdit, IconTrash } from '@tabler/icons-react';
+import { notifications } from '@mantine/notifications';
+import { IconArrowLeft, IconAlertCircle, IconPlus, IconEdit, IconTrash, IconCheck } from '@tabler/icons-react';
 import { Layout } from '../components/Layout';
 import { managementService } from '../services/api';
 
@@ -150,7 +151,7 @@ export function ManagementPage() {
     setError(null);
 
     try {
-      let updatedItem;
+      let updatedItem: ManagementItem | undefined;
       
       // Call appropriate API based on type and whether we're editing or creating
       if (editingItem) {
@@ -167,12 +168,18 @@ export function ManagementPage() {
         
         if (updatedItem) {
           setItems(prev => prev.map(item => 
-            item.id === editingItem.id ? updatedItem : item
+            item.id === editingItem.id ? updatedItem! : item
           ));
+          notifications.show({
+            title: 'Success!',
+            message: `${config.singular} updated successfully`,
+            color: 'green',
+            icon: <IconCheck size="1rem" />,
+          });
         }
       } else {
         // Create new item  
-        let newItem;
+        let newItem: ManagementItem | undefined;
         if (type === 'business-units') {
           newItem = await managementService.createBusinessUnit({ name: values.name || '' });
         } else if (type === 'trucks') {
@@ -185,6 +192,12 @@ export function ManagementPage() {
         
         if (newItem) {
           setItems(prev => [...prev, newItem]);
+          notifications.show({
+            title: 'Success!',
+            message: `${config.singular} created successfully`,
+            color: 'green',
+            icon: <IconCheck size="1rem" />,
+          });
         }
       }
       
@@ -202,11 +215,13 @@ export function ManagementPage() {
     form.setValues({
       [config.field]: item[config.field as keyof ManagementItem] as string
     });
+    setError(null); // Clear any previous errors when opening edit modal
     setModalOpened(true);
   };
 
   const handleDelete = async (item: ManagementItem) => {
     if (confirm(`Are you sure you want to delete this ${config.singular.toLowerCase()}?`)) {
+      setError(null); // Clear any previous errors
       try {
         if (type === 'business-units') {
           await managementService.deleteBusinessUnit(item.id);
@@ -220,13 +235,93 @@ export function ManagementPage() {
         
         // Remove from local state
         setItems(prev => prev.filter(i => i.id !== item.id));
-      } catch (error: any) {
-        if (error.message.includes('expense(s) reference it')) {
+        notifications.show({
+          title: 'Deleted!',
+          message: `${config.singular} deleted successfully`,
+          color: 'red',
+          icon: <IconTrash size="1rem" />,
+        });
+      } catch (error: unknown) {
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        if (errorMessage.includes('expense(s) reference it')) {
           setError(`Cannot delete this ${config.singular.toLowerCase()}: it is being used by existing expenses. Please remove those expenses first.`);
         } else {
-          setError(`Failed to delete ${config.singular.toLowerCase()}: ${error.message}`);
+          setError(`Failed to delete ${config.singular.toLowerCase()}: ${errorMessage}`);
         }
       }
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedIds.length === 0) return;
+    
+    if (confirm(`Are you sure you want to delete ${selectedIds.length} ${config.singular.toLowerCase()}(s)?`)) {
+      setError(null); // Clear any previous errors
+      const deleteResults: { success: number; failed: { id: number; name: string; error: string }[] } = {
+        success: 0,
+        failed: []
+      };
+      
+      for (const id of selectedIds) {
+        try {
+          if (type === 'business-units') {
+            await managementService.deleteBusinessUnit(id);
+          } else if (type === 'trucks') {
+            await managementService.deleteTruck(id);
+          } else if (type === 'trailers') {
+            await managementService.deleteTrailer(id);
+          } else if (type === 'fuel-stations') {
+            await managementService.deleteFuelStation(id);
+          }
+          deleteResults.success++;
+        } catch (error: unknown) {
+          const errorMessage = error instanceof Error ? error.message : String(error);
+          const item = items.find(i => i.id === id);
+          const itemName = item?.[config.field as keyof ManagementItem] as string || `ID ${id}`;
+          deleteResults.failed.push({
+            id,
+            name: itemName,
+            error: errorMessage
+          });
+        }
+      }
+      
+      // Remove successfully deleted items from local state
+      if (deleteResults.success > 0) {
+        setItems(prev => prev.filter(item => !selectedIds.includes(item.id) || deleteResults.failed.some(f => f.id === item.id)));
+        setSelectedIds([]);
+        notifications.show({
+          title: 'Success!',
+          message: `${deleteResults.success} ${config.singular.toLowerCase()}(s) deleted successfully`,
+          color: 'green',
+          icon: <IconCheck size="1rem" />,
+        });
+      }
+      
+      // Show results
+      if (deleteResults.failed.length > 0 && deleteResults.success > 0) {
+        const failedNames = deleteResults.failed.map(f => f.name).join(', ');
+        setError(`${deleteResults.success} ${config.singular.toLowerCase()}(s) deleted successfully. Failed to delete: ${failedNames} (they are being used by existing expenses).`);
+      } else if (deleteResults.failed.length > 0) {
+        const failedNames = deleteResults.failed.map(f => f.name).join(', ');
+        setError(`Failed to delete: ${failedNames}. They are being used by existing expenses. Please remove those expenses first.`);
+      }
+    }
+  };
+
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedIds(items.map(item => item.id));
+    } else {
+      setSelectedIds([]);
+    }
+  };
+
+  const handleSelectItem = (id: number, checked: boolean) => {
+    if (checked) {
+      setSelectedIds(prev => [...prev, id]);
+    } else {
+      setSelectedIds(prev => prev.filter(itemId => itemId !== id));
     }
   };
 
@@ -260,14 +355,37 @@ export function ManagementPage() {
               </Box>
             </Group>
             
-            <Button
-              leftSection={<IconPlus size={16} />}
-              color={config.color}
-              onClick={() => setModalOpened(true)}
-            >
-              Add {config.singular}
-            </Button>
+            <Group gap="sm">
+              <Button
+                leftSection={<IconPlus size={16} />}
+                color={config.color}
+                onClick={() => {
+                  setError(null); // Clear any previous errors when opening add modal
+                  setModalOpened(true);
+                }}
+              >
+                Add {config.singular}
+              </Button>
+              
+              {selectedIds.length > 0 && (
+                <Button
+                  variant="light"
+                  color="red"
+                  leftSection={<IconTrash size={16} />}
+                  onClick={handleBulkDelete}
+                >
+                  Delete ({selectedIds.length})
+                </Button>
+              )}
+            </Group>
           </Flex>
+
+          {/* Error Message */}
+          {error && (
+            <Alert color="red" title="Error" variant="light">
+              {error}
+            </Alert>
+          )}
 
           {/* Items Table */}
           <Card shadow="sm" padding="xl" radius="md">
@@ -281,7 +399,10 @@ export function ManagementPage() {
                   variant="light" 
                   color={config.color}
                   leftSection={<IconPlus size={16} />}
-                  onClick={() => setModalOpened(true)}
+                  onClick={() => {
+                    setError(null); // Clear any previous errors
+                    setModalOpened(true);
+                  }}
                 >
                   Add {config.singular}
                 </Button>
@@ -290,6 +411,13 @@ export function ManagementPage() {
               <Table striped highlightOnHover>
                 <Table.Thead>
                   <Table.Tr>
+                    <Table.Th w={50}>
+                      <Checkbox
+                        checked={selectedIds.length === items.length && items.length > 0}
+                        indeterminate={selectedIds.length > 0 && selectedIds.length < items.length}
+                        onChange={(event) => handleSelectAll(event.currentTarget.checked)}
+                      />
+                    </Table.Th>
                     <Table.Th>{config.field === 'name' ? 'Name' : 'Number'}</Table.Th>
                     <Table.Th>Created</Table.Th>
                     <Table.Th>Actions</Table.Th>
@@ -298,6 +426,12 @@ export function ManagementPage() {
                 <Table.Tbody>
                   {items.map((item) => (
                     <Table.Tr key={item.id}>
+                      <Table.Td>
+                        <Checkbox
+                          checked={selectedIds.includes(item.id)}
+                          onChange={(event) => handleSelectItem(item.id, event.currentTarget.checked)}
+                        />
+                      </Table.Td>
                       <Table.Td>{item[config.field as keyof ManagementItem]}</Table.Td>
                       <Table.Td>{new Date(item.created_at).toLocaleDateString()}</Table.Td>
                       <Table.Td>

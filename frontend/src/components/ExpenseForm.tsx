@@ -22,6 +22,7 @@ import { IconArrowLeft, IconAlertCircle, IconCheck, IconCalendar } from '@tabler
 import { Layout } from '../components/Layout';
 import { useCompany } from '../hooks/useCompany';
 import { managementService } from '../services/api';
+import { CATEGORY_CONFIG_MAP } from '../constants/expenseCategories';
 
 interface ExpenseFormData {
   date: Date | null;
@@ -42,64 +43,12 @@ interface ExpenseFormProps {
   initialData?: any;
   isEditing?: boolean;
   loading?: boolean;
+  returnTo?: string;
 }
 
 type FieldType = 'date' | 'businessUnit' | 'truck' | 'trailer' | 'repairDescription' | 'cost' | 'fuelStation' | 'gallons' | 'description';
 
-const categoryConfigs = {
-  truck: {
-    fields: ['date', 'businessUnit', 'truck', 'repairDescription', 'cost'] as FieldType[],
-    icon: '🚛',
-    color: 'blue'
-  },
-  trailer: {
-    fields: ['date', 'businessUnit', 'trailer', 'repairDescription', 'cost'] as FieldType[],
-    icon: '🚚',
-    color: 'green'
-  },
-  'fuel-diesel': {
-    fields: ['date', 'fuelStation', 'gallons', 'cost'] as FieldType[],
-    icon: '⛽',
-    color: 'teal'
-  },
-  dmv: {
-    fields: ['date', 'description', 'cost'] as FieldType[],
-    icon: '📋',
-    color: 'orange'
-  },
-  parts: {
-    fields: ['date', 'description', 'cost'] as FieldType[],
-    icon: '🔧',
-    color: 'red'
-  },
-  'phone-tracker': {
-    fields: ['date', 'description', 'cost'] as FieldType[],
-    icon: '📱',
-    color: 'purple'
-  },
-  'other-expenses': {
-    fields: ['date', 'description', 'cost'] as FieldType[],
-    icon: '💼',
-    color: 'gray'
-  },
-  toll: {
-    fields: ['date', 'cost'] as FieldType[],
-    icon: '🛣️',
-    color: 'yellow'
-  },
-  'office-supplies': {
-    fields: ['date', 'description', 'cost'] as FieldType[],
-    icon: '📝',
-    color: 'pink'
-  },
-  def: {
-    fields: ['date', 'cost'] as FieldType[],
-    icon: '🧪',
-    color: 'indigo'
-  }
-} as const;
-
-export function ExpenseForm({ category, categoryLabel, onSubmit, initialData, isEditing, loading: formLoading }: ExpenseFormProps) {
+export function ExpenseForm({ category, categoryLabel, onSubmit, initialData, isEditing, loading: formLoading, returnTo = '/dashboard' }: ExpenseFormProps) {
   const navigate = useNavigate();
   const { selectedCompany } = useCompany();
   const [loading, setLoading] = useState(false);
@@ -112,7 +61,7 @@ export function ExpenseForm({ category, categoryLabel, onSubmit, initialData, is
   const [trailers, setTrailers] = useState<Array<{value: string, label: string}>>([]);
   const [fuelStations, setFuelStations] = useState<Array<{value: string, label: string}>>([]);
 
-  const config = categoryConfigs[category as keyof typeof categoryConfigs];
+  const config = CATEGORY_CONFIG_MAP[category];
   const requiredFields = config?.fields || ['date', 'cost'] as FieldType[];
 
   // Load management data on component mount
@@ -240,7 +189,7 @@ export function ExpenseForm({ category, categoryLabel, onSubmit, initialData, is
       await onSubmit(values);
       setSuccess(true);
       setTimeout(() => {
-        navigate('/dashboard');
+        navigate(returnTo);
       }, 2000);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to save expense');
@@ -250,7 +199,7 @@ export function ExpenseForm({ category, categoryLabel, onSubmit, initialData, is
   };
 
   const handleBack = () => {
-    navigate('/dashboard');
+    navigate(returnTo);
   };
 
   if (success) {
@@ -318,7 +267,6 @@ export function ExpenseForm({ category, categoryLabel, onSubmit, initialData, is
                   placeholder="Select date"
                   leftSection={<IconCalendar size="1rem" />}
                   required
-                  maxDate={new Date()}
                   {...form.getInputProps('date')}
                 />
 

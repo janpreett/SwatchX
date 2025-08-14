@@ -1,5 +1,7 @@
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useEffect, useState } from 'react';
+import { notifications } from '@mantine/notifications';
+import { IconCheck } from '@tabler/icons-react';
 import { ExpenseForm } from '../components/ExpenseForm';
 import { expenseService } from '../services/api';
 import { useCompany } from '../hooks/useCompany';
@@ -35,6 +37,7 @@ export function ExpenseFormPage() {
   const { selectedCompany } = useCompany();
   const [searchParams] = useSearchParams();
   const editId = searchParams.get('edit');
+  const returnTo = searchParams.get('returnTo') || '/dashboard';
   const [initialData, setInitialData] = useState<any>(null);
   const [loading, setLoading] = useState(false);
 
@@ -72,7 +75,7 @@ export function ExpenseFormPage() {
     const expenseData = {
       company: selectedCompany,
       category: category,
-      date: data.date?.toISOString() || new Date().toISOString(),
+      date: data.date instanceof Date ? data.date.toISOString() : new Date(data.date || new Date()).toISOString(),
       cost: Number(data.cost),
       description: data.description || undefined,
       repair_description: data.repairDescription || undefined,
@@ -85,8 +88,20 @@ export function ExpenseFormPage() {
 
     if (editId) {
       await expenseService.update(Number(editId), expenseData);
+      notifications.show({
+        title: 'Success!',
+        message: 'Expense updated successfully',
+        color: 'green',
+        icon: <IconCheck size="1rem" />,
+      });
     } else {
       await expenseService.create(expenseData);
+      notifications.show({
+        title: 'Success!',
+        message: 'Expense created successfully',
+        color: 'green',
+        icon: <IconCheck size="1rem" />,
+      });
     }
   };
 
@@ -98,6 +113,7 @@ export function ExpenseFormPage() {
       initialData={initialData}
       isEditing={!!editId}
       loading={loading}
+      returnTo={returnTo}
     />
   );
 }

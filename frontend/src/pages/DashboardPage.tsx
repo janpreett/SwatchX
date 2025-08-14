@@ -19,24 +19,28 @@ import { IconPlus, IconTable, IconSettings, IconArrowLeft } from '@tabler/icons-
 import { Layout } from '../components/Layout';
 import { useCompany } from '../hooks/useCompany';
 import { expenseService } from '../services/api';
+import { EXPENSE_CATEGORIES } from '../constants/expenseCategories';
 
-const expenseCategories = [
-  { key: 'truck', label: 'Truck', color: 'blue', icon: '🚛' },
-  { key: 'trailer', label: 'Trailer', color: 'green', icon: '🚚' },
-  { key: 'dmv', label: 'DMV', color: 'orange', icon: '📋' },
-  { key: 'parts', label: 'Parts', color: 'red', icon: '🔧' },
-  { key: 'phone-tracker', label: 'Phone Tracker', color: 'purple', icon: '📱' },
-  { key: 'other-expenses', label: 'Other Expenses', color: 'gray', icon: '💼' },
-  { key: 'toll', label: 'Toll', color: 'yellow', icon: '🛣️' },
-  { key: 'office-supplies', label: 'Office Supplies', color: 'pink', icon: '📝' },
-  { key: 'fuel-diesel', label: 'Fuel (Diesel)', color: 'teal', icon: '⛽' },
-  { key: 'def', label: 'DEF', color: 'indigo', icon: '🧪' },
-];
+interface DashboardExpense {
+  id: number;
+  date: string;
+  category: string;
+  company: string;
+  cost: number;
+  description?: string;
+  repair_description?: string;
+  repairDescription?: string;
+  gallons?: number;
+  businessUnit?: { name: string };
+  truck?: { number: string };
+  trailer?: { number: string };
+  fuelStation?: { name: string };
+}
 
 export function DashboardPage() {
   const navigate = useNavigate();
   const { selectedCompany, clearSelectedCompany } = useCompany();
-  const [recentExpenses, setRecentExpenses] = useState<any[]>([]);
+  const [recentExpenses, setRecentExpenses] = useState<DashboardExpense[]>([]);
   const [loading, setLoading] = useState(true);
   const [totals, setTotals] = useState({
     total: 0,
@@ -53,10 +57,10 @@ export function DashboardPage() {
         const expenses = await expenseService.getAll();
         // Filter by company and get the 5 most recent
         const companyExpenses = expenses
-          .filter((expense: any) => expense.company === selectedCompany);
+          .filter((expense: DashboardExpense) => expense.company === selectedCompany);
         
         const recentExpenses = companyExpenses
-          .sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime())
+          .sort((a: DashboardExpense, b: DashboardExpense) => new Date(b.date).getTime() - new Date(a.date).getTime())
           .slice(0, 5);
         setRecentExpenses(recentExpenses);
 
@@ -65,26 +69,26 @@ export function DashboardPage() {
         const currentMonth = now.getMonth();
         const currentYear = now.getFullYear();
         
-        const total = companyExpenses.reduce((sum: number, expense: any) => sum + Number(expense.cost || 0), 0);
+        const total = companyExpenses.reduce((sum: number, expense: DashboardExpense) => sum + Number(expense.cost || 0), 0);
         const fuel = companyExpenses
-          .filter((expense: any) => ['fuel-diesel', 'def'].includes(expense.category))
-          .reduce((sum: number, expense: any) => sum + Number(expense.cost || 0), 0);
+          .filter((expense: DashboardExpense) => ['fuel-diesel', 'def'].includes(expense.category))
+          .reduce((sum: number, expense: DashboardExpense) => sum + Number(expense.cost || 0), 0);
         const repairs = companyExpenses
-          .filter((expense: any) => ['truck', 'trailer', 'parts'].includes(expense.category))
-          .reduce((sum: number, expense: any) => sum + Number(expense.cost || 0), 0);
+          .filter((expense: DashboardExpense) => ['truck', 'trailer', 'parts'].includes(expense.category))
+          .reduce((sum: number, expense: DashboardExpense) => sum + Number(expense.cost || 0), 0);
         const thisMonth = companyExpenses
-          .filter((expense: any) => {
+          .filter((expense: DashboardExpense) => {
             const expenseDate = new Date(expense.date);
             return expenseDate.getMonth() === currentMonth && expenseDate.getFullYear() === currentYear;
           })
-          .reduce((sum: number, expense: any) => sum + Number(expense.cost || 0), 0);
+          .reduce((sum: number, expense: DashboardExpense) => sum + Number(expense.cost || 0), 0);
         
         // Calculate category totals
         const categoryTotals: Record<string, number> = {};
-        expenseCategories.forEach(category => {
+        EXPENSE_CATEGORIES.forEach(category => {
           categoryTotals[category.key] = companyExpenses
-            .filter((expense: any) => expense.category === category.key)
-            .reduce((sum: number, expense: any) => sum + Number(expense.cost || 0), 0);
+            .filter((expense: DashboardExpense) => expense.category === category.key)
+            .reduce((sum: number, expense: DashboardExpense) => sum + Number(expense.cost || 0), 0);
         });
 
         setTotals({
@@ -169,61 +173,61 @@ export function DashboardPage() {
 
           {/* Summary Cards */}
           <SimpleGrid cols={{ base: 1, sm: 2, lg: 4 }} spacing="lg">
-            <Paper p="lg" radius="md" shadow="sm">
-              <Stack gap="xs">
-                <Text size="sm" c="dimmed" fw={500}>Total Expenses</Text>
-                <Text size="2xl" fw={700} c="blue">${totals.thisMonth.toFixed(2)}</Text>
-                <Text size="xs" c="green">This month</Text>
+            <Paper p="xl" radius="md" shadow="sm">
+              <Stack gap="sm">
+                <Text size="md" c="dimmed" fw={500}>Total Expenses</Text>
+                <Text size="3xl" fw={700} c="blue">${totals.thisMonth.toFixed(2)}</Text>
+                <Text size="sm" c="green">This month</Text>
               </Stack>
             </Paper>
             
-            <Paper p="lg" radius="md" shadow="sm">
-              <Stack gap="xs">
-                <Text size="sm" c="dimmed" fw={500}>Fuel Costs</Text>
-                <Text size="2xl" fw={700} c="teal">${totals.fuel.toFixed(2)}</Text>
-                <Text size="xs" c="dimmed">Diesel & DEF</Text>
+            <Paper p="xl" radius="md" shadow="sm">
+              <Stack gap="sm">
+                <Text size="md" c="dimmed" fw={500}>Fuel Costs</Text>
+                <Text size="3xl" fw={700} c="teal">${totals.fuel.toFixed(2)}</Text>
+                <Text size="sm" c="dimmed">Diesel & DEF</Text>
               </Stack>
             </Paper>
             
-            <Paper p="lg" radius="md" shadow="sm">
-              <Stack gap="xs">
-                <Text size="sm" c="dimmed" fw={500}>Vehicle Repairs</Text>
-                <Text size="2xl" fw={700} c="orange">${totals.repairs.toFixed(2)}</Text>
-                <Text size="xs" c="dimmed">Trucks & Trailers</Text>
+            <Paper p="xl" radius="md" shadow="sm">
+              <Stack gap="sm">
+                <Text size="md" c="dimmed" fw={500}>Vehicle Repairs</Text>
+                <Text size="3xl" fw={700} c="orange">${totals.repairs.toFixed(2)}</Text>
+                <Text size="sm" c="dimmed">Trucks & Trailers</Text>
               </Stack>
             </Paper>
             
-            <Paper p="lg" radius="md" shadow="sm">
-              <Stack gap="xs">
-                <Text size="sm" c="dimmed" fw={500}>All Time Total</Text>
-                <Text size="2xl" fw={700} c="grape">${totals.total.toFixed(2)}</Text>
-                <Text size="xs" c="dimmed">All categories</Text>
+            <Paper p="xl" radius="md" shadow="sm">
+              <Stack gap="sm">
+                <Text size="md" c="dimmed" fw={500}>All Time Total</Text>
+                <Text size="3xl" fw={700} c="grape">${totals.total.toFixed(2)}</Text>
+                <Text size="sm" c="dimmed">All categories</Text>
               </Stack>
             </Paper>
           </SimpleGrid>
 
           {/* Expense Categories */}
           <Box>
-            <Text size="xl" fw={600} mb="lg">Expense Categories</Text>
-            <Grid gutter="lg">
-              {expenseCategories.map((category) => (
+            <Text size="2xl" fw={600} mb="xl">Expense Categories</Text>
+            <Grid gutter="xl">
+              {EXPENSE_CATEGORIES.map((category) => (
                 <Grid.Col key={category.key} span={{ base: 12, sm: 6, md: 4, lg: 3 }}>
-                  <Card shadow="sm" padding="lg" radius="md" h="100%">
-                    <Stack gap="md">
+                  <Card shadow="sm" padding="xl" radius="md" h="100%">
+                    <Stack gap="lg">
                       <Group justify="space-between">
-                        <Text size="xl" lh={1}>
+                        <Text size="2xl" lh={1}>
                           {category.icon}
                         </Text>
-                        <Badge color={category.color} variant="light" size="sm">
+                        <Badge color={category.color} variant="light" size="md">
                           ${(totals.categoryTotals[category.key] || 0).toFixed(2)}
                         </Badge>
                       </Group>
                       
-                      <Text fw={600} size="md">
+                      <Text fw={600} size="lg">
                         {category.label}
                       </Text>
                       
-                      <Group gap="xs" grow>
+                      <Group gap="sm" grow>
                         <Button
                           variant="light"
                           color={category.color}
@@ -252,8 +256,8 @@ export function DashboardPage() {
 
           {/* Recent Activity */}
           <Box>
-            <Text size="xl" fw={600} mb="lg">Recent Activity</Text>
-            <Card shadow="sm" padding="xl" radius="md">
+            <Text size="2xl" fw={600} mb="xl">Recent Activity</Text>
+            <Card shadow="sm" padding="2xl" radius="md">
               {loading ? (
                 <Stack align="center" gap="md" py="xl">
                   <Text size="lg" c="dimmed">Loading recent expenses...</Text>
@@ -266,16 +270,41 @@ export function DashboardPage() {
                   </Text>
                 </Stack>
               ) : (
-                <Stack gap="sm">
-                  {recentExpenses.map((expense: any, index: number) => (
-                    <Group key={expense.id || index} justify="space-between" p="md" bg="gray.0" style={{ borderRadius: 8 }}>
-                      <Box>
-                        <Text fw={600}>{expense.category?.charAt(0).toUpperCase() + expense.category?.slice(1) || 'Expense'}</Text>
-                        <Text size="sm" c="dimmed">
-                          {new Date(expense.date).toLocaleDateString()} • {expense.description || expense.repair_description || 'No description'}
-                        </Text>
+                <Stack gap="lg">
+                  {recentExpenses.map((expense: DashboardExpense, index: number) => (
+                    <Group key={expense.id || index} justify="space-between" p="xl" bg="gray.0" style={{ borderRadius: 8 }}>
+                      <Box flex={1}>
+                        <Group justify="space-between" mb="lg">
+                          <Text fw={600} size="xl">{expense.category?.charAt(0).toUpperCase() + expense.category?.slice(1) || 'Expense'}</Text>
+                          <Text size="md" c="dimmed">
+                            {new Date(expense.date).toLocaleDateString()}
+                          </Text>
+                        </Group>
+                        <Stack gap="md">
+                          {expense.businessUnit && (
+                            <Text size="md"><Text fw={600} span>Business Unit:</Text> <Text c="dark.6" span>{expense.businessUnit.name}</Text></Text>
+                          )}
+                          {expense.truck && (
+                            <Text size="md"><Text fw={600} span>Truck:</Text> <Text c="dark.6" span>{expense.truck.number}</Text></Text>
+                          )}
+                          {expense.trailer && (
+                            <Text size="md"><Text fw={600} span>Trailer:</Text> <Text c="dark.6" span>{expense.trailer.number}</Text></Text>
+                          )}
+                          {expense.fuelStation && (
+                            <Text size="md"><Text fw={600} span>Fuel Station:</Text> <Text c="dark.6" span>{expense.fuelStation.name}</Text></Text>
+                          )}
+                          {expense.gallons && (
+                            <Text size="md"><Text fw={600} span>Gallons:</Text> <Text c="dark.6" span>{expense.gallons}</Text></Text>
+                          )}
+                          {expense.description && (
+                            <Text size="md"><Text fw={600} span>Description:</Text> <Text c="dark.6" span>{expense.description}</Text></Text>
+                          )}
+                          {(expense.repairDescription || expense.repair_description) && (
+                            <Text size="md"><Text fw={600} span>Repair Description:</Text> <Text c="dark.6" span>{expense.repairDescription || expense.repair_description}</Text></Text>
+                          )}
+                        </Stack>
                       </Box>
-                      <Badge color="green" variant="light">
+                      <Badge color="green" variant="light" size="xl">
                         ${Number(expense.cost || 0).toFixed(2)}
                       </Badge>
                     </Group>

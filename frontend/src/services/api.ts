@@ -3,15 +3,15 @@ const API_BASE_URL = 'http://127.0.0.1:8000';
 // Auth token management
 export const authService = {
   getToken() {
-    return localStorage.getItem('accessToken');
+    return localStorage.getItem('access_token');
   },
 
   setToken(token: string) {
-    localStorage.setItem('accessToken', token);
+    localStorage.setItem('access_token', token);
   },
 
   removeToken() {
-    localStorage.removeItem('accessToken');
+    localStorage.removeItem('access_token');
   },
 
   isAuthenticated() {
@@ -24,12 +24,27 @@ export const authService = {
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
       },
-      body: new URLSearchParams(credentials),
+      body: new URLSearchParams({
+        username: credentials.email,
+        password: credentials.password
+      }),
     });
 
     if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.detail || 'Login failed');
+      let errorMessage = 'Login failed';
+      try {
+        const error = await response.json();
+        if (error.detail) {
+          if (Array.isArray(error.detail)) {
+            errorMessage = error.detail.map((err: { msg?: string; message?: string }) => err.msg || err.message || String(err)).join(', ');
+          } else {
+            errorMessage = error.detail;
+          }
+        }
+      } catch {
+        errorMessage = `Login failed (${response.status})`;
+      }
+      throw new Error(errorMessage);
     }
 
     const data = await response.json();

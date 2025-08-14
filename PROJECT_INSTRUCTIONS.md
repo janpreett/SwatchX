@@ -71,13 +71,16 @@ Owner can create/edit/delete:
 
 ### Completed ✅
 - Homepage with company selection
-- Dashboard with expense categories
+- Dashboard with expense categories and recent activity display
 - Backend models (Expense, BusinessUnit, Truck, Trailer, FuelStation)
 - Backend API endpoints with JWT authentication
 - Expense form components with category-specific fields
-- Table view pages with filtering and sorting
-- Management pages for CRUD operations
+- Table view pages with filtering, sorting, and bulk delete
+- Management pages for CRUD operations with bulk delete capability
 - API service layer with authentication and CRUD operations
+- Comprehensive table display showing all expense fields
+- Proper error handling for management item deletion
+- Recent activity with fallback descriptions for all expense types
 
 ### In Progress 🔄
 - Frontend-backend API integration

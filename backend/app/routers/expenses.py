@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Query
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from typing import List, Optional
 from datetime import datetime
 
@@ -17,6 +17,92 @@ from ..schemas.expense import (
 
 router = APIRouter()
 
+def serialize_expense_with_relationships(expense: Expense) -> dict:
+    """
+    Serialize expense with relationships to camelCase format for frontend compatibility.
+    Centralizes the mapping logic to avoid duplication.
+    """
+    return {
+        "id": expense.id,
+        "company": expense.company,
+        "category": expense.category,
+        "date": expense.date,
+        "cost": expense.cost,
+        "description": expense.description,
+        "repair_description": expense.repair_description,
+        "gallons": expense.gallons,
+        "business_unit_id": expense.business_unit_id,
+        "truck_id": expense.truck_id,
+        "trailer_id": expense.trailer_id,
+        "fuel_station_id": expense.fuel_station_id,
+        "businessUnit": {
+            "id": expense.business_unit.id, 
+            "name": expense.business_unit.name
+        } if expense.business_unit else None,
+        "truck": {
+            "id": expense.truck.id, 
+            "number": expense.truck.number
+        } if expense.truck else None,
+        "trailer": {
+            "id": expense.trailer.id, 
+            "number": expense.trailer.number
+        } if expense.trailer else None,
+        "fuelStation": {
+            "id": expense.fuel_station.id, 
+            "name": expense.fuel_station.name
+        } if expense.fuel_station else None,
+        "created_at": expense.created_at,
+        "updated_at": expense.updated_at
+    }
+
+def get_expense_with_relationships(db: Session, expense_id: int) -> Expense:
+    """
+    Get expense with all relationships loaded.
+    Centralizes the query logic to avoid duplication.
+    """
+    return db.query(Expense).options(
+        joinedload(Expense.business_unit),
+        joinedload(Expense.truck),
+        joinedload(Expense.trailer),
+        joinedload(Expense.fuel_station)
+    ).filter(Expense.id == expense_id).first()
+
+def get_expenses_with_relationships(db: Session, company: Optional[CompanyEnum] = None, 
+                                  category: Optional[ExpenseCategoryEnum] = None, 
+                                  skip: int = 0, limit: int = 100) -> List[Expense]:
+    """
+    Get expenses with all relationships loaded and optional filtering.
+    Centralizes the query logic to avoid duplication.
+    """
+    query = db.query(Expense).options(
+        joinedload(Expense.business_unit),
+        joinedload(Expense.truck),
+        joinedload(Expense.trailer),
+        joinedload(Expense.fuel_station)
+    )
+    
+    if company:
+        query = query.filter(Expense.company == company)
+    if category:
+        query = query.filter(Expense.category == category)
+    
+    return query.offset(skip).limit(limit).all()
+
+def check_entity_usage_and_delete(db: Session, entity, entity_id: int, entity_name: str):
+    """
+    Check if management entity is referenced by expenses and delete if not.
+    Centralizes the deletion logic with referential integrity checks.
+    """
+    expense_count = db.query(Expense).filter(getattr(Expense, f"{entity_name}_id") == entity_id).count()
+    if expense_count > 0:
+        raise HTTPException(
+            status_code=400, 
+            detail=f"Cannot delete {entity_name}: {expense_count} expense(s) reference it"
+        )
+    
+    db.delete(entity)
+    db.commit()
+
 # Expense endpoints
 @router.post("/expenses/", response_model=ExpenseSchema, status_code=status.HTTP_201_CREATED)
 def create_expense(
@@ -24,13 +110,14 @@ def create_expense(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user)
 ):
+    """Create a new expense entry."""
     db_expense = Expense(**expense.dict())
     db.add(db_expense)
     db.commit()
     db.refresh(db_expense)
     return db_expense
 
-@router.get("/expenses/", response_model=List[ExpenseSchema])
+@router.get("/expenses/", response_model=List[dict])
 async def read_expenses(
     company: Optional[CompanyEnum] = None,
     category: Optional[ExpenseCategoryEnum] = None,
@@ -39,34 +126,36 @@ async def read_expenses(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user)
 ):
-    query = db.query(Expense)
-    if company:
-        query = query.filter(Expense.company == company)
-    if category:
-        query = query.filter(Expense.category == category)
-    
-    expenses = query.offset(skip).limit(limit).all()
-    return expenses
+    """
+    Get all expenses with optional filtering by company and category.
+    Returns expenses with relationships serialized for frontend compatibility.
+    """
+    expenses = get_expenses_with_relationships(db, company, category, skip, limit)
+    return [serialize_expense_with_relationships(expense) for expense in expenses]
 
-@router.get("/expenses/{expense_id}", response_model=ExpenseSchema)
+@router.get("/expenses/{expense_id}", response_model=dict)
 def read_expense(
     expense_id: int,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user)
 ):
-    expense = db.query(Expense).filter(Expense.id == expense_id).first()
+    """Get a single expense by ID with all relationships."""
+    expense = get_expense_with_relationships(db, expense_id)
+    
     if expense is None:
         raise HTTPException(status_code=404, detail="Expense not found")
-    return expense
+    
+    return serialize_expense_with_relationships(expense)
 
-@router.put("/expenses/{expense_id}", response_model=ExpenseSchema)
+@router.put("/expenses/{expense_id}", response_model=dict)
 def update_expense(
     expense_id: int,
     expense: ExpenseUpdate,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user)
 ):
-    db_expense = db.query(Expense).filter(Expense.id == expense_id).first()
+    """Update an expense by ID."""
+    db_expense = get_expense_with_relationships(db, expense_id)
     if db_expense is None:
         raise HTTPException(status_code=404, detail="Expense not found")
     
@@ -76,7 +165,7 @@ def update_expense(
     
     db.commit()
     db.refresh(db_expense)
-    return db_expense
+    return serialize_expense_with_relationships(db_expense)
 
 @router.delete("/expenses/{expense_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_expense(
@@ -139,17 +228,12 @@ def delete_business_unit(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user)
 ):
+    """Delete a business unit if not referenced by expenses."""
     business_unit = db.query(BusinessUnit).filter(BusinessUnit.id == business_unit_id).first()
     if not business_unit:
         raise HTTPException(status_code=404, detail="Business unit not found")
     
-    # Check if any expenses use this business unit
-    expense_count = db.query(Expense).filter(Expense.business_unit_id == business_unit_id).count()
-    if expense_count > 0:
-        raise HTTPException(status_code=400, detail=f"Cannot delete business unit: {expense_count} expense(s) reference it")
-    
-    db.delete(business_unit)
-    db.commit()
+    check_entity_usage_and_delete(db, business_unit, business_unit_id, "business_unit")
 
 # Truck endpoints
 @router.post("/trucks/", response_model=TruckSchema, status_code=status.HTTP_201_CREATED)
@@ -198,17 +282,12 @@ def delete_truck(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user)
 ):
+    """Delete a truck if not referenced by expenses."""
     truck = db.query(Truck).filter(Truck.id == truck_id).first()
     if not truck:
         raise HTTPException(status_code=404, detail="Truck not found")
     
-    # Check if any expenses use this truck
-    expense_count = db.query(Expense).filter(Expense.truck_id == truck_id).count()
-    if expense_count > 0:
-        raise HTTPException(status_code=400, detail=f"Cannot delete truck: {expense_count} expense(s) reference it")
-    
-    db.delete(truck)
-    db.commit()
+    check_entity_usage_and_delete(db, truck, truck_id, "truck")
 
 # Trailer endpoints
 @router.post("/trailers/", response_model=TrailerSchema, status_code=status.HTTP_201_CREATED)
@@ -257,17 +336,12 @@ def delete_trailer(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user)
 ):
+    """Delete a trailer if not referenced by expenses."""
     trailer = db.query(Trailer).filter(Trailer.id == trailer_id).first()
     if not trailer:
         raise HTTPException(status_code=404, detail="Trailer not found")
     
-    # Check if any expenses use this trailer
-    expense_count = db.query(Expense).filter(Expense.trailer_id == trailer_id).count()
-    if expense_count > 0:
-        raise HTTPException(status_code=400, detail=f"Cannot delete trailer: {expense_count} expense(s) reference it")
-    
-    db.delete(trailer)
-    db.commit()
+    check_entity_usage_and_delete(db, trailer, trailer_id, "trailer")
 
 # Fuel Station endpoints
 @router.post("/fuel-stations/", response_model=FuelStationSchema, status_code=status.HTTP_201_CREATED)
@@ -316,14 +390,9 @@ def delete_fuel_station(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user)
 ):
+    """Delete a fuel station if not referenced by expenses."""
     fuel_station = db.query(FuelStation).filter(FuelStation.id == fuel_station_id).first()
     if not fuel_station:
         raise HTTPException(status_code=404, detail="Fuel station not found")
     
-    # Check if any expenses use this fuel station
-    expense_count = db.query(Expense).filter(Expense.fuel_station_id == fuel_station_id).count()
-    if expense_count > 0:
-        raise HTTPException(status_code=400, detail=f"Cannot delete fuel station: {expense_count} expense(s) reference it")
-    
-    db.delete(fuel_station)
-    db.commit()
+    check_entity_usage_and_delete(db, fuel_station, fuel_station_id, "fuel_station")

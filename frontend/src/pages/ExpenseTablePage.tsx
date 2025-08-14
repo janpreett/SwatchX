@@ -19,6 +19,7 @@ import {
   Checkbox
 } from '@mantine/core';
 import { DateInput } from '@mantine/dates';
+import { notifications } from '@mantine/notifications';
 import { useNavigate, useParams } from 'react-router-dom';
 import { 
   IconArrowLeft, 
@@ -28,7 +29,8 @@ import {
   IconSearch,
   IconFilter,
   IconSortAscending,
-  IconSortDescending
+  IconSortDescending,
+  IconCheck
 } from '@tabler/icons-react';
 import { Layout } from '../components/Layout';
 import { useCompany } from '../hooks/useCompany';
@@ -41,7 +43,8 @@ interface Expense {
   company: string;
   cost: number;
   description?: string;
-  repairDescription?: string;
+  repair_description?: string; // Backend uses snake_case
+  repairDescription?: string; // Keep for compatibility
   gallons?: number;
   businessUnit?: { name: string };
   truck?: { number: string };
@@ -138,7 +141,7 @@ export function ExpenseTablePage() {
   };
 
   const handleEditExpense = (id: number) => {
-    navigate(`/forms/${category}?edit=${id}`);
+    navigate(`/forms/${category}?edit=${id}&returnTo=${encodeURIComponent(`/table/${category}`)}`);
   };
 
   const handleDeleteExpense = async (id: number) => {
@@ -151,8 +154,20 @@ export function ExpenseTablePage() {
           expense.category === category && expense.company === selectedCompany
         );
         setExpenses(filteredData);
+        notifications.show({
+          title: 'Success!',
+          message: 'Expense deleted successfully',
+          color: 'green',
+          icon: <IconCheck size="1rem" />,
+        });
       } catch (error) {
         console.error('Failed to delete expense:', error);
+        notifications.show({
+          title: 'Error!',
+          message: 'Failed to delete expense',
+          color: 'red',
+          icon: <IconTrash size="1rem" />,
+        });
       }
     }
   };
@@ -170,8 +185,20 @@ export function ExpenseTablePage() {
         );
         setExpenses(filteredData);
         setSelectedIds([]);
+        notifications.show({
+          title: 'Success!',
+          message: `${selectedIds.length} expense(s) deleted successfully`,
+          color: 'green',
+          icon: <IconCheck size="1rem" />,
+        });
       } catch (error) {
         console.error('Failed to delete expenses:', error);
+        notifications.show({
+          title: 'Error!',
+          message: 'Failed to delete expenses',
+          color: 'red',
+          icon: <IconTrash size="1rem" />,
+        });
       }
     }
   };
