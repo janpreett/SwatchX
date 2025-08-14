@@ -31,6 +31,7 @@ import {
 } from '@tabler/icons-react';
 import { Layout } from '../components/Layout';
 import { useCompany } from '../hooks/useCompany';
+import { expenseService } from '../services/api';
 
 interface Expense {
   id: number;
@@ -94,13 +95,24 @@ export function ExpenseTablePage() {
       return;
     }
 
-    // TODO: Load expenses from API
-    setLoading(true);
-    // Simulate API call
-    setTimeout(() => {
-      setExpenses([]); // Empty for now
-      setLoading(false);
-    }, 1000);
+    const loadExpenses = async () => {
+      setLoading(true);
+      try {
+        const data = await expenseService.getAll();
+        // Filter by category and company
+        const filteredData = data.filter(expense => 
+          expense.category === category && expense.company === selectedCompany
+        );
+        setExpenses(filteredData);
+      } catch (error) {
+        console.error('Failed to load expenses:', error);
+        setExpenses([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadExpenses();
   }, [selectedCompany, category, navigate]);
 
   if (!selectedCompany) {
@@ -128,9 +140,20 @@ export function ExpenseTablePage() {
     console.log('Edit expense:', id);
   };
 
-  const handleDeleteExpense = (id: number) => {
-    // TODO: Implement delete with confirmation
-    console.log('Delete expense:', id);
+  const handleDeleteExpense = async (id: number) => {
+    if (window.confirm('Are you sure you want to delete this expense?')) {
+      try {
+        await expenseService.delete(id);
+        // Reload expenses
+        const data = await expenseService.getAll();
+        const filteredData = data.filter((expense: any) => 
+          expense.category === category && expense.company === selectedCompany
+        );
+        setExpenses(filteredData);
+      } catch (error) {
+        console.error('Failed to delete expense:', error);
+      }
+    }
   };
 
   const handleSort = (field: keyof Expense) => {

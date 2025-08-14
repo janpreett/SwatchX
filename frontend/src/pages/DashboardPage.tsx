@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { 
   Container, 
   Text, 
@@ -17,6 +18,7 @@ import { useNavigate } from 'react-router-dom';
 import { IconPlus, IconTable, IconSettings, IconArrowLeft } from '@tabler/icons-react';
 import { Layout } from '../components/Layout';
 import { useCompany } from '../hooks/useCompany';
+import { expenseService } from '../services/api';
 
 const expenseCategories = [
   { key: 'truck', label: 'Truck', color: 'blue', icon: '🚛' },
@@ -34,6 +36,32 @@ const expenseCategories = [
 export function DashboardPage() {
   const navigate = useNavigate();
   const { selectedCompany, clearSelectedCompany } = useCompany();
+  const [recentExpenses, setRecentExpenses] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadRecentExpenses = async () => {
+      if (!selectedCompany) return;
+      
+      try {
+        setLoading(true);
+        const expenses = await expenseService.getAll();
+        // Filter by company and get the 5 most recent
+        const companyExpenses = expenses
+          .filter((expense: any) => expense.company === selectedCompany)
+          .sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime())
+          .slice(0, 5);
+        setRecentExpenses(companyExpenses);
+      } catch (error) {
+        console.error('Failed to load recent expenses:', error);
+        setRecentExpenses([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadRecentExpenses();
+  }, [selectedCompany]);
 
   if (!selectedCompany) {
     // Redirect back to home if no company is selected
@@ -139,8 +167,21 @@ export function DashboardPage() {
                   <Card shadow="sm" padding="lg" radius="md" h="100%">
                     <Stack gap="md">
                       <Group justify="space-between">
-                        <Box>
-                          <Text size="2rem">{category.icon}</Text>
+                        <Box
+                          w={40}
+                          h={40}
+                          bg={category.color + '.1'}
+                          style={{
+                            borderRadius: '8px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            border: `2px solid var(--mantine-color-${category.color}-3)`
+                          }}
+                        >
+                          <Text fw={600} size="sm" c={category.color + '.7'}>
+                            {category.label.charAt(0).toUpperCase()}
+                          </Text>
                         </Box>
                         <Badge color={category.color} variant="light" size="sm">
                           $0.00
@@ -182,19 +223,42 @@ export function DashboardPage() {
           <Box>
             <Text size="xl" fw={600} mb="lg">Recent Activity</Text>
             <Card shadow="sm" padding="xl" radius="md">
-              <Stack align="center" gap="md" py="xl">
-                <Text size="lg" c="dimmed">No recent expenses</Text>
-                <Text size="sm" c="dimmed" ta="center">
-                  Start adding expenses to see recent activity here
-                </Text>
-                <Button 
-                  variant="light" 
-                  color={selectedCompany === 'Swatch' ? 'blue' : 'cyan'}
-                  leftSection={<IconPlus size={16} />}
-                >
-                  Add First Expense
-                </Button>
-              </Stack>
+              {loading ? (
+                <Stack align="center" gap="md" py="xl">
+                  <Text size="lg" c="dimmed">Loading recent expenses...</Text>
+                </Stack>
+              ) : recentExpenses.length === 0 ? (
+                <Stack align="center" gap="md" py="xl">
+                  <Text size="lg" c="dimmed">No recent expenses</Text>
+                  <Text size="sm" c="dimmed" ta="center">
+                    Start adding expenses to see recent activity here
+                  </Text>
+                  <Button 
+                    variant="light" 
+                    color={selectedCompany === 'Swatch' ? 'blue' : 'cyan'}
+                    leftSection={<IconPlus size={16} />}
+                    onClick={() => navigate('/dashboard')}
+                  >
+                    Add First Expense
+                  </Button>
+                </Stack>
+              ) : (
+                <Stack gap="sm">
+                  {recentExpenses.map((expense: any, index: number) => (
+                    <Group key={expense.id || index} justify="space-between" p="md" bg="gray.0" style={{ borderRadius: 8 }}>
+                      <Box>
+                        <Text fw={600}>{expense.category?.charAt(0).toUpperCase() + expense.category?.slice(1) || 'Expense'}</Text>
+                        <Text size="sm" c="dimmed">
+                          {new Date(expense.date).toLocaleDateString()} • {expense.description || 'No description'}
+                        </Text>
+                      </Box>
+                      <Badge color="green" variant="light">
+                        ${Number(expense.cost || 0).toFixed(2)}
+                      </Badge>
+                    </Group>
+                  ))}
+                </Stack>
+              )}
             </Card>
           </Box>
         </Stack>

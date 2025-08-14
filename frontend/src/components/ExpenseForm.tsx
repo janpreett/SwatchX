@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Container,
   Card,
@@ -21,6 +21,7 @@ import { useNavigate } from 'react-router-dom';
 import { IconArrowLeft, IconAlertCircle, IconCheck, IconCalendar } from '@tabler/icons-react';
 import { Layout } from '../components/Layout';
 import { useCompany } from '../hooks/useCompany';
+import { managementService } from '../services/api';
 
 interface ExpenseFormData {
   date: Date | null;
@@ -101,9 +102,38 @@ export function ExpenseForm({ category, categoryLabel, onSubmit }: ExpenseFormPr
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  
+  // Management data state
+  const [businessUnits, setBusinessUnits] = useState<Array<{value: string, label: string}>>([]);
+  const [trucks, setTrucks] = useState<Array<{value: string, label: string}>>([]);
+  const [trailers, setTrailers] = useState<Array<{value: string, label: string}>>([]);
+  const [fuelStations, setFuelStations] = useState<Array<{value: string, label: string}>>([]);
 
   const config = categoryConfigs[category as keyof typeof categoryConfigs];
   const requiredFields = config?.fields || ['date', 'cost'] as FieldType[];
+
+  // Load management data on component mount
+  useEffect(() => {
+    const loadManagementData = async () => {
+      try {
+        const [businessUnitsData, trucksData, trailersData, fuelStationsData] = await Promise.all([
+          managementService.getBusinessUnits(),
+          managementService.getTrucks(),
+          managementService.getTrailers(),
+          managementService.getFuelStations(),
+        ]);
+
+        setBusinessUnits(businessUnitsData.map((item: any) => ({ value: item.id.toString(), label: item.name })));
+        setTrucks(trucksData.map((item: any) => ({ value: item.id.toString(), label: item.number })));
+        setTrailers(trailersData.map((item: any) => ({ value: item.id.toString(), label: item.number })));
+        setFuelStations(fuelStationsData.map((item: any) => ({ value: item.id.toString(), label: item.name })));
+      } catch (error) {
+        console.error('Failed to load management data:', error);
+      }
+    };
+
+    loadManagementData();
+  }, []);
 
   const form = useForm<ExpenseFormData>({
     initialValues: {
@@ -239,10 +269,7 @@ export function ExpenseForm({ category, categoryLabel, onSubmit }: ExpenseFormPr
               <IconArrowLeft size={18} />
             </ActionIcon>
             <Box>
-              <Group gap="sm">
-                <Text size="2rem">{config?.icon}</Text>
-                <Title order={1}>Add {categoryLabel}</Title>
-              </Group>
+              <Title order={1}>Add {categoryLabel}</Title>
               <Text c="dimmed">
                 {selectedCompany} • New expense entry
               </Text>
@@ -275,7 +302,7 @@ export function ExpenseForm({ category, categoryLabel, onSubmit }: ExpenseFormPr
                     label="Business Unit"
                     placeholder="Select business unit"
                     required
-                    data={[]} // TODO: Load from API
+                    data={businessUnits}
                     {...form.getInputProps('businessUnitId')}
                   />
                 )}
@@ -286,7 +313,7 @@ export function ExpenseForm({ category, categoryLabel, onSubmit }: ExpenseFormPr
                     label="Truck Number"
                     placeholder="Select truck"
                     required
-                    data={[]} // TODO: Load from API
+                    data={trucks}
                     {...form.getInputProps('truckId')}
                   />
                 )}
@@ -297,7 +324,7 @@ export function ExpenseForm({ category, categoryLabel, onSubmit }: ExpenseFormPr
                     label="Trailer Number"
                     placeholder="Select trailer"
                     required
-                    data={[]} // TODO: Load from API
+                    data={trailers}
                     {...form.getInputProps('trailerId')}
                   />
                 )}
@@ -308,7 +335,7 @@ export function ExpenseForm({ category, categoryLabel, onSubmit }: ExpenseFormPr
                     label="Fuel Station"
                     placeholder="Select fuel station"
                     required
-                    data={[]} // TODO: Load from API
+                    data={fuelStations}
                     {...form.getInputProps('fuelStationId')}
                   />
                 )}
