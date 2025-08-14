@@ -176,14 +176,14 @@ export function DashboardPage() {
               shadow="sm" 
               padding="xl" 
               radius="md" 
-              bg="dark"
+              bg="gray.0"
               style={{ 
                 cursor: 'pointer',
                 transition: 'all 0.2s ease',
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.transform = 'translateY(-4px)';
-                e.currentTarget.style.boxShadow = '0 12px 28px rgba(0, 0, 0, 0.25)';
+                e.currentTarget.style.transform = 'translateY(-2px)';
+                e.currentTarget.style.boxShadow = '0 8px 24px rgba(0, 0, 0, 0.12)';
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.transform = 'translateY(0)';
@@ -192,8 +192,8 @@ export function DashboardPage() {
             >
               <Stack gap="sm">
                 <Text size="md" c="dimmed" fw={500}>Total Expenses</Text>
-                <Text size="3xl" fw={700} c="blue.4">${totals.thisMonth.toFixed(2)}</Text>
-                <Text size="sm" c="green.4" fw={500}>This month</Text>
+                <Text size="3xl" fw={700} c="blue">${totals.thisMonth.toFixed(2)}</Text>
+                <Text size="sm" c="green" fw={500}>This month</Text>
               </Stack>
             </Card>
             
@@ -201,14 +201,14 @@ export function DashboardPage() {
               shadow="sm" 
               padding="xl" 
               radius="md" 
-              bg="dark"
+              bg="gray.0"
               style={{ 
                 cursor: 'pointer',
                 transition: 'all 0.2s ease',
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.transform = 'translateY(-4px)';
-                e.currentTarget.style.boxShadow = '0 12px 28px rgba(0, 0, 0, 0.25)';
+                e.currentTarget.style.transform = 'translateY(-2px)';
+                e.currentTarget.style.boxShadow = '0 8px 24px rgba(0, 0, 0, 0.12)';
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.transform = 'translateY(0)';
@@ -217,7 +217,7 @@ export function DashboardPage() {
             >
               <Stack gap="sm">
                 <Text size="md" c="dimmed" fw={500}>Fuel Costs</Text>
-                <Text size="3xl" fw={700} c="teal.4">${totals.fuel.toFixed(2)}</Text>
+                <Text size="3xl" fw={700} c="teal">${totals.fuel.toFixed(2)}</Text>
                 <Text size="sm" c="dimmed" fw={500}>Diesel & DEF</Text>
               </Stack>
             </Card>
@@ -226,14 +226,14 @@ export function DashboardPage() {
               shadow="sm" 
               padding="xl" 
               radius="md" 
-              bg="dark"
+              bg="gray.0"
               style={{ 
                 cursor: 'pointer',
                 transition: 'all 0.2s ease',
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.transform = 'translateY(-4px)';
-                e.currentTarget.style.boxShadow = '0 12px 28px rgba(0, 0, 0, 0.25)';
+                e.currentTarget.style.transform = 'translateY(-2px)';
+                e.currentTarget.style.boxShadow = '0 8px 24px rgba(0, 0, 0, 0.12)';
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.transform = 'translateY(0)';
@@ -242,7 +242,7 @@ export function DashboardPage() {
             >
               <Stack gap="sm">
                 <Text size="md" c="dimmed" fw={500}>Vehicle Repairs</Text>
-                <Text size="3xl" fw={700} c="orange.4">${totals.repairs.toFixed(2)}</Text>
+                <Text size="3xl" fw={700} c="orange">${totals.repairs.toFixed(2)}</Text>
                 <Text size="sm" c="dimmed" fw={500}>Trucks & Trailers</Text>
               </Stack>
             </Card>
@@ -251,14 +251,14 @@ export function DashboardPage() {
               shadow="sm" 
               padding="xl" 
               radius="md" 
-              bg="dark"
+              bg="gray.0"
               style={{ 
                 cursor: 'pointer',
                 transition: 'all 0.2s ease',
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.transform = 'translateY(-4px)';
-                e.currentTarget.style.boxShadow = '0 12px 28px rgba(0, 0, 0, 0.25)';
+                e.currentTarget.style.transform = 'translateY(-2px)';
+                e.currentTarget.style.boxShadow = '0 8px 24px rgba(0, 0, 0, 0.12)';
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.transform = 'translateY(0)';
@@ -267,7 +267,7 @@ export function DashboardPage() {
             >
               <Stack gap="sm">
                 <Text size="md" c="dimmed" fw={500}>All Time Total</Text>
-                <Text size="3xl" fw={700} c="grape.4">${totals.total.toFixed(2)}</Text>
+                <Text size="3xl" fw={700} c="grape">${totals.total.toFixed(2)}</Text>
                 <Text size="sm" c="dimmed" fw={500}>All categories</Text>
               </Stack>
             </Card>
