@@ -96,7 +96,7 @@ export function SignupPage() {
     >
       <Container size="xs" w="100%">
         <Stack align="center" gap="xl">
-          {/* Brand Logo - Mobile */}
+          {/* Brand Logo */}
           <Text 
             size="2.5rem"
             fw={700}
@@ -108,7 +108,6 @@ export function SignupPage() {
             SwatchX
           </Text>
           
-          {/* Brand Logo - Desktop */}
           <Text 
             size="3rem"
             fw={700}
@@ -133,9 +132,9 @@ export function SignupPage() {
               {success ? (
                 // Success state
                 <Stack gap="lg" align="center" ta="center">
-                  <div style={{ fontSize: '3rem', color: 'var(--mantine-color-green-6)' }}>
+                  <Text size="3rem" c="green.6" fw={700}>
                     ✓
-                  </div>
+                  </Text>
                   <Stack gap="xs">
                     <Title order={2} fw={600} c="green">
                       Account Created Successfully!
@@ -152,9 +151,6 @@ export function SignupPage() {
                     <Title order={2} fw={600}>
                       Create Account
                     </Title>
-                    <Text size="sm" c="dimmed">
-                      Join SwatchX today
-                    </Text>
                   </Stack>
 
                   {error && (
@@ -172,7 +168,7 @@ export function SignupPage() {
                     <Stack gap="md">
                       <TextInput
                         label="Email"
-                        placeholder="your@email.com"
+                        placeholder="Enter your email"
                         leftSection={<IconMail size="1rem" />}
                         size="md"
                         radius="md"
@@ -182,7 +178,7 @@ export function SignupPage() {
 
                       <PasswordInput
                         label="Password"
-                        placeholder="Create password"
+                        placeholder="Choose a password"
                         leftSection={<IconLock size="1rem" />}
                         size="md"
                         radius="md"
@@ -192,7 +188,7 @@ export function SignupPage() {
 
                       <PasswordInput
                         label="Confirm Password"
-                        placeholder="Confirm password"
+                        placeholder="Confirm your password"
                         leftSection={<IconLock size="1rem" />}
                         size="md"
                         radius="md"
@@ -200,17 +196,17 @@ export function SignupPage() {
                         {...form.getInputProps('confirmPassword')}
                       />
 
-                      {/* THIS IS THE TERMS & PRIVACY CHECKBOX - THE FEATURE YOU'RE LOOKING FOR */}
+                      {/* Terms and Privacy checkbox */}
                       <Checkbox
                         mt="sm"
                         label={
                           <Text size="sm">
                             I agree to the{' '}
-                            <Anchor href="#" size="sm" c="blue" fw={500}>
+                            <Anchor href="#" size="sm" c="blue">
                               Terms of Service
                             </Anchor>{' '}
                             and{' '}
-                            <Anchor href="#" size="sm" c="blue" fw={500}>
+                            <Anchor href="#" size="sm" c="blue">
                               Privacy Policy
                             </Anchor>
                           </Text>
