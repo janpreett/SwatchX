@@ -15,6 +15,7 @@ import {
   Flex,
   Table,
   Modal,
+  Checkbox,
 } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { IconArrowLeft, IconAlertCircle, IconPlus, IconEdit, IconTrash } from '@tabler/icons-react';
@@ -76,6 +77,7 @@ export function ManagementPage() {
   const [error, setError] = useState<string | null>(null);
   const [modalOpened, setModalOpened] = useState(false);
   const [editingItem, setEditingItem] = useState<ManagementItem | null>(null);
+  const [selectedIds, setSelectedIds] = useState<number[]>([]);
 
   const form = useForm<ManagementFormData>({
     initialValues: {

@@ -15,7 +15,8 @@ import {
   Badge,
   Alert,
   Loader,
-  Center
+  Center,
+  Checkbox
 } from '@mantine/core';
 import { DateInput } from '@mantine/dates';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -84,6 +85,7 @@ export function ExpenseTablePage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [sortField, setSortField] = useState<keyof Expense>('date');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [dateFilter, setDateFilter] = useState<{ from: Date | null; to: Date | null }>({
     from: null,
     to: null
@@ -152,6 +154,41 @@ export function ExpenseTablePage() {
       } catch (error) {
         console.error('Failed to delete expense:', error);
       }
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedIds.length === 0) return;
+    
+    if (window.confirm(`Are you sure you want to delete ${selectedIds.length} expense(s)?`)) {
+      try {
+        await Promise.all(selectedIds.map(id => expenseService.delete(id)));
+        // Reload expenses
+        const data = await expenseService.getAll();
+        const filteredData = data.filter((expense: any) => 
+          expense.category === category && expense.company === selectedCompany
+        );
+        setExpenses(filteredData);
+        setSelectedIds([]);
+      } catch (error) {
+        console.error('Failed to delete expenses:', error);
+      }
+    }
+  };
+
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedIds(filteredExpenses.map(expense => expense.id));
+    } else {
+      setSelectedIds([]);
+    }
+  };
+
+  const handleSelectExpense = (id: number, checked: boolean) => {
+    if (checked) {
+      setSelectedIds(prev => [...prev, id]);
+    } else {
+      setSelectedIds(prev => prev.filter(expenseId => expenseId !== id));
     }
   };
 
@@ -238,12 +275,25 @@ export function ExpenseTablePage() {
               </Box>
             </Group>
             
-            <Button
-              leftSection={<IconPlus size={16} />}
-              onClick={handleAddExpense}
-            >
-              Add Expense
-            </Button>
+            <Group gap="sm">
+              <Button
+                leftSection={<IconPlus size={16} />}
+                onClick={handleAddExpense}
+              >
+                Add Expense
+              </Button>
+              
+              {selectedIds.length > 0 && (
+                <Button
+                  variant="light"
+                  color="red"
+                  leftSection={<IconTrash size={16} />}
+                  onClick={handleBulkDelete}
+                >
+                  Delete ({selectedIds.length})
+                </Button>
+              )}
+            </Group>
           </Flex>
 
           {/* Filters */}
@@ -338,6 +388,13 @@ export function ExpenseTablePage() {
                 <Table verticalSpacing="sm" horizontalSpacing="md">
                   <Table.Thead>
                     <Table.Tr>
+                      <Table.Th w={50}>
+                        <Checkbox
+                          checked={selectedIds.length === filteredExpenses.length && filteredExpenses.length > 0}
+                          indeterminate={selectedIds.length > 0 && selectedIds.length < filteredExpenses.length}
+                          onChange={(event) => handleSelectAll(event.currentTarget.checked)}
+                        />
+                      </Table.Th>
                       <Table.Th><SortButton field="date">Date</SortButton></Table.Th>
                       <Table.Th>Details</Table.Th>
                       <Table.Th><SortButton field="cost">Cost</SortButton></Table.Th>
@@ -347,6 +404,12 @@ export function ExpenseTablePage() {
                   <Table.Tbody>
                     {filteredExpenses.map((expense) => (
                       <Table.Tr key={expense.id}>
+                        <Table.Td>
+                          <Checkbox
+                            checked={selectedIds.includes(expense.id)}
+                            onChange={(event) => handleSelectExpense(expense.id, event.currentTarget.checked)}
+                          />
+                        </Table.Td>
                         <Table.Td>
                           {new Date(expense.date).toLocaleDateString()}
                         </Table.Td>
