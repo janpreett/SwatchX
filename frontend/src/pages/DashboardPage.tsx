@@ -167,22 +167,6 @@ export function DashboardPage() {
                   <Card shadow="sm" padding="lg" radius="md" h="100%">
                     <Stack gap="md">
                       <Group justify="space-between">
-                        <Box
-                          w={40}
-                          h={40}
-                          bg={category.color + '.1'}
-                          style={{
-                            borderRadius: '8px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            border: `2px solid var(--mantine-color-${category.color}-3)`
-                          }}
-                        >
-                          <Text fw={600} size="sm" c={category.color + '.7'}>
-                            {category.label.charAt(0).toUpperCase()}
-                          </Text>
-                        </Box>
                         <Badge color={category.color} variant="light" size="sm">
                           $0.00
                         </Badge>

@@ -116,6 +116,7 @@ export function ExpenseForm({ category, categoryLabel, onSubmit }: ExpenseFormPr
   useEffect(() => {
     const loadManagementData = async () => {
       try {
+        console.log('Loading management data...');
         const [businessUnitsData, trucksData, trailersData, fuelStationsData] = await Promise.all([
           managementService.getBusinessUnits(),
           managementService.getTrucks(),
@@ -123,7 +124,12 @@ export function ExpenseForm({ category, categoryLabel, onSubmit }: ExpenseFormPr
           managementService.getFuelStations(),
         ]);
 
-        setBusinessUnits(businessUnitsData.map((item: any) => ({ value: item.id.toString(), label: item.name })));
+        console.log('Business Units:', businessUnitsData);
+        console.log('Trucks:', trucksData);
+        console.log('Trailers:', trailersData);
+        console.log('Fuel Stations:', fuelStationsData);
+
+        setBusinessUnits(businessUnitsData.map((item: any) => ({ value: item.id.toString(), label: item.name || item.number })));
         setTrucks(trucksData.map((item: any) => ({ value: item.id.toString(), label: item.number })));
         setTrailers(trailersData.map((item: any) => ({ value: item.id.toString(), label: item.number })));
         setFuelStations(fuelStationsData.map((item: any) => ({ value: item.id.toString(), label: item.name })));
