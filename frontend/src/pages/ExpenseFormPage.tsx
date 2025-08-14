@@ -1,7 +1,7 @@
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { ExpenseForm } from '../components/ExpenseForm';
-import { expenseService } from '../services/auth';
+import { expenseService } from '../services/api';
 import { useCompany } from '../hooks/useCompany';
 
 interface ExpenseFormData {

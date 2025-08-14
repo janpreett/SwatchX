@@ -133,6 +133,24 @@ def update_business_unit(
     db.refresh(db_business_unit)
     return db_business_unit
 
+@router.delete("/business-units/{business_unit_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_business_unit(
+    business_unit_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    business_unit = db.query(BusinessUnit).filter(BusinessUnit.id == business_unit_id).first()
+    if not business_unit:
+        raise HTTPException(status_code=404, detail="Business unit not found")
+    
+    # Check if any expenses use this business unit
+    expense_count = db.query(Expense).filter(Expense.business_unit_id == business_unit_id).count()
+    if expense_count > 0:
+        raise HTTPException(status_code=400, detail=f"Cannot delete business unit: {expense_count} expense(s) reference it")
+    
+    db.delete(business_unit)
+    db.commit()
+
 # Truck endpoints
 @router.post("/trucks/", response_model=TruckSchema, status_code=status.HTTP_201_CREATED)
 def create_truck(
@@ -173,6 +191,24 @@ def update_truck(
     db.commit()
     db.refresh(db_truck)
     return db_truck
+
+@router.delete("/trucks/{truck_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_truck(
+    truck_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    truck = db.query(Truck).filter(Truck.id == truck_id).first()
+    if not truck:
+        raise HTTPException(status_code=404, detail="Truck not found")
+    
+    # Check if any expenses use this truck
+    expense_count = db.query(Expense).filter(Expense.truck_id == truck_id).count()
+    if expense_count > 0:
+        raise HTTPException(status_code=400, detail=f"Cannot delete truck: {expense_count} expense(s) reference it")
+    
+    db.delete(truck)
+    db.commit()
 
 # Trailer endpoints
 @router.post("/trailers/", response_model=TrailerSchema, status_code=status.HTTP_201_CREATED)
@@ -215,6 +251,24 @@ def update_trailer(
     db.refresh(db_trailer)
     return db_trailer
 
+@router.delete("/trailers/{trailer_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_trailer(
+    trailer_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    trailer = db.query(Trailer).filter(Trailer.id == trailer_id).first()
+    if not trailer:
+        raise HTTPException(status_code=404, detail="Trailer not found")
+    
+    # Check if any expenses use this trailer
+    expense_count = db.query(Expense).filter(Expense.trailer_id == trailer_id).count()
+    if expense_count > 0:
+        raise HTTPException(status_code=400, detail=f"Cannot delete trailer: {expense_count} expense(s) reference it")
+    
+    db.delete(trailer)
+    db.commit()
+
 # Fuel Station endpoints
 @router.post("/fuel-stations/", response_model=FuelStationSchema, status_code=status.HTTP_201_CREATED)
 def create_fuel_station(
@@ -255,3 +309,21 @@ def update_fuel_station(
     db.commit()
     db.refresh(db_fuel_station)
     return db_fuel_station
+
+@router.delete("/fuel-stations/{fuel_station_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_fuel_station(
+    fuel_station_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    fuel_station = db.query(FuelStation).filter(FuelStation.id == fuel_station_id).first()
+    if not fuel_station:
+        raise HTTPException(status_code=404, detail="Fuel station not found")
+    
+    # Check if any expenses use this fuel station
+    expense_count = db.query(Expense).filter(Expense.fuel_station_id == fuel_station_id).count()
+    if expense_count > 0:
+        raise HTTPException(status_code=400, detail=f"Cannot delete fuel station: {expense_count} expense(s) reference it")
+    
+    db.delete(fuel_station)
+    db.commit()

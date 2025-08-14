@@ -19,7 +19,7 @@ import {
 import { useForm } from '@mantine/form';
 import { IconArrowLeft, IconAlertCircle, IconPlus, IconEdit, IconTrash } from '@tabler/icons-react';
 import { Layout } from '../components/Layout';
-import { managementService } from '../services/auth';
+import { managementService } from '../services/api';
 
 interface ManagementItem {
   id: number;
@@ -205,11 +205,26 @@ export function ManagementPage() {
 
   const handleDelete = async (item: ManagementItem) => {
     if (confirm(`Are you sure you want to delete this ${config.singular.toLowerCase()}?`)) {
-      // TODO: Implement API call to delete item
-      console.log('Deleting item:', item);
-      
-      // Mock delete
-      setItems(prev => prev.filter(i => i.id !== item.id));
+      try {
+        if (type === 'business-units') {
+          await managementService.deleteBusinessUnit(item.id);
+        } else if (type === 'trucks') {
+          await managementService.deleteTruck(item.id);
+        } else if (type === 'trailers') {
+          await managementService.deleteTrailer(item.id);
+        } else if (type === 'fuel-stations') {
+          await managementService.deleteFuelStation(item.id);
+        }
+        
+        // Remove from local state
+        setItems(prev => prev.filter(i => i.id !== item.id));
+      } catch (error: any) {
+        if (error.message.includes('expense(s) reference it')) {
+          setError(`Cannot delete this ${config.singular.toLowerCase()}: it is being used by existing expenses. Please remove those expenses first.`);
+        } else {
+          setError(`Failed to delete ${config.singular.toLowerCase()}: ${error.message}`);
+        }
+      }
     }
   };
 

@@ -18,7 +18,7 @@ import { useNavigate } from 'react-router-dom';
 import { IconPlus, IconTable, IconSettings, IconArrowLeft } from '@tabler/icons-react';
 import { Layout } from '../components/Layout';
 import { useCompany } from '../hooks/useCompany';
-import { expenseService } from '../services/auth';
+import { expenseService } from '../services/api';
 
 const expenseCategories = [
   { key: 'truck', label: 'Truck', color: 'blue', icon: '🚛' },
@@ -38,6 +38,13 @@ export function DashboardPage() {
   const { selectedCompany, clearSelectedCompany } = useCompany();
   const [recentExpenses, setRecentExpenses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [totals, setTotals] = useState({
+    total: 0,
+    fuel: 0,
+    repairs: 0,
+    thisMonth: 0,
+    categoryTotals: {} as Record<string, number>
+  });
 
   useEffect(() => {    
     const loadRecentExpenses = async () => {
@@ -46,10 +53,47 @@ export function DashboardPage() {
         const expenses = await expenseService.getAll();
         // Filter by company and get the 5 most recent
         const companyExpenses = expenses
-          .filter((expense: any) => expense.company === selectedCompany)
+          .filter((expense: any) => expense.company === selectedCompany);
+        
+        const recentExpenses = companyExpenses
           .sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime())
           .slice(0, 5);
-        setRecentExpenses(companyExpenses);
+        setRecentExpenses(recentExpenses);
+
+        // Calculate totals
+        const now = new Date();
+        const currentMonth = now.getMonth();
+        const currentYear = now.getFullYear();
+        
+        const total = companyExpenses.reduce((sum: number, expense: any) => sum + Number(expense.cost || 0), 0);
+        const fuel = companyExpenses
+          .filter((expense: any) => ['fuel-diesel', 'def'].includes(expense.category))
+          .reduce((sum: number, expense: any) => sum + Number(expense.cost || 0), 0);
+        const repairs = companyExpenses
+          .filter((expense: any) => ['truck', 'trailer', 'parts'].includes(expense.category))
+          .reduce((sum: number, expense: any) => sum + Number(expense.cost || 0), 0);
+        const thisMonth = companyExpenses
+          .filter((expense: any) => {
+            const expenseDate = new Date(expense.date);
+            return expenseDate.getMonth() === currentMonth && expenseDate.getFullYear() === currentYear;
+          })
+          .reduce((sum: number, expense: any) => sum + Number(expense.cost || 0), 0);
+        
+        // Calculate category totals
+        const categoryTotals: Record<string, number> = {};
+        expenseCategories.forEach(category => {
+          categoryTotals[category.key] = companyExpenses
+            .filter((expense: any) => expense.category === category.key)
+            .reduce((sum: number, expense: any) => sum + Number(expense.cost || 0), 0);
+        });
+
+        setTotals({
+          total,
+          fuel,
+          repairs,
+          thisMonth,
+          categoryTotals
+        });
       } catch (error) {
         console.error('Failed to load recent expenses:', error);
         setRecentExpenses([]);
@@ -128,7 +172,7 @@ export function DashboardPage() {
             <Paper p="lg" radius="md" shadow="sm">
               <Stack gap="xs">
                 <Text size="sm" c="dimmed" fw={500}>Total Expenses</Text>
-                <Text size="2xl" fw={700} c="blue">$0.00</Text>
+                <Text size="2xl" fw={700} c="blue">${totals.thisMonth.toFixed(2)}</Text>
                 <Text size="xs" c="green">This month</Text>
               </Stack>
             </Paper>
@@ -136,7 +180,7 @@ export function DashboardPage() {
             <Paper p="lg" radius="md" shadow="sm">
               <Stack gap="xs">
                 <Text size="sm" c="dimmed" fw={500}>Fuel Costs</Text>
-                <Text size="2xl" fw={700} c="teal">$0.00</Text>
+                <Text size="2xl" fw={700} c="teal">${totals.fuel.toFixed(2)}</Text>
                 <Text size="xs" c="dimmed">Diesel & DEF</Text>
               </Stack>
             </Paper>
@@ -144,16 +188,16 @@ export function DashboardPage() {
             <Paper p="lg" radius="md" shadow="sm">
               <Stack gap="xs">
                 <Text size="sm" c="dimmed" fw={500}>Vehicle Repairs</Text>
-                <Text size="2xl" fw={700} c="orange">$0.00</Text>
+                <Text size="2xl" fw={700} c="orange">${totals.repairs.toFixed(2)}</Text>
                 <Text size="xs" c="dimmed">Trucks & Trailers</Text>
               </Stack>
             </Paper>
             
             <Paper p="lg" radius="md" shadow="sm">
               <Stack gap="xs">
-                <Text size="sm" c="dimmed" fw={500}>Recent Entries</Text>
-                <Text size="2xl" fw={700} c="grape">0</Text>
-                <Text size="xs" c="dimmed">Last 7 days</Text>
+                <Text size="sm" c="dimmed" fw={500}>All Time Total</Text>
+                <Text size="2xl" fw={700} c="grape">${totals.total.toFixed(2)}</Text>
+                <Text size="xs" c="dimmed">All categories</Text>
               </Stack>
             </Paper>
           </SimpleGrid>
@@ -171,7 +215,7 @@ export function DashboardPage() {
                           {category.icon}
                         </Text>
                         <Badge color={category.color} variant="light" size="sm">
-                          $0.00
+                          ${(totals.categoryTotals[category.key] || 0).toFixed(2)}
                         </Badge>
                       </Group>
                       

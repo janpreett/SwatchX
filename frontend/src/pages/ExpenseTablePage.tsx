@@ -31,7 +31,7 @@ import {
 } from '@tabler/icons-react';
 import { Layout } from '../components/Layout';
 import { useCompany } from '../hooks/useCompany';
-import { expenseService } from '../services/auth';
+import { expenseService } from '../services/api';
 
 interface Expense {
   id: number;
