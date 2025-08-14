@@ -242,16 +242,39 @@ export function ExpenseTablePage() {
         expense.fuelStation?.name.toLowerCase().includes(searchTerm.toLowerCase());
 
       const matchesDateFilter = (() => {
-        if (!dateFilter.from && !dateFilter.to) return true;
-        
-        const expenseDate = new Date(expense.date);
-        // Normalize dates to midnight for accurate comparison
-        const normalizedExpenseDate = new Date(expenseDate.getFullYear(), expenseDate.getMonth(), expenseDate.getDate());
-        
-        const fromMatch = !dateFilter.from || normalizedExpenseDate >= new Date(dateFilter.from.getFullYear(), dateFilter.from.getMonth(), dateFilter.from.getDate());
-        const toMatch = !dateFilter.to || normalizedExpenseDate <= new Date(dateFilter.to.getFullYear(), dateFilter.to.getMonth(), dateFilter.to.getDate());
-        
-        return fromMatch && toMatch;
+        try {
+          if (!dateFilter.from && !dateFilter.to) return true;
+          
+          const expenseDate = new Date(expense.date);
+          if (isNaN(expenseDate.getTime())) return true; // Invalid expense date, show it
+          
+          // Normalize dates to midnight for accurate comparison
+          const normalizedExpenseDate = new Date(expenseDate.getFullYear(), expenseDate.getMonth(), expenseDate.getDate());
+          
+          let fromMatch = true;
+          let toMatch = true;
+          
+          if (dateFilter.from) {
+            const fromDate = dateFilter.from instanceof Date ? dateFilter.from : new Date(dateFilter.from);
+            if (!isNaN(fromDate.getTime())) {
+              const normalizedFromDate = new Date(fromDate.getFullYear(), fromDate.getMonth(), fromDate.getDate());
+              fromMatch = normalizedExpenseDate >= normalizedFromDate;
+            }
+          }
+          
+          if (dateFilter.to) {
+            const toDate = dateFilter.to instanceof Date ? dateFilter.to : new Date(dateFilter.to);
+            if (!isNaN(toDate.getTime())) {
+              const normalizedToDate = new Date(toDate.getFullYear(), toDate.getMonth(), toDate.getDate());
+              toMatch = normalizedExpenseDate <= normalizedToDate;
+            }
+          }
+          
+          return fromMatch && toMatch;
+        } catch (error) {
+          console.warn('Date filter error:', error);
+          return true; // Show the item if there's an error
+        }
       })();
 
       return matchesSearch && matchesDateFilter;
