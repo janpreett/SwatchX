@@ -14,70 +14,70 @@ export const EXPENSE_CATEGORIES: ExpenseCategoryConfig[] = [
     key: 'truck',
     label: 'Truck',
     color: 'blue.6',
-    icon: '🚛',
+    icon: '',
     fields: ['date', 'serviceProviderId', 'truckId', 'description', 'price']
   },
   {
     key: 'trailer',
     label: 'Trailer',
     color: 'teal.6',
-    icon: '🚚',
+    icon: '',
     fields: ['date', 'serviceProviderId', 'trailerId', 'description', 'price']
   },
   {
     key: 'fuel-diesel',
     label: 'Fuel (Diesel)',
     color: 'cyan.6',
-    icon: '⛽',
+    icon: '',
     fields: ['date', 'fuelStationId', 'gallons', 'price']
   },
   {
     key: 'dmv',
     label: 'DMV',
     color: 'orange.6',
-    icon: '🏛️',
+    icon: '',
     fields: ['date', 'description', 'price']
   },
   {
     key: 'parts',
     label: 'Parts',
     color: 'red.6',
-    icon: '🔧',
+    icon: '',
     fields: ['date', 'description', 'price']
   },
   {
     key: 'phone-tracker',
     label: 'Phone Tracker',
     color: 'violet.6',
-    icon: '📱',
+    icon: '',
     fields: ['date', 'description', 'price']
   },
   {
     key: 'other-expenses',
     label: 'Other Expenses',
     color: 'gray.7',
-    icon: '💼',
+    icon: '',
     fields: ['date', 'description', 'price']
   },
   {
     key: 'toll',
     label: 'Toll',
     color: 'lime.7',
-    icon: '🛣️',
+    icon: '',
     fields: ['date', 'price']
   },
   {
     key: 'office-supplies',
     label: 'Office Supplies',
     color: 'pink.6',
-    icon: '📋',
+    icon: '',
     fields: ['date', 'description', 'price']
   },
   {
     key: 'def',
     label: 'DEF',
     color: 'indigo.6',
-    icon: '🛢️',
+    icon: '',
     fields: ['date', 'price']
   }
 ];
@@ -102,7 +102,7 @@ export const getCategoryColor = (key: string): string => {
 // Helper function to get category icon
 export const getCategoryIcon = (key: string): string => {
   const config = getCategoryConfig(key);
-  return config?.icon || '💼';
+  return config?.icon || '';
 };
 
 // Create a map for quick lookups

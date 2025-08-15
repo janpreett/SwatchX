@@ -244,7 +244,6 @@ export function ExpenseForm({ category, categoryLabel, onSubmit, initialData, is
               <IconArrowLeft size={18} />
             </ActionIcon>
             <Group gap="md">
-              {config?.icon && <Text size="3xl" lh={1}>{config.icon}</Text>}
               <Box>
                 <Title order={1} c={config?.color || 'blue'}>
                   {isEditing ? 'Edit' : 'Add'} {categoryLabel}
