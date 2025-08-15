@@ -7,9 +7,18 @@ import {
   Text,
   Group,
   Box,
+  Button,
+  Stack,
+  Divider,
+  LoadingOverlay,
+  Flex,
 } from '@mantine/core';
-import { IconArrowLeft } from '@tabler/icons-react';
+import { IconArrowLeft, IconDownload } from '@tabler/icons-react';
+import { useState } from 'react';
+import { notifications } from '@mantine/notifications';
 import { Layout } from '../components/Layout';
+import { useCompany } from '../hooks/useCompany';
+import { managementService } from '../services/api';
 
 const managementOptions = [
   {
@@ -44,6 +53,8 @@ const managementOptions = [
 
 export function ManagementIndexPage() {
   const navigate = useNavigate();
+  const { selectedCompany } = useCompany();
+  const [exportLoading, setExportLoading] = useState(false);
 
   const handleBack = () => {
     navigate('/dashboard');
@@ -51,6 +62,54 @@ export function ManagementIndexPage() {
 
   const handleSelectManagement = (type: string) => {
     navigate(`/management/${type}`);
+  };
+
+  const handleExportData = async () => {
+    if (!selectedCompany) {
+      notifications.show({
+        title: 'Error',
+        message: 'No company selected',
+        color: 'red',
+      });
+      return;
+    }
+
+    setExportLoading(true);
+    try {
+      const blob = await managementService.exportCompanyData(selectedCompany);
+      
+      // Create download link
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      
+      // Generate filename
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
+      link.download = `${selectedCompany}_Expenses_Export_${timestamp}.xlsx`;
+      
+      // Trigger download
+      document.body.appendChild(link);
+      link.click();
+      
+      // Cleanup
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      
+      notifications.show({
+        title: 'Success!',
+        message: 'Data exported successfully',
+        color: 'green',
+      });
+    } catch (error) {
+      console.error('Export failed:', error);
+      notifications.show({
+        title: 'Export Failed',
+        message: 'Failed to export data. Please try again.',
+        color: 'red',
+      });
+    } finally {
+      setExportLoading(false);
+    }
   };
 
   return (
@@ -102,7 +161,54 @@ export function ManagementIndexPage() {
             </Grid.Col>
           ))}
         </Grid>
+
+        {/* Data Export Section */}
+        <Divider my="xl" />
+        
+        <Stack gap="lg">
+          <Group gap="md">
+            <Title order={2}>Data Export</Title>
+          </Group>
+          
+          <Text size="md" c="dimmed">
+            Export all expense data for {selectedCompany} company to Excel format
+          </Text>
+          
+          <Card shadow="sm" padding="xl" radius="md" withBorder>
+            <Stack gap="md">
+              <Flex justify="space-between" align="center" wrap="wrap" gap="md">
+                <Box>
+                  <Text fw={600} size="lg" mb="xs">
+                    Export All Company Data
+                  </Text>
+                  <Text size="sm" c="dimmed">
+                    Downloads a comprehensive Excel file containing all expense categories with proper formatting and summaries
+                  </Text>
+                </Box>
+                
+                <Button
+                  leftSection={<IconDownload size={16} />}
+                  color="green"
+                  size="md"
+                  onClick={handleExportData}
+                  loading={exportLoading}
+                >
+                  Export to Excel
+                </Button>
+              </Flex>
+              
+              <Text size="xs" c="dimmed">
+                • Includes all expense categories with separate sheets<br />
+                • Contains summary sheet with totals by category<br />
+                • Properly formatted columns with appropriate field names<br />
+                • Sorted by date (most recent first)
+              </Text>
+            </Stack>
+          </Card>
+        </Stack>
       </Container>
+      
+      <LoadingOverlay visible={exportLoading} overlayProps={{ blur: 2 }} />
     </Layout>
   );
 }

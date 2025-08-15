@@ -5,6 +5,10 @@ from typing import List, Optional
 from datetime import datetime
 import json
 import os
+import tempfile
+from openpyxl import Workbook
+from openpyxl.styles import Font, PatternFill, Alignment, NamedStyle
+from openpyxl.styles.numbers import FORMAT_CURRENCY_USD_SIMPLE
 
 from ..core.database import get_db
 from ..core.security import get_current_active_user
@@ -499,3 +503,196 @@ def delete_fuel_station(
         raise HTTPException(status_code=404, detail="Fuel station not found")
     
     check_entity_usage_and_delete(db, fuel_station, fuel_station_id, "fuel_station")
+
+@router.get("/export/{company}")
+def export_company_data(
+    company: CompanyEnum,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    """Export all expense data for a company to Excel format."""
+    try:
+        # Get all expenses for the company with relationships
+        expenses = db.query(Expense).options(
+            joinedload(Expense.business_unit),
+            joinedload(Expense.truck),
+            joinedload(Expense.trailer),
+            joinedload(Expense.fuel_station)
+        ).filter(Expense.company == company).order_by(Expense.date.desc()).all()
+
+        # Create Excel workbook
+        wb = Workbook()
+        
+        # Remove default sheet
+        wb.remove(wb.active)
+        
+        # Define expense categories and their fields
+        categories = {
+            'truck': ['Date', 'Business Unit', 'Truck Number', 'Repair Description', 'Price ($)'],
+            'trailer': ['Date', 'Business Unit', 'Trailer Number', 'Repair Description', 'Price ($)'],
+            'dmv': ['Date', 'Description', 'Price ($)'],
+            'parts': ['Date', 'Description', 'Price ($)'],
+            'phone-tracker': ['Date', 'Description', 'Price ($)'],
+            'other-expenses': ['Date', 'Description', 'Price ($)'],
+            'toll': ['Date', 'Price ($)'],
+            'office-supplies': ['Date', 'Description', 'Price ($)'],
+            'fuel-diesel': ['Date', 'Fuel Station', 'Gallons', 'Price ($)'],
+            'def': ['Date', 'Price ($)']
+        }
+        
+        # Create a sheet for each category that has data
+        for category, fields in categories.items():
+            category_expenses = [e for e in expenses if e.category == category]
+            if not category_expenses:
+                continue
+                
+            # Create worksheet
+            ws = wb.create_sheet(title=category.replace('-', ' ').title())
+            
+            # Style for headers
+            header_font = Font(bold=True, color='FFFFFF')
+            header_fill = PatternFill(start_color='366092', end_color='366092', fill_type='solid')
+            header_alignment = Alignment(horizontal='center', vertical='center')
+            
+            # Add headers
+            for col, field in enumerate(fields, 1):
+                cell = ws.cell(row=1, column=col, value=field)
+                cell.font = header_font
+                cell.fill = header_fill
+                cell.alignment = header_alignment
+            
+            # Add data rows
+            for row, expense in enumerate(category_expenses, 2):
+                col = 1
+                
+                # Date
+                ws.cell(row=row, column=col, value=expense.date.strftime('%Y-%m-%d') if expense.date else '')
+                col += 1
+                
+                # Category specific fields
+                if category in ['truck', 'trailer']:
+                    # Business Unit
+                    ws.cell(row=row, column=col, value=expense.business_unit.name if expense.business_unit else '')
+                    col += 1
+                    
+                    # Truck/Trailer Number
+                    if category == 'truck':
+                        ws.cell(row=row, column=col, value=expense.truck.number if expense.truck else '')
+                    else:
+                        ws.cell(row=row, column=col, value=expense.trailer.number if expense.trailer else '')
+                    col += 1
+                    
+                    # Repair Description
+                    ws.cell(row=row, column=col, value=expense.repair_description or '')
+                    col += 1
+                    
+                elif category == 'fuel-diesel':
+                    # Fuel Station
+                    ws.cell(row=row, column=col, value=expense.fuel_station.name if expense.fuel_station else '')
+                    col += 1
+                    
+                    # Gallons
+                    ws.cell(row=row, column=col, value=expense.gallons or '')
+                    col += 1
+                    
+                elif category not in ['toll', 'def']:
+                    # Description for categories that have it
+                    ws.cell(row=row, column=col, value=expense.description or '')
+                    col += 1
+                
+                # Price (always last column) - format as currency
+                cost_cell = ws.cell(row=row, column=col, value=float(expense.cost) if expense.cost else 0)
+                cost_cell.number_format = '"$"#,##0.00'
+            
+            # Auto-adjust column widths
+            for column in ws.columns:
+                max_length = 0
+                column_letter = column[0].column_letter
+                for cell in column:
+                    try:
+                        if len(str(cell.value)) > max_length:
+                            max_length = len(str(cell.value))
+                    except:
+                        pass
+                adjusted_width = min(max_length + 2, 30)
+                ws.column_dimensions[column_letter].width = adjusted_width
+        
+        # Create summary sheet
+        if expenses:
+            summary_ws = wb.create_sheet(title='Summary', index=0)
+            
+            # Headers
+            summary_ws.cell(row=1, column=1, value='Category').font = header_font
+            summary_ws.cell(row=1, column=1).fill = header_fill
+            summary_ws.cell(row=1, column=2, value='Total Expenses').font = header_font
+            summary_ws.cell(row=1, column=2).fill = header_fill
+            summary_ws.cell(row=1, column=3, value='Total Price ($)').font = header_font
+            summary_ws.cell(row=1, column=3).fill = header_fill
+            
+            # Calculate summary data
+            category_totals = {}
+            for expense in expenses:
+                category = expense.category
+                if category not in category_totals:
+                    category_totals[category] = {'count': 0, 'total': 0}
+                category_totals[category]['count'] += 1
+                category_totals[category]['total'] += float(expense.cost) if expense.cost else 0
+            
+            # Add summary data
+            row = 2
+            grand_total = 0
+            total_expenses = 0
+            for category, data in category_totals.items():
+                summary_ws.cell(row=row, column=1, value=category.replace('-', ' ').title())
+                summary_ws.cell(row=row, column=2, value=data['count'])
+                total_cell = summary_ws.cell(row=row, column=3, value=data['total'])
+                total_cell.number_format = '"$"#,##0.00'
+                grand_total += data['total']
+                total_expenses += data['count']
+                row += 1
+            
+            # Add grand total
+            row += 1
+            summary_ws.cell(row=row, column=1, value='GRAND TOTAL').font = Font(bold=True)
+            summary_ws.cell(row=row, column=2, value=total_expenses).font = Font(bold=True)
+            grand_total_cell = summary_ws.cell(row=row, column=3, value=grand_total)
+            grand_total_cell.font = Font(bold=True)
+            grand_total_cell.number_format = '"$"#,##0.00'
+            
+            # Auto-adjust column widths for summary
+            for column in summary_ws.columns:
+                max_length = 0
+                column_letter = column[0].column_letter
+                for cell in column:
+                    try:
+                        if len(str(cell.value)) > max_length:
+                            max_length = len(str(cell.value))
+                    except:
+                        pass
+                adjusted_width = min(max_length + 2, 30)
+                summary_ws.column_dimensions[column_letter].width = adjusted_width
+
+        # If no expenses, create an empty summary sheet
+        if not wb.worksheets:
+            ws = wb.create_sheet(title='No Data')
+            ws.cell(row=1, column=1, value='No expense data found for this company')
+        
+        # Save to temporary file
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.xlsx') as tmp_file:
+            wb.save(tmp_file.name)
+            tmp_file_path = tmp_file.name
+        
+        # Generate filename
+        company_name = company.value.upper()
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        filename = f"{company_name}_Expenses_Export_{timestamp}.xlsx"
+        
+        # Return file response
+        return FileResponse(
+            path=tmp_file_path,
+            filename=filename,
+            media_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        )
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Export failed: {str(e)}")

@@ -349,4 +349,29 @@ export const managementService = {
   async deleteFuelStation(id: number) {
     return apiRequest(`/api/v1/fuel-stations/${id}`, { method: 'DELETE' });
   },
+
+  // Export data
+  async exportCompanyData(company: string) {
+    const token = authService.getToken();
+    if (!token) throw new Error('No authentication token');
+
+    const response = await fetch(`${API_BASE_URL}/api/v1/export/${company}`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      let errorMessage = 'Export failed';
+      try {
+        const errorData = await response.json();
+        errorMessage = errorData.detail || `Export failed (${response.status})`;
+      } catch {
+        errorMessage = `Export failed (${response.status})`;
+      }
+      throw new Error(errorMessage);
+    }
+
+    return response.blob();
+  },
 };
