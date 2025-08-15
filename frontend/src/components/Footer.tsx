@@ -1,4 +1,5 @@
 import { Container, Group, Text, Anchor } from '@mantine/core';
+import { Link } from 'react-router-dom';
 
 export function Footer() {
   return (
@@ -10,10 +11,10 @@ export function Footer() {
           </Text>
           
           <Group gap="sm" visibleFrom="sm">
-            <Anchor size="sm" c="dimmed" href="#" underline="hover">
+            <Anchor component={Link} to="/privacy" size="sm" c="dimmed" underline="hover">
               Privacy Policy
             </Anchor>
-            <Anchor size="sm" c="dimmed" href="#" underline="hover">
+            <Anchor component={Link} to="/terms" size="sm" c="dimmed" underline="hover">
               Terms of Service
             </Anchor>
             <Anchor size="sm" c="dimmed" href="#" underline="hover">

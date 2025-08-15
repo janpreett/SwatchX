@@ -202,11 +202,11 @@ export function SignupPage() {
                         label={
                           <Text size="sm">
                             I agree to the{' '}
-                            <Anchor href="#" size="sm" c="blue">
+                            <Anchor component={Link} to="/terms" size="sm" c="blue">
                               Terms of Service
                             </Anchor>{' '}
                             and{' '}
-                            <Anchor href="#" size="sm" c="blue">
+                            <Anchor component={Link} to="/privacy" size="sm" c="blue">
                               Privacy Policy
                             </Anchor>
                           </Text>

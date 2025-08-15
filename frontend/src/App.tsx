@@ -11,6 +11,8 @@ import { ExpenseFormPage } from './pages/ExpenseFormPage';
 import { ExpenseTablePage } from './pages/ExpenseTablePage';
 import { ManagementIndexPage } from './pages/ManagementIndexPage';
 import { ManagementPage } from './pages/ManagementPage';
+import { TermsOfServicePage } from './pages/TermsOfServicePage';
+import { PrivacyPolicyPage } from './pages/PrivacyPolicyPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 import '@mantine/core/styles.css';
 
@@ -24,6 +26,8 @@ function App() {
               {/* Public routes */}
               <Route path="/login" element={<LoginPage />} />
               <Route path="/signup" element={<SignupPage />} />
+              <Route path="/terms" element={<TermsOfServicePage />} />
+              <Route path="/privacy" element={<PrivacyPolicyPage />} />
               
               {/* Protected routes */}
               <Route 
