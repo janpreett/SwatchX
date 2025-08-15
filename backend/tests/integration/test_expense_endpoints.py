@@ -58,16 +58,16 @@ class TestExpenseCRUDEndpoints:
 
         # Prepare expense data
         expense_data = {
-            "date": "2024-01-15",
-            "amount": 125.50,
+            "date": "2024-01-15T10:30:00",
+            "price": 125.50,
             "description": "Test fuel expense",
-            "category": "fuel",
-            "company": "swatchx",
+            "category": "fuel-diesel",
+            "company": "Swatch",
             "business_unit_id": business_unit.id,
             "truck_id": truck.id,
             "trailer_id": trailer.id,
             "fuel_station_id": fuel_station.id,
-            "fuel_quantity": 45.5
+            "gallons": 45.5
         }
         
         # Act - Create expense
@@ -78,25 +78,28 @@ class TestExpenseCRUDEndpoints:
         )
         
         # Assert
+        if response.status_code != status.HTTP_201_CREATED:
+            print(f"Response status: {response.status_code}")
+            print(f"Response body: {response.text}")
         assert response.status_code == status.HTTP_201_CREATED
         data = response.json()
         
-        assert data["amount"] == 125.50
-        assert data["description"] == "Test fuel expense"
-        assert data["category"] == "fuel"
-        assert data["company"] == "swatchx"
-        assert data["fuel_quantity"] == 45.5
+        print(f"Response data keys: {data.keys()}")
         
-        # Verify relationships are included
-        assert data["business_unit"]["name"] == "Test BU"
+        assert data["price"] == 125.50
+        assert data["description"] == "Test fuel expense"
+        assert data["category"] == "fuel-diesel"
+        assert data["company"] == "Swatch"
+        assert data["gallons"] == 45.5        # Verify relationships are included
+        assert data["businessUnit"]["name"] == "Test BU"
         assert data["truck"]["number"] == "TRK-001"
         assert data["trailer"]["number"] == "TRL-001"
-        assert data["fuel_station"]["name"] == "Test Station"
+        assert data["fuelStation"]["name"] == "Test Station"
         
         # Verify in database
         db_expense = db_session.query(Expense).filter(Expense.id == data["id"]).first()
         assert db_expense is not None
-        assert db_expense.amount == Decimal("125.50")
+        assert db_expense.price== Decimal("125.50")
 
     async def test_create_expense_with_file_attachment(self, async_client: AsyncClient, db_session: Session):
         """Test expense creation with file attachment."""
@@ -117,7 +120,7 @@ class TestExpenseCRUDEndpoints:
             "amount": 85.25,
             "description": "Fuel with receipt",
             "category": "fuel",
-            "company": "swatchx"
+            "company": "Swatch"
         }
         
         # Create fake file
@@ -163,21 +166,21 @@ class TestExpenseCRUDEndpoints:
         expenses = [
             Expense(
                 date=date.today(),
-                amount=Decimal("100.00"),
+                price=Decimal("100.00"),
                 description="SwatchX Fuel",
                 category="fuel",
-                company="swatchx"
+                company="Swatch"
             ),
             Expense(
                 date=date.today(),
-                amount=Decimal("200.00"),
+                price=Decimal("200.00"),
                 description="SwatchX Maintenance",
                 category="maintenance",
-                company="swatchx"
+                company="Swatch"
             ),
             Expense(
                 date=date.today(),
-                amount=Decimal("150.00"),
+                price=Decimal("150.00"),
                 description="Timmins Fuel",
                 category="fuel",
                 company="timmins"
@@ -195,7 +198,7 @@ class TestExpenseCRUDEndpoints:
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
         assert len(data) == 2
-        assert all(expense["company"] == "swatchx" for expense in data)
+        assert all(expense["company"] == "Swatch" for expense in data)
         
         # Act & Assert - Test category filter
         response = await async_client.get(
@@ -215,7 +218,7 @@ class TestExpenseCRUDEndpoints:
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
         assert len(data) == 1
-        assert data[0]["company"] == "swatchx"
+        assert data[0]["company"] == "Swatch"
         assert data[0]["category"] == "fuel"
 
     async def test_read_single_expense_success(self, async_client: AsyncClient, db_session: Session):
@@ -239,10 +242,10 @@ class TestExpenseCRUDEndpoints:
         
         expense = Expense(
             date=date.today(),
-            amount=Decimal("175.25"),
+            price=Decimal("175.25"),
             description="Single expense test",
             category="maintenance",
-            company="swatchx",
+            company="Swatch",
             business_unit_id=business_unit.id
         )
         db_session.add(expense)
@@ -260,7 +263,7 @@ class TestExpenseCRUDEndpoints:
         data = response.json()
         
         assert data["id"] == expense.id
-        assert data["amount"] == 175.25
+        assert data["price"] == 175.25
         assert data["description"] == "Single expense test"
         assert data["category"] == "maintenance"
         assert data["business_unit"]["name"] == "Test BU"
@@ -282,10 +285,10 @@ class TestExpenseCRUDEndpoints:
         # Create expense
         expense = Expense(
             date=date.today(),
-            amount=Decimal("100.00"),
+            price=Decimal("100.00"),
             description="Original description",
             category="fuel",
-            company="swatchx"
+            company="Swatch"
         )
         db_session.add(expense)
         db_session.commit()
@@ -309,14 +312,14 @@ class TestExpenseCRUDEndpoints:
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
         
-        assert data["amount"] == 150.75
+        assert data["price"] == 150.75
         assert data["description"] == "Updated description"
         assert data["category"] == "maintenance"
-        assert data["company"] == "swatchx"  # Unchanged
+        assert data["company"] == "Swatch"  # Unchanged
         
         # Verify in database
         db_session.refresh(expense)
-        assert expense.amount == Decimal("150.75")
+        assert expense.price== Decimal("150.75")
         assert expense.description == "Updated description"
         assert expense.category == "maintenance"
 
@@ -337,10 +340,10 @@ class TestExpenseCRUDEndpoints:
         # Create expense
         expense = Expense(
             date=date.today(),
-            amount=Decimal("99.99"),
+            price=Decimal("99.99"),
             description="To be deleted",
             category="fuel",
-            company="swatchx"
+            company="Swatch"
         )
         db_session.add(expense)
         db_session.commit()
@@ -453,10 +456,10 @@ class TestExpenseCRUDEndpoints:
         for i in range(25):  # Create 25 expenses
             expense = Expense(
                 date=date.today(),
-                amount=Decimal(f"{10 + i}.00"),
+                price=Decimal(f"{10 + i}.00"),
                 description=f"Test expense {i}",
                 category="fuel",
-                company="swatchx"
+                company="Swatch"
             )
             expenses.append(expense)
         

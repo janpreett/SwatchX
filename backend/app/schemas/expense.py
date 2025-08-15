@@ -76,7 +76,7 @@ class ExpenseBase(BaseModel):
     company: CompanyEnum
     category: ExpenseCategoryEnum
     date: datetime
-    cost: float = Field(..., gt=0)
+    price: float = Field(..., gt=0)
     description: Optional[str] = Field(None, max_length=500)
     repair_description: Optional[str] = Field(None, max_length=500)
     gallons: Optional[float] = Field(None, gt=0)
@@ -86,11 +86,11 @@ class ExpenseBase(BaseModel):
     fuel_station_id: Optional[int] = None
     attachment_path: Optional[str] = Field(None, max_length=500)
 
-    @field_validator('cost')
+    @field_validator('price')
     @classmethod
-    def cost_must_be_positive(cls, v):
+    def price_must_be_positive(cls, v):
         if v <= 0:
-            raise ValueError('Cost must be greater than 0')
+            raise ValueError('Price must be greater than 0')
         return round(v, 2)
     
     @field_validator('gallons')
@@ -107,7 +107,7 @@ class ExpenseUpdate(BaseModel):
     company: Optional[CompanyEnum] = None
     category: Optional[ExpenseCategoryEnum] = None
     date: Optional[datetime] = None
-    cost: Optional[float] = Field(None, gt=0)
+    price: Optional[float] = Field(None, gt=0)
     description: Optional[str] = Field(None, max_length=500)
     repair_description: Optional[str] = Field(None, max_length=500)
     gallons: Optional[float] = Field(None, gt=0)
@@ -117,11 +117,11 @@ class ExpenseUpdate(BaseModel):
     fuel_station_id: Optional[int] = None
     attachment_path: Optional[str] = Field(None, max_length=500)
 
-    @field_validator('cost')
+    @field_validator('price')
     @classmethod
-    def cost_must_be_positive(cls, v):
+    def price_must_be_positive(cls, v):
         if v is not None and v <= 0:
-            raise ValueError('Cost must be greater than 0')
+            raise ValueError('Price must be greater than 0')
         return round(v, 2) if v is not None else v
     
     @field_validator('gallons')

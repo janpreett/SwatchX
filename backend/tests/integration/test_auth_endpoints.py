@@ -26,9 +26,7 @@ class TestSignupEndpoint:
             "confirm_password": "SecurePass123!"
         }
         
-        async for client in async_client:
-            response = await client.post("/auth/signup", json=signup_data)
-            break
+        response = await async_client.post("/auth/signup", json=signup_data)
         
         assert response.status_code == status.HTTP_201_CREATED
         data = response.json()

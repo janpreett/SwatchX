@@ -11,6 +11,7 @@ addopts = [
     "--strict-config",
     "--disable-warnings",
 ]
+asyncio_mode = "auto"
 testpaths = [
     "tests",
 ]

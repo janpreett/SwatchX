@@ -6,7 +6,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '../utils/test-utils';
 import userEvent from '@testing-library/user-event';
-import { Table, Button, TextInput, Select, Pagination, Checkbox } from '@mantine/core';
+import { Table, Button, T      const data = Array.from({ length: 20 }, (_, i) => ({
+        id: i + 1,
+        description: `Expense ${i + 1}`,
+        price: (i + 1) * 10,nput, Select, Pagination, Checkbox } from '@mantine/core';
 
 // Mock ExpenseList component for testing
 const ExpenseList: React.FC = () => {
@@ -14,14 +17,14 @@ const ExpenseList: React.FC = () => {
     {
       id: 1,
       description: 'Gas Station Fill-up',
-      amount: 45.50,
+      price: 45.50,
       category: 'Fuel',
       date: '2024-01-15',
     },
     {
       id: 2,
       description: 'Oil Change Service',
-      amount: 89.99,
+      price: 89.99,
       category: 'Maintenance',
       date: '2024-01-10',
     },
@@ -54,7 +57,7 @@ const ExpenseList: React.FC = () => {
             <Table.Tr key={expense.id} data-testid="expense-item">
               <Table.Td><Checkbox /></Table.Td>
               <Table.Td>{expense.description}</Table.Td>
-              <Table.Td>${expense.amount}</Table.Td>
+              <Table.Td>${expense.price}</Table.Td>
               <Table.Td>{expense.category}</Table.Td>
               <Table.Td>
                 <Button size="xs">Edit expense</Button>
@@ -76,7 +79,7 @@ const mockExpenses = [
   {
     id: 1,
     description: 'Gas Station Fill-up',
-    amount: 45.50,
+    price: 45.50,
     category: 'Fuel',
     date: '2024-01-15',
     vehicleId: 1,
@@ -87,7 +90,7 @@ const mockExpenses = [
   {
     id: 2,
     description: 'Oil Change Service',
-    amount: 89.99,
+    price: 89.99,
     category: 'Maintenance',
     date: '2024-01-10',
     vehicleId: 2,
@@ -98,7 +101,7 @@ const mockExpenses = [
   {
     id: 3,
     description: 'Parking Fee',
-    amount: 15.00,
+    price: 15.00,
     category: 'Parking',
     date: '2024-01-20',
     vehicleId: 1,
@@ -512,7 +515,7 @@ describe('ExpenseList', () => {
       const manyExpenses = Array.from({ length: 1000 }, (_, i) => ({
         id: i + 1,
         description: `Expense ${i + 1}`,
-        amount: (i + 1) * 10,
+        price: (i + 1) * 10,
         category: 'Fuel',
         date: '2024-01-15',
         vehicleId: 1,

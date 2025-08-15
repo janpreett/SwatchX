@@ -49,10 +49,10 @@ class TestSQLInjectionPrevention:
         # Create test expense
         expense = Expense(
             date=date.today(),
-            amount=Decimal("100.00"),
+            price=Decimal("100.00"),
             description="Test expense",
             category="fuel",
-            company="swatchx"
+            company="Swatch"
         )
         db_session.add(expense)
         db_session.commit()
@@ -62,7 +62,7 @@ class TestSQLInjectionPrevention:
             "swatchx' OR '1'='1",
             "swatchx'; DROP TABLE expenses; --",
             "swatchx' UNION SELECT * FROM users --",
-            "swatchx'; UPDATE expenses SET amount=0; --",
+            "swatchx'; UPDATE expenses SET price=0; --",
             "swatchx' AND (SELECT COUNT(*) FROM users) > 0 --",
         ]
         
@@ -139,7 +139,7 @@ class TestSQLInjectionPrevention:
             "amount": 100.0,
             "description": "Test'; DROP TABLE expenses; --",
             "category": "fuel' OR '1'='1' --",
-            "company": "swatchx'; UPDATE users SET email='hacked@evil.com'; --"
+            "company": "Swatch'; UPDATE users SET email='hacked@evil.com'; --"
         }
         
         # Act
@@ -277,14 +277,14 @@ class TestDataIsolationSecurity:
         # Create expenses for different companies
         expense1 = Expense(
             date=date.today(),
-            amount=Decimal("100.00"),
+            price=Decimal("100.00"),
             description="SwatchX expense",
             category="fuel",
-            company="swatchx"
+            company="Swatch"
         )
         expense2 = Expense(
             date=date.today(),
-            amount=Decimal("200.00"),
+            price=Decimal("200.00"),
             description="Timmins expense",
             category="fuel",
             company="timmins"
@@ -322,7 +322,7 @@ class TestDataIsolationSecurity:
         # Create expense for different company
         restricted_expense = Expense(
             date=date.today(),
-            amount=Decimal("500.00"),
+            price=Decimal("500.00"),
             description="Restricted expense",
             category="fuel",
             company="restricted_company"
@@ -380,7 +380,7 @@ class TestInputValidationSecurity:
             "amount": 100.0,
             "description": "Test expense",
             "category": "fuel",
-            "company": "swatchx"
+            "company": "Swatch"
         }
         
         # Test various malicious file types
@@ -442,7 +442,7 @@ class TestInputValidationSecurity:
                 "amount": 100.0,
                 "description": payload,
                 "category": "fuel",
-                "company": "swatchx"
+                "company": "Swatch"
             }
             
             # Act
@@ -485,7 +485,7 @@ class TestInputValidationSecurity:
             "amount": 100.0,
             "description": oversized_description,
             "category": "fuel",
-            "company": "swatchx"
+            "company": "Swatch"
         }
         
         # Act

@@ -51,10 +51,10 @@ class TestAPIResponseTimes:
             for i in range(batch_size):
                 expense = Expense(
                     date=date.today(),
-                    amount=Decimal(f"{100 + i}.00"),
+                    price=Decimal(f"{100 + i}.00"),
                     description=f"Performance test expense {i}",
                     category="fuel",
-                    company="swatchx"
+                    company="Swatch"
                 )
                 expenses.append(expense)
             
@@ -113,7 +113,7 @@ class TestAPIResponseTimes:
             "amount": 125.50,
             "description": "Performance test expense",
             "category": "fuel",
-            "company": "swatchx",
+            "company": "Swatch",
             "business_unit_id": business_unit.id,
             "truck_id": truck.id
         }
@@ -259,10 +259,10 @@ class TestConcurrentUsers:
         for i in range(100):
             expense = Expense(
                 date=date.today(),
-                amount=Decimal(f"{50 + i}.00"),
+                price=Decimal(f"{50 + i}.00"),
                 description=f"Concurrent test expense {i}",
                 category="fuel",
-                company="swatchx"
+                company="Swatch"
             )
             expenses.append(expense)
         
@@ -320,7 +320,7 @@ class TestConcurrentUsers:
                 "amount": 100.0 + index,
                 "description": f"Concurrent creation test {index}",
                 "category": "fuel",
-                "company": "swatchx"
+                "company": "Swatch"
             }
             
             start_time = time.time()
@@ -390,10 +390,10 @@ class TestDatabaseQueryPerformance:
         for i in range(50):
             expense = Expense(
                 date=date.today(),
-                amount=Decimal(f"{100 + i}.00"),
+                price=Decimal(f"{100 + i}.00"),
                 description=f"Relationship test {i}",
                 category="fuel",
-                company="swatchx",
+                company="Swatch",
                 business_unit_id=business_units[i % len(business_units)].id,
                 truck_id=trucks[i % len(trucks)].id,
                 trailer_id=trailers[i % len(trailers)].id,
@@ -448,10 +448,10 @@ class TestDatabaseQueryPerformance:
         for i in range(1000):  # Large dataset
             expense = Expense(
                 date=date.today(),
-                amount=Decimal(f"{10 + i}.00"),
+                price=Decimal(f"{10 + i}.00"),
                 description=f"Pagination test {i}",
                 category="fuel",
-                company="swatchx"
+                company="Swatch"
             )
             expenses.append(expense)
         
@@ -523,10 +523,10 @@ class TestMemoryUsage:
         for i in range(200):  # 200KB of description data
             expense = Expense(
                 date=date.today(),
-                amount=Decimal(f"{100 + i}.00"),
+                price=Decimal(f"{100 + i}.00"),
                 description=f"{large_description} {i}",
                 category="fuel",
-                company="swatchx"
+                company="Swatch"
             )
             expenses.append(expense)
         

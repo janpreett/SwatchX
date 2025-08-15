@@ -28,7 +28,6 @@ import { CATEGORY_CONFIG_MAP } from '../constants/expenseCategories';
 
 interface ExpenseFormData {
   date: Date | null;
-  cost: number | '';
   price: number | '';
   description?: string;
   repairDescription?: string;
@@ -52,7 +51,7 @@ interface ExpenseFormProps {
   returnTo?: string;
 }
 
-type FieldType = 'date' | 'businessUnit' | 'truck' | 'trailer' | 'repairDescription' | 'cost' | 'price' | 'fuelStation' | 'gallons' | 'description';
+type FieldType = 'date' | 'businessUnit' | 'truck' | 'trailer' | 'repairDescription' | 'price' | 'fuelStation' | 'gallons' | 'description';
 
 export function ExpenseForm({ category, categoryLabel, onSubmit, initialData, isEditing, loading: formLoading, returnTo = '/dashboard' }: ExpenseFormProps) {
   const navigate = useNavigate();
@@ -103,7 +102,6 @@ export function ExpenseForm({ category, categoryLabel, onSubmit, initialData, is
   const form = useForm<ExpenseFormData>({
     initialValues: {
       date: new Date(),
-      cost: '',
       price: '',
       description: '',
       repairDescription: '',
@@ -118,13 +116,6 @@ export function ExpenseForm({ category, categoryLabel, onSubmit, initialData, is
     },
     validate: {
       date: (value) => (!value ? 'Date is required' : null),
-      cost: (value) => {
-        if (requiredFields.includes('cost')) {
-          if (!value && value !== 0) return 'Cost is required';
-          if (typeof value === 'number' && value <= 0) return 'Cost must be greater than 0';
-        }
-        return null;
-      },
       price: (value) => {
         if (requiredFields.includes('price')) {
           if (!value && value !== 0) return 'Price is required';
@@ -183,7 +174,7 @@ export function ExpenseForm({ category, categoryLabel, onSubmit, initialData, is
     if (initialData && isEditing) {
       form.setValues({
         date: initialData.date ? new Date(initialData.date) : new Date(),
-        cost: initialData.cost || '',
+        price: initialData.price || '',
         description: initialData.description || '',
         repairDescription: initialData.repair_description || '',
         gallons: initialData.gallons || '',
@@ -431,20 +422,7 @@ export function ExpenseForm({ category, categoryLabel, onSubmit, initialData, is
                   />
                 </Stack>
 
-                {/* Cost - for backward compatibility */}
-                {requiredFields.includes('cost') && (
-                  <NumberInput
-                    label="Cost (USD)"
-                    placeholder="Enter cost"
-                    required
-                    min={0}
-                    decimalScale={2}
-                    prefix="$"
-                    {...form.getInputProps('cost')}
-                  />
-                )}
-
-                {/* Price - new field name */}
+                {/* Price field */}
                 {requiredFields.includes('price') && (
                   <NumberInput
                     label="Price (USD)"

@@ -32,7 +32,7 @@ interface DashboardExpense {
   date: string;
   category: string;
   company: string;
-  cost: number;
+  price: number;
   description?: string;
   repair_description?: string;
   repairDescription?: string;
@@ -103,20 +103,20 @@ export function DashboardPage() {
         const currentMonth = now.getMonth();
         const currentYear = now.getFullYear();
         
-        const total = companyExpenses.reduce((sum: number, expense: DashboardExpense) => sum + Number(expense.cost || 0), 0);
+        const total = companyExpenses.reduce((sum: number, expense: DashboardExpense) => sum + Number(expense.price || 0), 0);
         const thisMonth = companyExpenses
           .filter((expense: DashboardExpense) => {
             const expenseDate = new Date(expense.date);
             return expenseDate.getMonth() === currentMonth && expenseDate.getFullYear() === currentYear;
           })
-          .reduce((sum: number, expense: DashboardExpense) => sum + Number(expense.cost || 0), 0);
+          .reduce((sum: number, expense: DashboardExpense) => sum + Number(expense.price || 0), 0);
         
         // Calculate category totals
         const categoryTotals: Record<string, number> = {};
         EXPENSE_CATEGORIES.forEach(category => {
           categoryTotals[category.key] = companyExpenses
             .filter((expense: DashboardExpense) => expense.category === category.key)
-            .reduce((sum: number, expense: DashboardExpense) => sum + Number(expense.cost || 0), 0);
+            .reduce((sum: number, expense: DashboardExpense) => sum + Number(expense.price || 0), 0);
         });
 
         setTotals({
@@ -687,7 +687,7 @@ export function DashboardPage() {
                         </Box>
                         <Badge color="green" variant="filled" size="lg" radius="md">
                           <Text fw={700} size="sm">
-                            ${Number(expense.cost || 0).toFixed(2)}
+                            ${Number(expense.price || 0).toFixed(2)}
                           </Text>
                         </Badge>
                       </Group>

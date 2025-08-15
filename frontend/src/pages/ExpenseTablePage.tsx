@@ -46,7 +46,7 @@ interface Expense {
   date: string;
   category: string;
   company: string;
-  cost: number;
+  price: number;
   description?: string;
   repair_description?: string; // Backend uses snake_case
   repairDescription?: string; // Keep for compatibility
@@ -55,7 +55,8 @@ interface Expense {
   truck?: { number: string };
   trailer?: { number: string };
   fuelStation?: { name: string };
-  attachment_path?: string;
+  attachment_path?: string; // Backend uses snake_case
+  attachmentPath?: string; // Keep for consistency
 }
 
 const categoryLabels = {
@@ -296,7 +297,7 @@ export function ExpenseTablePage() {
         expense.description?.toLowerCase().includes(searchLower) ||
         expense.repair_description?.toLowerCase().includes(searchLower) ||
         expense.repairDescription?.toLowerCase().includes(searchLower) ||
-        expense.cost?.toString().includes(searchLower) ||
+        expense.price?.toString().includes(searchLower) ||
         expense.gallons?.toString().includes(searchLower) ||
         // Date field (format: YYYY-MM-DD and readable format)
         expense.date?.toLowerCase().includes(searchLower) ||
@@ -369,11 +370,11 @@ export function ExpenseTablePage() {
       return 0;
     });
 
-  const totalCost = filteredExpenses.reduce((sum, expense) => sum + expense.cost, 0);
+  const totalPrice = filteredExpenses.reduce((sum, expense) => sum + expense.price, 0);
 
   // Get required fields for this category to show as columns
   const config = CATEGORY_CONFIG_MAP[category];
-  const requiredFields = config?.fields || ['date', 'cost'];
+  const requiredFields = config?.fields || ['date', 'price'];
 
   const SortButton = ({ field, children }: { field: keyof Expense; children: React.ReactNode }) => (
     <Button 
@@ -483,7 +484,7 @@ export function ExpenseTablePage() {
                 {filteredExpenses.length} expense{filteredExpenses.length !== 1 ? 's' : ''}
               </Text>
               <Badge size="lg" variant="light" color="green">
-                Total: ${totalCost.toFixed(2)}
+                Total: ${totalPrice.toFixed(2)}
               </Badge>
             </Group>
           </Card>
@@ -532,7 +533,7 @@ export function ExpenseTablePage() {
                             onChange={(event) => handleSelectExpense(expense.id, event.currentTarget.checked)}
                           />
                           <Badge color="green" variant="filled" size="md">
-                            ${Number(expense.cost || 0).toFixed(2)}
+                            ${Number(expense.price || 0).toFixed(2)}
                           </Badge>
                         </Group>
                         
@@ -631,7 +632,7 @@ export function ExpenseTablePage() {
                             <Table.Th w={150}>Repair Description</Table.Th>
                           )}
                           
-                          <Table.Th w={100}><SortButton field="cost">Cost</SortButton></Table.Th>
+                          <Table.Th w={100}><SortButton field="price">Price</SortButton></Table.Th>
                           <Table.Th w={100}>Attachment</Table.Th>
                           <Table.Th w={120}>Actions</Table.Th>
                         </Table.Tr>
@@ -673,7 +674,7 @@ export function ExpenseTablePage() {
                         )}
                         
                         <Table.Td>
-                          <Text fw={500}>${expense.cost.toFixed(2)}</Text>
+                          <Text fw={500}>${expense.price.toFixed(2)}</Text>
                         </Table.Td>
                         
                         {/* Attachment column */}

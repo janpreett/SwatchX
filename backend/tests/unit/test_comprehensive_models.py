@@ -4,7 +4,18 @@ Comprehensive unit tests for database models.
 Tests the core functionality of SQLAlchemy models including:
 - Model creation and validation
 - Field constraints and relationships
-- Model methods and properties
+- Model metho        expense = Expense(
+            date=date.today(),
+            price=Decimal("125.50"),
+            description="Test fuel expense",
+            category="fuel",
+            company="Swatch",
+            business_unit_id=business_unit.id,
+            truck_id=truck.id,
+            trailer_id=trailer.id,
+            fuel_station_id=fuel_station.id,
+            gallons=Decimal("45.5")
+        )rties
 """
 import pytest
 from datetime import date, datetime
@@ -201,15 +212,15 @@ class TestExpenseModel:
         # Act - Create expense
         expense = Expense(
             date=date.today(),
-            amount=Decimal("125.50"),
+            price=Decimal("125.50"),
             description="Test fuel expense",
             category="fuel",
-            company="swatchx",
+            company="Swatch",
             business_unit_id=business_unit.id,
             truck_id=truck.id,
             trailer_id=trailer.id,
             fuel_station_id=fuel_station.id,
-            fuel_quantity=Decimal("45.5")
+            gallons=Decimal("45.5")
         )
         db_session.add(expense)
         db_session.commit()
@@ -218,14 +229,14 @@ class TestExpenseModel:
         # Assert
         assert expense.id is not None
         assert expense.date == date.today()
-        assert expense.amount == Decimal("125.50")
+        assert expense.price == Decimal("125.50")
         assert expense.category == "fuel"
-        assert expense.company == "swatchx"
+        assert expense.company == "Swatch"
         assert expense.business_unit_id == business_unit.id
         assert expense.truck_id == truck.id
         assert expense.trailer_id == trailer.id
         assert expense.fuel_station_id == fuel_station.id
-        assert expense.fuel_quantity == Decimal("45.5")
+        assert expense.gallons == Decimal("45.5")
         assert expense.created_at is not None
 
     def test_expense_relationships_loading(self, db_session: Session):
@@ -241,10 +252,10 @@ class TestExpenseModel:
         
         expense = Expense(
             date=date.today(),
-            amount=Decimal("100.00"),
+            price=Decimal("100.00"),
             description="Test expense",
             category="fuel",
-            company="swatchx",
+            company="Swatch",
             business_unit_id=business_unit.id,
             truck_id=truck.id,
             trailer_id=trailer.id,
@@ -266,10 +277,10 @@ class TestExpenseModel:
         """Test that expense requires mandatory fields."""
         # Arrange & Act & Assert - Missing date
         expense1 = Expense(
-            amount=Decimal("100.00"),
+            price=Decimal("100.00"),
             description="Test",
             category="fuel",
-            company="swatchx"
+            company="Swatch"
         )
         db_session.add(expense1)
         with pytest.raises(IntegrityError):
@@ -282,7 +293,7 @@ class TestExpenseModel:
             date=date.today(),
             description="Test",
             category="fuel", 
-            company="swatchx"
+            company="Swatch"
         )
         db_session.add(expense2)
         with pytest.raises(IntegrityError):
@@ -291,14 +302,14 @@ class TestExpenseModel:
     def test_expense_decimal_precision(self, db_session: Session):
         """Test that expense amounts handle decimal precision correctly."""
         # Arrange
-        amount = Decimal("123.456")  # More precision than expected
+        price= Decimal("123.456")  # More precision than expected
         
         expense = Expense(
             date=date.today(),
-            amount=amount,
+            price=amount,
             description="Precision test",
             category="fuel",
-            company="swatchx"
+            company="Swatch"
         )
         
         # Act
@@ -307,17 +318,17 @@ class TestExpenseModel:
         db_session.refresh(expense)
         
         # Assert - Should maintain precision
-        assert expense.amount == amount
+        assert expense.price== amount
 
     def test_expense_optional_fields(self, db_session: Session):
         """Test expense creation with only required fields."""
         # Arrange
         expense = Expense(
             date=date.today(),
-            amount=Decimal("50.00"),
+            price=Decimal("50.00"),
             description="Basic expense",
             category="maintenance",
-            company="swatchx"
+            company="Swatch"
         )
         
         # Act
@@ -331,7 +342,7 @@ class TestExpenseModel:
         assert expense.truck_id is None
         assert expense.trailer_id is None
         assert expense.fuel_station_id is None
-        assert expense.fuel_quantity is None
+        assert expense.gallons is None
         assert expense.attachment_path is None
 
 
@@ -347,10 +358,10 @@ class TestModelRelationships:
         
         expense = Expense(
             date=date.today(),
-            amount=Decimal("100.00"),
+            price=Decimal("100.00"),
             description="Test",
             category="fuel",
-            company="swatchx",
+            company="Swatch",
             business_unit_id=business_unit.id
         )
         db_session.add(expense)
@@ -365,10 +376,10 @@ class TestModelRelationships:
         # Arrange - Create expense with invalid business_unit_id
         expense = Expense(
             date=date.today(),
-            amount=Decimal("100.00"),
+            price=Decimal("100.00"),
             description="Test",
             category="fuel",
-            company="swatchx",
+            company="Swatch",
             business_unit_id=999999  # Non-existent ID
         )
         

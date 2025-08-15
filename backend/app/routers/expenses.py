@@ -37,7 +37,7 @@ def serialize_expense_with_relationships(expense: Expense) -> dict:
         "company": expense.company,
         "category": expense.category,
         "date": expense.date,
-        "cost": expense.cost,
+        "price": expense.price,
         "description": expense.description,
         "repair_description": expense.repair_description,
         "gallons": expense.gallons,
@@ -136,7 +136,7 @@ async def create_expense(
         attachment_path = await file_handler.save_file(attachment)
     
     # Create expense with attachment path
-    expense_data_dict = expense.dict()
+    expense_data_dict = expense.model_dump()
     expense_data_dict["attachment_path"] = attachment_path
     
     db_expense = Expense(**expense_data_dict)
@@ -297,7 +297,7 @@ def create_business_unit(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user)
 ):
-    db_business_unit = BusinessUnit(**business_unit.dict())
+    db_business_unit = BusinessUnit(**business_unit.model_dump())
     db.add(db_business_unit)
     db.commit()
     db.refresh(db_business_unit)
@@ -324,7 +324,7 @@ def update_business_unit(
     if not db_business_unit:
         raise HTTPException(status_code=404, detail="Business unit not found")
     
-    for key, value in business_unit.dict().items():
+    for key, value in business_unit.model_dump().items():
         setattr(db_business_unit, key, value)
     
     db.commit()
@@ -351,7 +351,7 @@ def create_truck(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user)
 ):
-    db_truck = Truck(**truck.dict())
+    db_truck = Truck(**truck.model_dump())
     db.add(db_truck)
     db.commit()
     db.refresh(db_truck)
@@ -378,7 +378,7 @@ def update_truck(
     if not db_truck:
         raise HTTPException(status_code=404, detail="Truck not found")
     
-    for key, value in truck.dict().items():
+    for key, value in truck.model_dump().items():
         setattr(db_truck, key, value)
     
     db.commit()
@@ -405,7 +405,7 @@ def create_trailer(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user)
 ):
-    db_trailer = Trailer(**trailer.dict())
+    db_trailer = Trailer(**trailer.model_dump())
     db.add(db_trailer)
     db.commit()
     db.refresh(db_trailer)
@@ -432,7 +432,7 @@ def update_trailer(
     if not db_trailer:
         raise HTTPException(status_code=404, detail="Trailer not found")
     
-    for key, value in trailer.dict().items():
+    for key, value in trailer.model_dump().items():
         setattr(db_trailer, key, value)
     
     db.commit()
@@ -459,7 +459,7 @@ def create_fuel_station(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user)
 ):
-    db_fuel_station = FuelStation(**fuel_station.dict())
+    db_fuel_station = FuelStation(**fuel_station.model_dump())
     db.add(db_fuel_station)
     db.commit()
     db.refresh(db_fuel_station)
@@ -486,7 +486,7 @@ def update_fuel_station(
     if not db_fuel_station:
         raise HTTPException(status_code=404, detail="Fuel station not found")
     
-    for key, value in fuel_station.dict().items():
+    for key, value in fuel_station.model_dump().items():
         setattr(db_fuel_station, key, value)
     
     db.commit()
@@ -533,14 +533,14 @@ def get_monthly_change(
         prev_month_end = datetime(prev_year, prev_month, monthrange(prev_year, prev_month)[1], 23, 59, 59)
         
         # Calculate current month total
-        current_total = db.query(func.sum(Expense.cost)).filter(
+        current_total = db.query(func.sum(Expense.price)).filter(
             Expense.company == company,
             Expense.date >= current_month_start,
             Expense.date <= current_month_end
         ).scalar() or 0
         
         # Calculate previous month total
-        prev_total = db.query(func.sum(Expense.cost)).filter(
+        prev_total = db.query(func.sum(Expense.price)).filter(
             Expense.company == company,
             Expense.date >= prev_month_start,
             Expense.date <= prev_month_end
@@ -565,7 +565,7 @@ def get_monthly_change(
             month_start = datetime(year, month, 1)
             month_end = datetime(year, month, monthrange(year, month)[1], 23, 59, 59)
             
-            month_total = db.query(func.sum(Expense.cost)).filter(
+            month_total = db.query(func.sum(Expense.price)).filter(
                 Expense.company == company,
                 Expense.date >= month_start,
                 Expense.date <= month_end
@@ -601,11 +601,11 @@ def get_top_categories(
         # Get category totals
         category_totals = db.query(
             Expense.category,
-            func.sum(Expense.cost).label('total')
+            func.sum(Expense.price).label('total')
         ).filter(
             Expense.company == company,
             Expense.date >= six_months_ago
-        ).group_by(Expense.category).order_by(func.sum(Expense.cost).desc()).limit(3).all()
+        ).group_by(Expense.category).order_by(func.sum(Expense.price).desc()).limit(3).all()
         
         # Get monthly trends for each top category
         top_categories_data = []
@@ -625,7 +625,7 @@ def get_top_categories(
                 month_start = datetime(year, month, 1)
                 month_end = datetime(year, month, monthrange(year, month)[1], 23, 59, 59)
                 
-                month_total = db.query(func.sum(Expense.cost)).filter(
+                month_total = db.query(func.sum(Expense.price)).filter(
                     Expense.company == company,
                     Expense.category == category,
                     Expense.date >= month_start,
@@ -751,8 +751,8 @@ def export_company_data(
                     col += 1
                 
                 # Price (always last column) - format as currency
-                cost_cell = ws.cell(row=row, column=col, value=float(expense.cost) if expense.cost else 0)
-                cost_cell.number_format = '"$"#,##0.00'
+                price_cell = ws.cell(row=row, column=col, value=float(expense.price) if expense.price else 0)
+                price_cell.number_format = '"$"#,##0.00'
             
             # Auto-adjust column widths
             for column in ws.columns:
@@ -786,7 +786,7 @@ def export_company_data(
                 if category not in category_totals:
                     category_totals[category] = {'count': 0, 'total': 0}
                 category_totals[category]['count'] += 1
-                category_totals[category]['total'] += float(expense.cost) if expense.cost else 0
+                category_totals[category]['total'] += float(expense.price) if expense.price else 0
             
             # Add summary data
             row = 2
@@ -873,12 +873,12 @@ async def get_pie_chart_data(
         category_totals = {}
         for expense in expenses:
             category = expense.category.value
-            cost = float(expense.cost or 0)
+            price = float(expense.price or 0)
             
             if category in category_totals:
-                category_totals[category] += cost
+                category_totals[category] += price
             else:
-                category_totals[category] = cost
+                category_totals[category] = price
         
         # Convert to pie chart format with default Mantine colors
         category_colors = {

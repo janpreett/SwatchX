@@ -61,7 +61,7 @@ class Expense(Base):
     company = Column(SQLEnum(CompanyEnum), nullable=False)
     category = Column(SQLEnum(ExpenseCategoryEnum), nullable=False)
     date = Column(DateTime, nullable=False)
-    cost = Column(Float, nullable=False)
+    price = Column(Float, nullable=False)
     
     # Optional fields based on category
     description = Column(String(500), nullable=True)

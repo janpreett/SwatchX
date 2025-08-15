@@ -185,10 +185,10 @@ class TestBusinessUnitEndpoints:
         
         expense = Expense(
             date=date.today(),
-            amount=Decimal("100.00"),
+            price=Decimal("100.00"),
             description="Test expense",
             category="fuel",
-            company="swatchx",
+            company="Swatch",
             business_unit_id=bu.id
         )
         db_session.add(expense)
