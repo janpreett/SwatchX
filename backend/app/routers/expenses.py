@@ -850,7 +850,7 @@ def export_company_data(
 @router.get("/pie-chart-data/{company}")
 async def get_pie_chart_data(
     company: CompanyEnum,
-    period: str = Query("total", regex="^(this-month|total)$"),
+    period: str = Query("total", pattern="^(this-month|total)$"),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user)
 ):

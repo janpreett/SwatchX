@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator, ConfigDict
 from datetime import datetime
 from typing import Optional
 from ..models.expense import CompanyEnum, ExpenseCategoryEnum
@@ -14,12 +14,11 @@ class BusinessUnitUpdate(BusinessUnitBase):
     pass
 
 class BusinessUnit(BusinessUnitBase):
+    model_config = ConfigDict(from_attributes=True)
+    
     id: int
     created_at: datetime
     updated_at: Optional[datetime] = None
-    
-    class Config:
-        from_attributes = True
 
 # Truck schemas
 class TruckBase(BaseModel):
@@ -32,12 +31,11 @@ class TruckUpdate(TruckBase):
     pass
 
 class Truck(TruckBase):
+    model_config = ConfigDict(from_attributes=True)
+    
     id: int
     created_at: datetime
     updated_at: Optional[datetime] = None
-    
-    class Config:
-        from_attributes = True
 
 # Trailer schemas
 class TrailerBase(BaseModel):
@@ -50,12 +48,11 @@ class TrailerUpdate(TrailerBase):
     pass
 
 class Trailer(TrailerBase):
+    model_config = ConfigDict(from_attributes=True)
+    
     id: int
     created_at: datetime
     updated_at: Optional[datetime] = None
-    
-    class Config:
-        from_attributes = True
 
 # Fuel Station schemas
 class FuelStationBase(BaseModel):
@@ -68,12 +65,11 @@ class FuelStationUpdate(FuelStationBase):
     pass
 
 class FuelStation(FuelStationBase):
+    model_config = ConfigDict(from_attributes=True)
+    
     id: int
     created_at: datetime
     updated_at: Optional[datetime] = None
-    
-    class Config:
-        from_attributes = True
 
 # Expense schemas
 class ExpenseBase(BaseModel):
@@ -90,13 +86,15 @@ class ExpenseBase(BaseModel):
     fuel_station_id: Optional[int] = None
     attachment_path: Optional[str] = Field(None, max_length=500)
 
-    @validator('cost')
+    @field_validator('cost')
+    @classmethod
     def cost_must_be_positive(cls, v):
         if v <= 0:
             raise ValueError('Cost must be greater than 0')
         return round(v, 2)
     
-    @validator('gallons')
+    @field_validator('gallons')
+    @classmethod
     def gallons_must_be_positive(cls, v):
         if v is not None and v <= 0:
             raise ValueError('Gallons must be greater than 0')
@@ -119,13 +117,15 @@ class ExpenseUpdate(BaseModel):
     fuel_station_id: Optional[int] = None
     attachment_path: Optional[str] = Field(None, max_length=500)
 
-    @validator('cost')
+    @field_validator('cost')
+    @classmethod
     def cost_must_be_positive(cls, v):
         if v is not None and v <= 0:
             raise ValueError('Cost must be greater than 0')
         return round(v, 2) if v is not None else v
     
-    @validator('gallons')
+    @field_validator('gallons')
+    @classmethod
     def gallons_must_be_positive(cls, v):
         if v is not None and v <= 0:
             raise ValueError('Gallons must be greater than 0')
@@ -140,5 +140,4 @@ class Expense(ExpenseBase):
     created_at: datetime
     updated_at: Optional[datetime] = None
     
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)

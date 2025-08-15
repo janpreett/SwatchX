@@ -1,6 +1,6 @@
 # SwatchX
 
-A modern full-stack web application built with React, Mantine UI, and FastAPI.
+A modern full-stack fleet expense tracking application built with React, Mantine UI, and FastAPI. Features comprehensive testing infrastructure with 90%+ code coverage, security testing, and automated CI/CD pipelines.
 
 ## 🚀 Quick Start
 
@@ -42,6 +42,66 @@ npm run dev
 - **Backend API**: http://127.0.0.1:8000
 - **API Docs**: http://127.0.0.1:8000/docs (Swagger UI)
 
+## 🧪 Testing Infrastructure
+
+SwatchX includes a comprehensive testing suite with multiple testing layers:
+
+### Quick Test Commands
+
+```powershell
+# Run all backend tests with coverage
+cd backend
+pytest --cov=app --cov-report=html --cov-report=term
+
+# Run all frontend tests with coverage  
+cd frontend
+npm run test:coverage
+
+# Run E2E tests
+npx playwright test
+
+# Run security scans
+cd backend
+bandit -r app/
+safety check
+```
+
+### Testing Features
+
+- **🔬 Unit Tests**: Fast, isolated tests for individual components and functions
+- **🔗 Integration Tests**: API endpoint testing with database interactions
+- **🛡️ Security Tests**: SQL injection, XSS, authentication, and authorization testing
+- **⚡ Performance Tests**: Load testing with response time monitoring
+- **🌐 E2E Tests**: Complete user workflow testing across browsers
+- **📊 Coverage Reports**: HTML and XML coverage reporting with 90% target
+- **🔍 Security Scanning**: Automated vulnerability detection
+
+### Test Structure
+
+```
+SwatchX/
+├── backend/tests/           # Backend test suite
+│   ├── unit/               # Unit tests (models, security, utilities)
+│   ├── integration/        # API endpoint tests
+│   ├── security/          # Security vulnerability tests
+│   ├── performance/       # Load and performance tests
+│   └── conftest.py        # Pytest configuration and fixtures
+├── frontend/src/test/      # Frontend test suite
+│   ├── components/        # React component tests
+│   ├── pages/            # Page component tests
+│   ├── hooks/            # Custom hook tests
+│   ├── utils/            # Utility function tests
+│   └── setup.ts          # Test configuration
+├── e2e/                   # End-to-end tests
+│   ├── swatchx.spec.ts   # Full user flow tests
+│   ├── global-setup.ts   # E2E test setup
+│   └── global-teardown.ts # E2E test cleanup
+├── TESTING_README.md      # Comprehensive testing documentation
+└── SECURITY_TESTING_CHECKLIST.md # Security testing procedures
+```
+
+For detailed testing information, see [TESTING_README.md](TESTING_README.md).
+
 ## 🛠 Tech Stack
 
 ### Frontend
@@ -57,6 +117,14 @@ npm run dev
 - **Pydantic** for data validation
 - **JWT** authentication with bcrypt password hashing
 - **CORS** middleware for frontend communication
+
+### Testing & Quality Assurance
+- **Backend Testing**: pytest, pytest-asyncio, pytest-cov, httpx
+- **Frontend Testing**: Vitest, React Testing Library, MSW (Mock Service Worker)
+- **E2E Testing**: Playwright with cross-browser support
+- **Security Testing**: Bandit, Safety, manual penetration testing
+- **Performance Testing**: Locust for load testing
+- **Code Coverage**: 90%+ target with HTML/XML reporting
 
 ## 🧪 Testing
 
@@ -276,18 +344,41 @@ npm run build
 
 1. Fork the repository
 2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. **Write tests** for new functionality (required for 90%+ coverage)
-4. **Run all tests** locally before submitting
+3. **Write comprehensive tests** for new functionality (required for 90%+ coverage)
+4. **Run all test suites** locally before submitting:
+   ```bash
+   # Backend tests
+   cd backend && pytest --cov=app --cov-report=html
+   
+   # Frontend tests
+   cd frontend && npm run test:coverage
+   
+   # E2E tests
+   npx playwright test
+   
+   # Security scans
+   cd backend && bandit -r app/ && safety check
+   ```
 5. Commit your changes (`git commit -m 'Add some amazing feature'`)
 6. Push to the branch (`git push origin feature/amazing-feature`)  
-7. Open a Pull Request (CI/CD tests will run automatically)
+7. Open a Pull Request (comprehensive CI/CD tests will run automatically)
 
 ### Development Guidelines
-- Maintain **90%+ test coverage**
-- Follow existing code style and patterns
-- Add tests for all new features
-- Update documentation as needed
-- Ensure all CI/CD checks pass
+- **Maintain 90%+ test coverage** across all code changes
+- **Follow existing code style** and architectural patterns
+- **Add comprehensive tests** for all new features (unit, integration, E2E)
+- **Include security tests** for authentication/authorization changes
+- **Update documentation** as needed (README, TESTING_README.md)
+- **Ensure all CI/CD checks pass** including security scans
+- **Test cross-browser compatibility** for frontend changes
+- **Validate mobile responsiveness** for UI modifications
+
+### Testing Requirements
+- **Unit Tests**: Test individual functions and components
+- **Integration Tests**: Test API endpoints and database interactions  
+- **Security Tests**: Validate authentication, authorization, input sanitization
+- **E2E Tests**: Test complete user workflows across browsers
+- **Performance Tests**: Ensure no performance regressions
 
 ## 📄 License
 
@@ -308,9 +399,21 @@ This project is licensed under the MIT License.
 - Clear node_modules and reinstall if needed
 
 **Tests failing:**
-- Run `pytest --lf` to run only last failed tests
-- Check test coverage with `pytest --cov=app --cov-report=html`
-- For frontend tests, run `npm run test:coverage`
+- **Backend**: Run `pytest --lf` to run only last failed tests
+- **Frontend**: Run `npm run test:clear-cache` to clear test cache
+- **E2E**: Run `npx playwright test --debug` for debugging
+- Check test coverage: `pytest --cov=app --cov-report=html`
+- For specific test info, see [TESTING_README.md](./TESTING_README.md)
+
+**Security scan issues:**
+- Update dependencies: `pip install --upgrade -r requirements.txt`
+- Fix vulnerabilities: `npm audit fix` (frontend)
+- Check security report: `bandit -r app/ -f json`
+
+**Performance issues:**
+- Run load tests: `locust -f locustfile.py --host=http://localhost:8000`
+- Monitor database queries in development logs
+- Check coverage reports for untested code paths
 
 **CORS errors:**
 - Ensure backend is running on `127.0.0.1:8000`  
@@ -319,6 +422,15 @@ This project is licensed under the MIT License.
 **Database issues:**
 - Database file is created automatically in `data/swatchx.db`
 - Delete database file to reset all data
+- For test database issues, check `backend/data/swatchx_test.db`
+
+### Getting Help
+
+1. **Check documentation**: Review [TESTING_README.md](./TESTING_README.md) and [SECURITY_TESTING_CHECKLIST.md](./SECURITY_TESTING_CHECKLIST.md)
+2. **Run diagnostics**: Use `python backend/check_db_location.py` to verify database setup
+3. **Check logs**: Review terminal output for detailed error messages
+4. **Test isolation**: Run individual test files to isolate issues
+5. **Clean installation**: Remove and reinstall dependencies if needed
 
 ---
 

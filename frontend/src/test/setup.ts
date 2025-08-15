@@ -1,21 +1,15 @@
-import '@testing-library/jest-dom'
-import { vi } from 'vitest'
+import '@testing-library/jest-dom';
+import { vi, afterEach } from 'vitest';
+import { cleanup } from '@testing-library/react';
 
-// Mock IntersectionObserver
-global.IntersectionObserver = vi.fn().mockImplementation(() => ({
-  observe: vi.fn(),
-  disconnect: vi.fn(),
-  unobserve: vi.fn(),
-}))
-
-// Mock ResizeObserver
+// Mock the ResizeObserver
 global.ResizeObserver = vi.fn().mockImplementation(() => ({
   observe: vi.fn(),
-  disconnect: vi.fn(),
   unobserve: vi.fn(),
-}))
+  disconnect: vi.fn(),
+}));
 
-// Mock matchMedia
+// Mock window.matchMedia
 Object.defineProperty(window, 'matchMedia', {
   writable: true,
   value: vi.fn().mockImplementation(query => ({
@@ -28,34 +22,58 @@ Object.defineProperty(window, 'matchMedia', {
     removeEventListener: vi.fn(),
     dispatchEvent: vi.fn(),
   })),
-})
+});
+
+// Mock fetch globally
+global.fetch = vi.fn();
 
 // Mock localStorage
-const localStorageMock = {
-  getItem: vi.fn(),
-  setItem: vi.fn(),
-  removeItem: vi.fn(),
-  clear: vi.fn(),
-}
 Object.defineProperty(window, 'localStorage', {
-  value: localStorageMock,
-})
+  value: {
+    getItem: vi.fn(),
+    setItem: vi.fn(),
+    removeItem: vi.fn(),
+    clear: vi.fn(),
+    length: 0,
+    key: vi.fn(),
+  },
+  writable: true,
+});
 
 // Mock sessionStorage
-const sessionStorageMock = {
-  getItem: vi.fn(),
-  setItem: vi.fn(),
-  removeItem: vi.fn(),
-  clear: vi.fn(),
-}
 Object.defineProperty(window, 'sessionStorage', {
-  value: sessionStorageMock,
-})
+  value: {
+    getItem: vi.fn(),
+    setItem: vi.fn(),
+    removeItem: vi.fn(),
+    clear: vi.fn(),
+    length: 0,
+    key: vi.fn(),
+  },
+  writable: true,
+});
 
-// Mock fetch API
-global.fetch = vi.fn()
+// Mock window.confirm
+Object.defineProperty(window, 'confirm', {
+  value: vi.fn(),
+  writable: true,
+});
 
-// Clear all mocks before each test
-beforeEach(() => {
-  vi.clearAllMocks()
-})
+// Mock window.alert
+Object.defineProperty(window, 'alert', {
+  value: vi.fn(),
+  writable: true,
+});
+
+// Mock IntersectionObserver
+global.IntersectionObserver = vi.fn().mockImplementation(() => ({
+  observe: vi.fn(),
+  unobserve: vi.fn(),
+  disconnect: vi.fn(),
+}));
+
+// Setup cleanup after each test
+afterEach(() => {
+  cleanup();
+  vi.clearAllMocks();
+});
