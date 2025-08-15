@@ -13,12 +13,14 @@ import {
   Box,
   ActionIcon,
   Text,
-  Flex
+  Flex,
+  FileInput,
+  Modal
 } from '@mantine/core';
 import { DateInput } from '@mantine/dates';
 import { useForm } from '@mantine/form';
 import { useNavigate } from 'react-router-dom';
-import { IconArrowLeft, IconAlertCircle, IconCheck, IconCalendar } from '@tabler/icons-react';
+import { IconArrowLeft, IconAlertCircle, IconCheck, IconCalendar, IconPaperclip, IconTrash } from '@tabler/icons-react';
 import { Layout } from '../components/Layout';
 import { useCompany } from '../hooks/useCompany';
 import { managementService } from '../services/api';
@@ -34,6 +36,9 @@ interface ExpenseFormData {
   truckId?: string | null;
   trailerId?: string | null;
   fuelStationId?: string | null;
+  attachment?: File | null;
+  currentAttachmentPath?: string;
+  removeCurrentAttachment?: boolean;
 }
 
 interface ExpenseFormProps {
@@ -54,6 +59,7 @@ export function ExpenseForm({ category, categoryLabel, onSubmit, initialData, is
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [showRemoveConfirmation, setShowRemoveConfirmation] = useState(false);
   
   // Management data state
   const [businessUnits, setBusinessUnits] = useState<Array<{value: string, label: string}>>([]);
@@ -104,6 +110,9 @@ export function ExpenseForm({ category, categoryLabel, onSubmit, initialData, is
       truckId: null,
       trailerId: null,
       fuelStationId: null,
+      attachment: null,
+      currentAttachmentPath: undefined,
+      removeCurrentAttachment: false,
     },
     validate: {
       date: (value) => (!value ? 'Date is required' : null),
@@ -171,6 +180,9 @@ export function ExpenseForm({ category, categoryLabel, onSubmit, initialData, is
         truckId: initialData.truck_id?.toString() || null,
         trailerId: initialData.trailer_id?.toString() || null,
         fuelStationId: initialData.fuel_station_id?.toString() || null,
+        currentAttachmentPath: initialData.attachment_path,
+        removeCurrentAttachment: false,
+        attachment: null,
       });
     }
   }, [initialData, isEditing]);
@@ -355,6 +367,57 @@ export function ExpenseForm({ category, categoryLabel, onSubmit, initialData, is
                   />
                 )}
 
+                {/* File attachment - optional for all categories */}
+                <Stack gap="xs">
+                  {/* Show current attachment if editing */}
+                  {isEditing && form.values.currentAttachmentPath && !form.values.removeCurrentAttachment && (
+                    <Box>
+                      <Text size="sm" fw={500} mb="xs">Current Attachment</Text>
+                      <Group gap="xs">
+                        <Text size="sm" c="dimmed">
+                          {form.values.currentAttachmentPath.split('/').pop()}
+                        </Text>
+                        <ActionIcon
+                          variant="light"
+                          color="red"
+                          size="sm"
+                          onClick={() => setShowRemoveConfirmation(true)}
+                          title="Remove current attachment"
+                        >
+                          <IconTrash size={14} />
+                        </ActionIcon>
+                      </Group>
+                    </Box>
+                  )}
+                  
+                  {/* Show removed attachment message */}
+                  {isEditing && form.values.removeCurrentAttachment && (
+                    <Alert color="orange" variant="light">
+                      <Group justify="space-between">
+                        <Text size="sm">Current attachment will be removed when you save</Text>
+                        <Button
+                          variant="subtle"
+                          size="xs"
+                          onClick={() => form.setFieldValue('removeCurrentAttachment', false)}
+                        >
+                          Undo
+                        </Button>
+                      </Group>
+                    </Alert>
+                  )}
+                  
+                  {/* File input for new attachment */}
+                  <FileInput
+                    label={isEditing && form.values.currentAttachmentPath && !form.values.removeCurrentAttachment ? "Replace Attachment (Optional)" : "Attachment (Optional)"}
+                    description="Upload a PDF or image file (max 10MB)"
+                    placeholder="Choose file..."
+                    leftSection={<IconPaperclip size="1rem" />}
+                    accept=".pdf,.jpg,.jpeg,.png,.gif,.bmp,.tiff"
+                    clearable
+                    {...form.getInputProps('attachment')}
+                  />
+                </Stack>
+
                 {/* Cost - always required */}
                 <NumberInput
                   label="Cost (USD)"
@@ -384,6 +447,38 @@ export function ExpenseForm({ category, categoryLabel, onSubmit, initialData, is
           </Card>
         </Stack>
       </Container>
+
+      {/* Attachment Removal Confirmation Modal */}
+      <Modal
+        opened={showRemoveConfirmation}
+        onClose={() => setShowRemoveConfirmation(false)}
+        title="Remove Attachment"
+        size="sm"
+      >
+        <Stack gap="md">
+          <Text>
+            Are you sure you want to remove the current attachment "{form.values.currentAttachmentPath?.split('/').pop()}"? 
+            This action will be applied when you save the expense.
+          </Text>
+          <Group justify="flex-end" gap="sm">
+            <Button 
+              variant="light" 
+              onClick={() => setShowRemoveConfirmation(false)}
+            >
+              Cancel
+            </Button>
+            <Button 
+              color="red"
+              onClick={() => {
+                form.setFieldValue('removeCurrentAttachment', true);
+                setShowRemoveConfirmation(false);
+              }}
+            >
+              Remove Attachment
+            </Button>
+          </Group>
+        </Stack>
+      </Modal>
     </Layout>
   );
 }

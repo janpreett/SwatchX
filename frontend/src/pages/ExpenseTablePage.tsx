@@ -16,7 +16,8 @@ import {
   Alert,
   Loader,
   Center,
-  Checkbox
+  Checkbox,
+  Modal
 } from '@mantine/core';
 import { DateInput } from '@mantine/dates';
 import { notifications } from '@mantine/notifications';
@@ -30,7 +31,9 @@ import {
   IconFilter,
   IconSortAscending,
   IconSortDescending,
-  IconCheck
+  IconCheck,
+  IconDownload,
+  IconX
 } from '@tabler/icons-react';
 import { Layout } from '../components/Layout';
 import { useCompany } from '../hooks/useCompany';
@@ -51,6 +54,7 @@ interface Expense {
   truck?: { number: string };
   trailer?: { number: string };
   fuelStation?: { name: string };
+  attachment_path?: string;
 }
 
 const categoryLabels = {
@@ -66,18 +70,6 @@ const categoryLabels = {
   def: 'DEF',
 } as const;
 
-const categoryIcons = {
-  truck: '🚛',
-  trailer: '🚚',
-  dmv: '📋',
-  parts: '🔧',
-  'phone-tracker': '📱',
-  'other-expenses': '💼',
-  toll: '🛣️',
-  'office-supplies': '📝',
-  'fuel-diesel': '⛽',
-  def: '🧪',
-} as const;
 
 export function ExpenseTablePage() {
   const { category } = useParams<{ category: string }>();
@@ -94,6 +86,7 @@ export function ExpenseTablePage() {
     from: null,
     to: null
   });
+  const [attachmentToRemove, setAttachmentToRemove] = useState<{ id: number; filename: string } | null>(null);
 
   useEffect(() => {
     if (!selectedCompany) {
@@ -131,7 +124,6 @@ export function ExpenseTablePage() {
   }
 
   const categoryLabel = categoryLabels[category as keyof typeof categoryLabels];
-  const categoryIcon = categoryIcons[category as keyof typeof categoryIcons];
 
   const handleBack = () => {
     navigate('/dashboard');
@@ -228,6 +220,69 @@ export function ExpenseTablePage() {
       setSortField(field);
       setSortOrder('asc');
     }
+  };
+
+  const handleDownloadAttachment = async (expenseId: number, attachmentPath: string) => {
+    try {
+      const blob = await expenseService.downloadAttachment(expenseId);
+      
+      // Create download link
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      
+      // Extract filename from path
+      const filename = attachmentPath.split('/').pop() || 'attachment';
+      link.download = filename;
+      
+      // Trigger download
+      document.body.appendChild(link);
+      link.click();
+      
+      // Cleanup
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Failed to download attachment:', error);
+      notifications.show({
+        title: 'Download Failed',
+        message: 'Failed to download attachment. Please try again.',
+        color: 'red',
+      });
+    }
+  };
+
+  const handleRemoveAttachment = async (expenseId: number) => {
+    try {
+      await expenseService.removeAttachment(expenseId);
+      
+      // Update the expense in the local state
+      setExpenses(prev => prev.map(expense => 
+        expense.id === expenseId 
+          ? { ...expense, attachment_path: undefined }
+          : expense
+      ));
+      
+      notifications.show({
+        title: 'Success',
+        message: 'Attachment removed successfully',
+        color: 'green',
+      });
+      
+      setAttachmentToRemove(null);
+    } catch (error) {
+      console.error('Failed to remove attachment:', error);
+      notifications.show({
+        title: 'Remove Failed',
+        message: 'Failed to remove attachment. Please try again.',
+        color: 'red',
+      });
+    }
+  };
+
+  const handleRemoveAttachmentClick = (expenseId: number, attachmentPath: string) => {
+    const filename = attachmentPath.split('/').pop() || 'attachment';
+    setAttachmentToRemove({ id: expenseId, filename });
   };
 
   // Filter and sort expenses
@@ -345,7 +400,6 @@ export function ExpenseTablePage() {
               </ActionIcon>
               <Box>
                 <Group gap="sm">
-                  <Text size="2rem">{categoryIcon}</Text>
                   <Title order={1}>{categoryLabel} Expenses</Title>
                 </Group>
                 <Text c="dimmed">
@@ -463,46 +517,123 @@ export function ExpenseTablePage() {
                 </Stack>
               </Center>
             ) : (
-              <Table.ScrollContainer minWidth={800}>
-                <Table verticalSpacing="sm" horizontalSpacing="md">
-                  <Table.Thead>
-                    <Table.Tr>
-                      <Table.Th w={50}>
-                        <Checkbox
-                          checked={selectedIds.length === filteredExpenses.length && filteredExpenses.length > 0}
-                          indeterminate={selectedIds.length > 0 && selectedIds.length < filteredExpenses.length}
-                          onChange={(event) => handleSelectAll(event.currentTarget.checked)}
-                        />
-                      </Table.Th>
-                      <Table.Th><SortButton field="date">Date</SortButton></Table.Th>
-                      
-                      {/* Dynamic columns based on category */}
-                      {requiredFields.includes('businessUnit') && (
-                        <Table.Th>Business Unit</Table.Th>
-                      )}
-                      {requiredFields.includes('truck') && (
-                        <Table.Th>Truck</Table.Th>
-                      )}
-                      {requiredFields.includes('trailer') && (
-                        <Table.Th>Trailer</Table.Th>
-                      )}
-                      {requiredFields.includes('fuelStation') && (
-                        <Table.Th>Fuel Station</Table.Th>
-                      )}
-                      {requiredFields.includes('gallons') && (
-                        <Table.Th>Gallons</Table.Th>
-                      )}
-                      {requiredFields.includes('description') && (
-                        <Table.Th>Description</Table.Th>
-                      )}
-                      {requiredFields.includes('repairDescription') && (
-                        <Table.Th>Repair Description</Table.Th>
-                      )}
-                      
-                      <Table.Th><SortButton field="cost">Cost</SortButton></Table.Th>
-                      <Table.Th>Actions</Table.Th>
-                    </Table.Tr>
-                  </Table.Thead>
+              <>
+                {/* Mobile Card View */}
+                <Box hiddenFrom="md">
+                  <Stack gap="md">
+                    {filteredExpenses.map((expense) => (
+                      <Card key={expense.id} withBorder shadow="xs" padding="md" radius="md">
+                        <Group justify="space-between" align="flex-start" mb="xs">
+                          <Checkbox
+                            size="sm"
+                            checked={selectedIds.includes(expense.id)}
+                            onChange={(event) => handleSelectExpense(expense.id, event.currentTarget.checked)}
+                          />
+                          <Badge color="green" variant="filled" size="md">
+                            ${Number(expense.cost || 0).toFixed(2)}
+                          </Badge>
+                        </Group>
+                        
+                        <Stack gap="xs">
+                          <Text fw={700} size="md" c="dark">{new Date(expense.date).toLocaleDateString()}</Text>
+                          
+                          {requiredFields.includes('businessUnit') && expense.businessUnit && (
+                            <Text size="sm"><Text fw={600} span>Business Unit:</Text> <Text span ml="xs">{expense.businessUnit.name}</Text></Text>
+                          )}
+                          {requiredFields.includes('truck') && expense.truck && (
+                            <Text size="sm"><Text fw={600} span>Truck:</Text> <Text span ml="xs">{expense.truck.number}</Text></Text>
+                          )}
+                          {requiredFields.includes('trailer') && expense.trailer && (
+                            <Text size="sm"><Text fw={600} span>Trailer:</Text> <Text span ml="xs">{expense.trailer.number}</Text></Text>
+                          )}
+                          {requiredFields.includes('fuelStation') && expense.fuelStation && (
+                            <Text size="sm"><Text fw={600} span>Fuel Station:</Text> <Text span ml="xs">{expense.fuelStation.name}</Text></Text>
+                          )}
+                          {requiredFields.includes('gallons') && expense.gallons && (
+                            <Text size="sm"><Text fw={600} span>Gallons:</Text> <Text span ml="xs">{expense.gallons}</Text></Text>
+                          )}
+                          {requiredFields.includes('description') && expense.description && (
+                            <Text size="sm"><Text fw={600} span>Description:</Text> <Text span ml="xs">{expense.description}</Text></Text>
+                          )}
+                          {requiredFields.includes('repairDescription') && (expense.repairDescription || expense.repair_description) && (
+                            <Text size="sm"><Text fw={600} span>Repair:</Text> <Text span ml="xs">{expense.repairDescription || expense.repair_description}</Text></Text>
+                          )}
+                          
+                          {expense.attachment_path && (
+                            <Group gap="xs">
+                              <Text fw={600} size="sm" span>Attachment:</Text>
+                              <ActionIcon size="sm" variant="light" color="blue" onClick={() => handleDownloadAttachment(expense.id, expense.attachment_path!)}>
+                                <IconDownload size={12} />
+                              </ActionIcon>
+                              <ActionIcon size="sm" variant="light" color="red" onClick={() => handleRemoveAttachment(expense.id)}>
+                                <IconX size={12} />
+                              </ActionIcon>
+                            </Group>
+                          )}
+                          
+                          <Group gap="xs" mt="xs">
+                            <ActionIcon variant="light" color="blue" size="sm" onClick={() => handleEditExpense(expense.id)}>
+                              <IconEdit size={14} />
+                            </ActionIcon>
+                            <ActionIcon variant="light" color="red" size="sm" onClick={() => handleDeleteExpense(expense.id)}>
+                              <IconTrash size={14} />
+                            </ActionIcon>
+                          </Group>
+                        </Stack>
+                      </Card>
+                    ))}
+                  </Stack>
+                </Box>
+
+                {/* Desktop Table View */}
+                <Box visibleFrom="md">
+                  <Table.ScrollContainer minWidth={500} type="native">
+                    <Table 
+                      verticalSpacing="sm" 
+                      horizontalSpacing="xs"
+                      withTableBorder
+                      withColumnBorders
+                    >
+                      <Table.Thead>
+                        <Table.Tr>
+                          <Table.Th w={40}>
+                            <Checkbox
+                              size="sm"
+                              checked={selectedIds.length === filteredExpenses.length && filteredExpenses.length > 0}
+                              indeterminate={selectedIds.length > 0 && selectedIds.length < filteredExpenses.length}
+                              onChange={(event) => handleSelectAll(event.currentTarget.checked)}
+                            />
+                          </Table.Th>
+                          <Table.Th w={100}><SortButton field="date">Date</SortButton></Table.Th>
+                          
+                          {/* Dynamic columns based on category */}
+                          {requiredFields.includes('businessUnit') && (
+                            <Table.Th w={120}>Business Unit</Table.Th>
+                          )}
+                          {requiredFields.includes('truck') && (
+                            <Table.Th w={80}>Truck</Table.Th>
+                          )}
+                          {requiredFields.includes('trailer') && (
+                            <Table.Th w={80}>Trailer</Table.Th>
+                          )}
+                          {requiredFields.includes('fuelStation') && (
+                            <Table.Th w={120}>Fuel Station</Table.Th>
+                          )}
+                          {requiredFields.includes('gallons') && (
+                            <Table.Th w={80}>Gallons</Table.Th>
+                          )}
+                          {requiredFields.includes('description') && (
+                            <Table.Th w={150}>Description</Table.Th>
+                          )}
+                          {requiredFields.includes('repairDescription') && (
+                            <Table.Th w={150}>Repair Description</Table.Th>
+                          )}
+                          
+                          <Table.Th w={100}><SortButton field="cost">Cost</SortButton></Table.Th>
+                          <Table.Th w={100}>Attachment</Table.Th>
+                          <Table.Th w={120}>Actions</Table.Th>
+                        </Table.Tr>
+                      </Table.Thead>
                   <Table.Tbody>
                     {filteredExpenses.map((expense) => (
                       <Table.Tr key={expense.id}>
@@ -542,6 +673,34 @@ export function ExpenseTablePage() {
                         <Table.Td>
                           <Text fw={500}>${expense.cost.toFixed(2)}</Text>
                         </Table.Td>
+                        
+                        {/* Attachment column */}
+                        <Table.Td>
+                          {expense.attachment_path ? (
+                            <Group gap="xs">
+                              <ActionIcon 
+                                variant="light" 
+                                color="blue"
+                                onClick={() => handleDownloadAttachment(expense.id, expense.attachment_path!)}
+                                title="Download attachment"
+                                size="sm"
+                              >
+                                <IconDownload size={14} />
+                              </ActionIcon>
+                              <ActionIcon 
+                                variant="light" 
+                                color="red"
+                                onClick={() => handleRemoveAttachmentClick(expense.id, expense.attachment_path!)}
+                                title="Remove attachment"
+                                size="sm"
+                              >
+                                <IconX size={14} />
+                              </ActionIcon>
+                            </Group>
+                          ) : (
+                            <Text c="dimmed" size="sm">-</Text>
+                          )}
+                        </Table.Td>
                         <Table.Td>
                           <Group gap="xs">
                             <ActionIcon 
@@ -563,12 +722,43 @@ export function ExpenseTablePage() {
                       </Table.Tr>
                     ))}
                   </Table.Tbody>
-                </Table>
-              </Table.ScrollContainer>
+                    </Table>
+                  </Table.ScrollContainer>
+                </Box>
+              </>
             )}
           </Card>
         </Stack>
       </Container>
+
+      {/* Attachment Removal Confirmation Modal */}
+      <Modal
+        opened={attachmentToRemove !== null}
+        onClose={() => setAttachmentToRemove(null)}
+        title="Remove Attachment"
+        size="sm"
+      >
+        <Stack gap="md">
+          <Text>
+            Are you sure you want to remove the attachment "{attachmentToRemove?.filename}"? 
+            This action cannot be undone.
+          </Text>
+          <Group justify="flex-end" gap="sm">
+            <Button 
+              variant="light" 
+              onClick={() => setAttachmentToRemove(null)}
+            >
+              Cancel
+            </Button>
+            <Button 
+              color="red"
+              onClick={() => attachmentToRemove && handleRemoveAttachment(attachmentToRemove.id)}
+            >
+              Remove Attachment
+            </Button>
+          </Group>
+        </Stack>
+      </Modal>
     </Layout>
   );
 }

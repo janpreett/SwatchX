@@ -103,13 +103,20 @@ async function apiRequest(endpoint: string, options: RequestInit = {}) {
   console.log(`Making API request to: ${API_BASE_URL}${endpoint}`);
   console.log(`Token exists: ${!!token}`);
   
+  // Build headers, but don't set Content-Type for FormData
+  const headers: Record<string, string> = {
+    ...(token && { 'Authorization': `Bearer ${token}` }),
+    ...(options.headers as Record<string, string>),
+  };
+  
+  // Only set Content-Type if body is not FormData
+  if (!(options.body instanceof FormData)) {
+    headers['Content-Type'] = 'application/json';
+  }
+  
   const response = await fetch(`${API_BASE_URL}${endpoint}`, {
     ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...(token && { 'Authorization': `Bearer ${token}` }),
-      ...options.headers,
-    },
+    headers,
   });
 
   console.log(`Response status: ${response.status}`);
@@ -156,6 +163,22 @@ export const expenseService = {
     });
   },
 
+  async createWithFile(expenseData: ExpenseData, attachment?: File | null) {
+    const formData = new FormData();
+    formData.append('expense_data', JSON.stringify(expenseData));
+    if (attachment) {
+      formData.append('attachment', attachment);
+    }
+
+    return apiRequest('/api/v1/expenses/', {
+      method: 'POST',
+      body: formData,
+      headers: {
+        // Don't set Content-Type header - let browser set it with boundary for multipart
+      },
+    });
+  },
+
   async getAll(params?: { 
     company?: string; 
     category?: string; 
@@ -183,8 +206,45 @@ export const expenseService = {
     });
   },
 
+  async updateWithFile(id: number, expenseData: Partial<ExpenseData>, attachment?: File | null) {
+    const formData = new FormData();
+    formData.append('expense_data', JSON.stringify(expenseData));
+    if (attachment) {
+      formData.append('attachment', attachment);
+    }
+
+    return apiRequest(`/api/v1/expenses/${id}`, {
+      method: 'PUT',
+      body: formData,
+      headers: {
+        // Don't set Content-Type header - let browser set it with boundary for multipart
+      },
+    });
+  },
+
   async delete(id: number) {
     return apiRequest(`/api/v1/expenses/${id}`, {
+      method: 'DELETE',
+    });
+  },
+
+  async downloadAttachment(id: number) {
+    const token = authService.getToken();
+    const response = await fetch(`${API_BASE_URL}/api/v1/expenses/${id}/attachment`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+    
+    if (!response.ok) {
+      throw new Error('Failed to download attachment');
+    }
+    
+    return response.blob();
+  },
+
+  async removeAttachment(id: number) {
+    return apiRequest(`/api/v1/expenses/${id}/attachment`, {
       method: 'DELETE',
     });
   },

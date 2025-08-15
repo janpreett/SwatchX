@@ -13,70 +13,70 @@ export const EXPENSE_CATEGORIES: ExpenseCategoryConfig[] = [
   {
     key: 'truck',
     label: 'Truck Repair',
-    color: 'blue',
+    color: 'blue.6',
     icon: '🚛',
     fields: ['date', 'businessUnit', 'truck', 'repairDescription', 'cost']
   },
   {
     key: 'trailer',
     label: 'Trailer Repair',
-    color: 'green',
+    color: 'teal.6',
     icon: '🚚',
     fields: ['date', 'businessUnit', 'trailer', 'repairDescription', 'cost']
   },
   {
     key: 'fuel-diesel',
     label: 'Fuel (Diesel)',
-    color: 'teal',
+    color: 'cyan.6',
     icon: '⛽',
     fields: ['date', 'fuelStation', 'gallons', 'cost']
   },
   {
     key: 'dmv',
     label: 'DMV',
-    color: 'orange',
+    color: 'orange.6',
     icon: '📋',
     fields: ['date', 'description', 'cost']
   },
   {
     key: 'parts',
     label: 'Parts',
-    color: 'red',
+    color: 'red.6',
     icon: '🔧',
     fields: ['date', 'description', 'cost']
   },
   {
     key: 'phone-tracker',
     label: 'Phone Tracker',
-    color: 'purple',
+    color: 'violet.6',
     icon: '📱',
     fields: ['date', 'description', 'cost']
   },
   {
     key: 'other-expenses',
     label: 'Other Expenses',
-    color: 'gray',
+    color: 'gray.7',
     icon: '💼',
     fields: ['date', 'description', 'cost']
   },
   {
     key: 'toll',
     label: 'Toll',
-    color: 'yellow',
+    color: 'lime.7',
     icon: '🛣️',
     fields: ['date', 'cost']
   },
   {
     key: 'office-supplies',
     label: 'Office Supplies',
-    color: 'pink',
+    color: 'pink.6',
     icon: '📝',
     fields: ['date', 'description', 'cost']
   },
   {
     key: 'def',
     label: 'DEF',
-    color: 'indigo',
+    color: 'indigo.6',
     icon: '🧪',
     fields: ['date', 'cost']
   }

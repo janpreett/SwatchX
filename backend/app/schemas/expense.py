@@ -88,6 +88,7 @@ class ExpenseBase(BaseModel):
     truck_id: Optional[int] = None
     trailer_id: Optional[int] = None
     fuel_station_id: Optional[int] = None
+    attachment_path: Optional[str] = Field(None, max_length=500)
 
     @validator('cost')
     def cost_must_be_positive(cls, v):
@@ -116,6 +117,7 @@ class ExpenseUpdate(BaseModel):
     truck_id: Optional[int] = None
     trailer_id: Optional[int] = None
     fuel_station_id: Optional[int] = None
+    attachment_path: Optional[str] = Field(None, max_length=500)
 
     @validator('cost')
     def cost_must_be_positive(cls, v):

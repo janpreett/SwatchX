@@ -348,7 +348,6 @@ export function ManagementPage() {
               </ActionIcon>
               <Box>
                 <Group gap="sm">
-                  <Text size="2rem">{config.icon}</Text>
                   <Title order={1}>{config.title}</Title>
                 </Group>
                 <Text c="dimmed">Manage {config.title.toLowerCase()}</Text>
@@ -408,56 +407,115 @@ export function ManagementPage() {
                 </Button>
               </Stack>
             ) : (
-              <Table striped highlightOnHover>
-                <Table.Thead>
-                  <Table.Tr>
-                    <Table.Th w={50}>
-                      <Checkbox
-                        checked={selectedIds.length === items.length && items.length > 0}
-                        indeterminate={selectedIds.length > 0 && selectedIds.length < items.length}
-                        onChange={(event) => handleSelectAll(event.currentTarget.checked)}
-                      />
-                    </Table.Th>
-                    <Table.Th>{config.field === 'name' ? 'Name' : 'Number'}</Table.Th>
-                    <Table.Th>Created</Table.Th>
-                    <Table.Th>Actions</Table.Th>
-                  </Table.Tr>
-                </Table.Thead>
-                <Table.Tbody>
-                  {items.map((item) => (
-                    <Table.Tr key={item.id}>
-                      <Table.Td>
-                        <Checkbox
-                          checked={selectedIds.includes(item.id)}
-                          onChange={(event) => handleSelectItem(item.id, event.currentTarget.checked)}
-                        />
-                      </Table.Td>
-                      <Table.Td>{item[config.field as keyof ManagementItem]}</Table.Td>
-                      <Table.Td>{new Date(item.created_at).toLocaleDateString()}</Table.Td>
-                      <Table.Td>
-                        <Group gap="xs">
-                          <ActionIcon
-                            variant="light"
-                            color="blue"
+              <>
+                {/* Mobile Card View */}
+                <Box hiddenFrom="md">
+                  <Stack gap="md">
+                    {items.map((item) => (
+                      <Card key={item.id} withBorder shadow="xs" padding="md" radius="md">
+                        <Group justify="space-between" align="flex-start" mb="xs">
+                          <Checkbox
                             size="sm"
-                            onClick={() => handleEdit(item)}
-                          >
-                            <IconEdit size={14} />
-                          </ActionIcon>
-                          <ActionIcon
-                            variant="light"
-                            color="red"
-                            size="sm"
-                            onClick={() => handleDelete(item)}
-                          >
-                            <IconTrash size={14} />
-                          </ActionIcon>
+                            checked={selectedIds.includes(item.id)}
+                            onChange={(event) => handleSelectItem(item.id, event.currentTarget.checked)}
+                          />
+                          <Text fw={700} size="lg" c="dark">
+                            {item[config.field as keyof ManagementItem]}
+                          </Text>
                         </Group>
-                      </Table.Td>
-                    </Table.Tr>
-                  ))}
-                </Table.Tbody>
-              </Table>
+                        
+                        <Stack gap="xs">
+                          <Text size="sm" c="dimmed">
+                            <Text fw={600} span>Created:</Text> <Text span ml="xs">{new Date(item.created_at).toLocaleDateString()}</Text>
+                          </Text>
+                          
+                          <Group gap="xs" mt="xs">
+                            <ActionIcon
+                              variant="light"
+                              color="blue"
+                              size="sm"
+                              onClick={() => handleEdit(item)}
+                            >
+                              <IconEdit size={14} />
+                            </ActionIcon>
+                            <ActionIcon
+                              variant="light"
+                              color="red"
+                              size="sm"
+                              onClick={() => handleDelete(item)}
+                            >
+                              <IconTrash size={14} />
+                            </ActionIcon>
+                          </Group>
+                        </Stack>
+                      </Card>
+                    ))}
+                  </Stack>
+                </Box>
+
+                {/* Desktop Table View */}
+                <Box visibleFrom="md">
+                  <Table.ScrollContainer minWidth={400} type="native">
+                    <Table 
+                      verticalSpacing="sm" 
+                      horizontalSpacing="xs"
+                      withTableBorder
+                      withColumnBorders
+                    >
+                      <Table.Thead>
+                        <Table.Tr>
+                          <Table.Th w={40}>
+                            <Checkbox
+                              size="sm"
+                              checked={selectedIds.length === items.length && items.length > 0}
+                              indeterminate={selectedIds.length > 0 && selectedIds.length < items.length}
+                              onChange={(event) => handleSelectAll(event.currentTarget.checked)}
+                            />
+                          </Table.Th>
+                          <Table.Th w={200}>{config.field === 'name' ? 'Name' : 'Number'}</Table.Th>
+                          <Table.Th w={120}>Created</Table.Th>
+                          <Table.Th w={100}>Actions</Table.Th>
+                        </Table.Tr>
+                      </Table.Thead>
+                      <Table.Tbody>
+                        {items.map((item) => (
+                          <Table.Tr key={item.id}>
+                            <Table.Td>
+                              <Checkbox
+                                size="sm"
+                                checked={selectedIds.includes(item.id)}
+                                onChange={(event) => handleSelectItem(item.id, event.currentTarget.checked)}
+                              />
+                            </Table.Td>
+                            <Table.Td>{item[config.field as keyof ManagementItem]}</Table.Td>
+                            <Table.Td>{new Date(item.created_at).toLocaleDateString()}</Table.Td>
+                            <Table.Td>
+                              <Group gap="xs">
+                                <ActionIcon
+                                  variant="light"
+                                  color="blue"
+                                  size="sm"
+                                  onClick={() => handleEdit(item)}
+                                >
+                                  <IconEdit size={14} />
+                                </ActionIcon>
+                                <ActionIcon
+                                  variant="light"
+                                  color="red"
+                                  size="sm"
+                                  onClick={() => handleDelete(item)}
+                                >
+                                  <IconTrash size={14} />
+                                </ActionIcon>
+                              </Group>
+                            </Table.Td>
+                          </Table.Tr>
+                        ))}
+                      </Table.Tbody>
+                    </Table>
+                  </Table.ScrollContainer>
+                </Box>
+              </>
             )}
           </Card>
         </Stack>

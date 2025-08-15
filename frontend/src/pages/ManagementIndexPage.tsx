@@ -90,12 +90,10 @@ export function ManagementIndexPage() {
                 }}
               >
                 <Group gap="md" mb="lg" align="flex-start">
-                  <Text size="3xl" lh={1}>{option.icon}</Text>
+                  <Text fw={700} size="xl" c={option.color}>
+                    {option.title}
+                  </Text>
                 </Group>
-                
-                <Text fw={600} size="xl" c={option.color} mb="md">
-                  {option.title}
-                </Text>
                 
                 <Text size="md" c="dimmed" fw={500}>
                   {option.description}

@@ -74,6 +74,9 @@ class Expense(Base):
     trailer_id = Column(Integer, ForeignKey("trailers.id"), nullable=True)
     fuel_station_id = Column(Integer, ForeignKey("fuel_stations.id"), nullable=True)
     
+    # File attachment
+    attachment_path = Column(String(500), nullable=True)
+    
     # Relationships
     business_unit = relationship("BusinessUnit")
     truck = relationship("Truck")

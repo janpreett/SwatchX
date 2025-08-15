@@ -16,6 +16,9 @@ interface ExpenseFormData {
   truckId?: string | null;
   trailerId?: string | null;
   fuelStationId?: string | null;
+  attachment?: File | null;
+  currentAttachmentPath?: string;
+  removeCurrentAttachment?: boolean;
 }
 
 const categoryLabels = {
@@ -38,7 +41,7 @@ export function ExpenseFormPage() {
   const [searchParams] = useSearchParams();
   const editId = searchParams.get('edit');
   const returnTo = searchParams.get('returnTo') || `/tables/${category}`;
-  const [initialData, setInitialData] = useState<any>(null);
+  const [initialData, setInitialData] = useState<ExpenseFormData | null>(null);
   const [loading, setLoading] = useState(false);
 
   // Load existing expense data if editing
@@ -71,7 +74,7 @@ export function ExpenseFormPage() {
       throw new Error('No company selected');
     }
 
-    // Transform form data to API format
+    // Prepare expense data (without attachment)
     const expenseData = {
       company: selectedCompany,
       category: category,
@@ -86,8 +89,20 @@ export function ExpenseFormPage() {
       fuel_station_id: data.fuelStationId ? Number(data.fuelStationId) : undefined,
     };
 
+    // Handle attachment logic
+    let attachmentToSend: File | null = null;
+    
+    if (data.removeCurrentAttachment) {
+      // If removing current attachment, don't send a file but still use updateWithFile to clear it
+      attachmentToSend = null;
+    } else if (data.attachment) {
+      // If new file selected, send it
+      attachmentToSend = data.attachment;
+    }
+
     if (editId) {
-      await expenseService.update(Number(editId), expenseData);
+      // For edits, always use updateWithFile to handle attachment changes
+      await expenseService.updateWithFile(Number(editId), expenseData, attachmentToSend);
       notifications.show({
         title: 'Success!',
         message: 'Expense updated successfully',
@@ -95,7 +110,7 @@ export function ExpenseFormPage() {
         icon: <IconCheck size="1rem" />,
       });
     } else {
-      await expenseService.create(expenseData);
+      await expenseService.createWithFile(expenseData, attachmentToSend);
       notifications.show({
         title: 'Success!',
         message: 'Expense created successfully',

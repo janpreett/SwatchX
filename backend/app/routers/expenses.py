@@ -1,7 +1,10 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Query
+from fastapi import APIRouter, Depends, HTTPException, status, Query, UploadFile, File, Form
+from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session, joinedload
 from typing import List, Optional
 from datetime import datetime
+import json
+import os
 
 from ..core.database import get_db
 from ..core.security import get_current_active_user
@@ -14,6 +17,7 @@ from ..schemas.expense import (
     TrailerCreate, TrailerUpdate, Trailer as TrailerSchema,
     FuelStationCreate, FuelStationUpdate, FuelStation as FuelStationSchema
 )
+from ..utils.file_handler import file_handler
 
 router = APIRouter()
 
@@ -35,6 +39,7 @@ def serialize_expense_with_relationships(expense: Expense) -> dict:
         "truck_id": expense.truck_id,
         "trailer_id": expense.trailer_id,
         "fuel_station_id": expense.fuel_station_id,
+        "attachment_path": expense.attachment_path,
         "businessUnit": {
             "id": expense.business_unit.id, 
             "name": expense.business_unit.name
@@ -104,18 +109,38 @@ def check_entity_usage_and_delete(db: Session, entity, entity_id: int, entity_na
     db.commit()
 
 # Expense endpoints
-@router.post("/expenses/", response_model=ExpenseSchema, status_code=status.HTTP_201_CREATED)
-def create_expense(
-    expense: ExpenseCreate,
+@router.post("/expenses/", response_model=dict, status_code=status.HTTP_201_CREATED)
+async def create_expense(
+    expense_data: str = Form(...),
+    attachment: Optional[UploadFile] = File(None),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user)
 ):
-    """Create a new expense entry."""
-    db_expense = Expense(**expense.dict())
+    """Create a new expense entry with optional file attachment."""
+    try:
+        # Parse JSON data from form
+        expense_dict = json.loads(expense_data)
+        expense = ExpenseCreate(**expense_dict)
+    except (json.JSONDecodeError, ValueError) as e:
+        raise HTTPException(status_code=400, detail=f"Invalid expense data: {str(e)}")
+    
+    # Handle file upload if provided
+    attachment_path = None
+    if attachment:
+        attachment_path = await file_handler.save_file(attachment)
+    
+    # Create expense with attachment path
+    expense_data_dict = expense.dict()
+    expense_data_dict["attachment_path"] = attachment_path
+    
+    db_expense = Expense(**expense_data_dict)
     db.add(db_expense)
     db.commit()
     db.refresh(db_expense)
-    return db_expense
+    
+    # Return with relationships
+    expense_with_relationships = get_expense_with_relationships(db, db_expense.id)
+    return serialize_expense_with_relationships(expense_with_relationships)
 
 @router.get("/expenses/", response_model=List[dict])
 async def read_expenses(
@@ -148,17 +173,41 @@ def read_expense(
     return serialize_expense_with_relationships(expense)
 
 @router.put("/expenses/{expense_id}", response_model=dict)
-def update_expense(
+async def update_expense(
     expense_id: int,
-    expense: ExpenseUpdate,
+    expense_data: str = Form(...),
+    attachment: Optional[UploadFile] = File(None),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user)
 ):
-    """Update an expense by ID."""
+    """Update an expense by ID with optional file attachment."""
     db_expense = get_expense_with_relationships(db, expense_id)
     if db_expense is None:
         raise HTTPException(status_code=404, detail="Expense not found")
     
+    try:
+        # Parse JSON data from form
+        expense_dict = json.loads(expense_data)
+        expense = ExpenseUpdate(**expense_dict)
+    except (json.JSONDecodeError, ValueError) as e:
+        raise HTTPException(status_code=400, detail=f"Invalid expense data: {str(e)}")
+    
+    # Handle file upload if provided
+    if attachment:
+        # Delete old attachment if it exists
+        if db_expense.attachment_path:
+            file_handler.delete_file(db_expense.attachment_path)
+        
+        # Save new attachment
+        attachment_path = await file_handler.save_file(attachment)
+        expense.attachment_path = attachment_path
+    elif attachment is None and 'attachment_path' not in expense_dict:
+        # If no file provided and no attachment_path in data, remove existing attachment
+        if db_expense.attachment_path:
+            file_handler.delete_file(db_expense.attachment_path)
+            expense.attachment_path = None
+    
+    # Update expense
     update_data = expense.dict(exclude_unset=True)
     for field, value in update_data.items():
         setattr(db_expense, field, value)
@@ -177,8 +226,62 @@ def delete_expense(
     if expense is None:
         raise HTTPException(status_code=404, detail="Expense not found")
     
+    # Delete associated file if it exists
+    if expense.attachment_path:
+        file_handler.delete_file(expense.attachment_path)
+    
     db.delete(expense)
     db.commit()
+    return
+
+@router.get("/expenses/{expense_id}/attachment")
+async def download_attachment(
+    expense_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    """Download expense attachment file."""
+    expense = db.query(Expense).filter(Expense.id == expense_id).first()
+    if expense is None:
+        raise HTTPException(status_code=404, detail="Expense not found")
+    
+    if not expense.attachment_path:
+        raise HTTPException(status_code=404, detail="No attachment found for this expense")
+    
+    file_path = file_handler.get_absolute_path(expense.attachment_path)
+    if not file_path or not file_path.exists():
+        raise HTTPException(status_code=404, detail="Attachment file not found")
+    
+    # Get the original filename from the path
+    filename = os.path.basename(expense.attachment_path)
+    
+    return FileResponse(
+        path=str(file_path),
+        filename=filename,
+        media_type='application/octet-stream'
+    )
+
+@router.delete("/expenses/{expense_id}/attachment", status_code=status.HTTP_204_NO_CONTENT)
+async def remove_attachment(
+    expense_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    """Remove attachment from expense."""
+    expense = db.query(Expense).filter(Expense.id == expense_id).first()
+    if expense is None:
+        raise HTTPException(status_code=404, detail="Expense not found")
+    
+    if not expense.attachment_path:
+        raise HTTPException(status_code=404, detail="No attachment found for this expense")
+    
+    # Delete the file
+    file_handler.delete_file(expense.attachment_path)
+    
+    # Remove path from database
+    expense.attachment_path = None
+    db.commit()
+    
     return
 
 # Business Unit endpoints
