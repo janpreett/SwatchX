@@ -27,7 +27,7 @@ export const getBorderColor = () => {
 };
 
 // For hardcoded colors that need to be theme-aware
-export const getThemeAwareColor = (lightColor: string, _darkColor: string = 'white') => {
+export const getThemeAwareColor = (lightColor: string) => {
   // This is a utility function - actual implementation would need to check theme context
   // For now, returning CSS custom property fallback
   return `var(--swatchx-text-primary, ${lightColor})`;

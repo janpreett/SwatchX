@@ -530,7 +530,7 @@ export const expenseService = {
     return response.json();
   },
 
-  async create(data: any) {
+  async create(data: Record<string, unknown>) {
     const response = await fetch(`${API_BASE_URL}/api/v1/expenses/`, {
       method: 'POST',
       headers: authService.getHeaders(),
@@ -543,7 +543,7 @@ export const expenseService = {
     return response.json();
   },
 
-  async update(id: number, data: any) {
+  async update(id: number, data: Record<string, unknown>) {
     const response = await fetch(`${API_BASE_URL}/api/v1/expenses/${id}`, {
       method: 'PUT',
       headers: authService.getHeaders(),

@@ -21,7 +21,7 @@ import 'cypress-axe'
 // require('./commands')
 
 // Add global error handling
-Cypress.on('uncaught:exception', (err, runnable) => {
+Cypress.on('uncaught:exception', (err) => {
   // returning false here prevents Cypress from failing the test
   // on uncaught exceptions, useful for third-party code
   console.error('Uncaught exception:', err)

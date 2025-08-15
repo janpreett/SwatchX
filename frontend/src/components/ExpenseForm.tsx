@@ -26,6 +26,25 @@ import { useCompany } from '../hooks/useCompany';
 import { managementService } from '../services/api';
 import { CATEGORY_CONFIG_MAP } from '../constants/expenseCategories';
 
+interface ManagementDataItem {
+  id: number;
+  name?: string;
+  number?: string;
+}
+
+export interface ExpenseInitialData {
+  date?: string | Date;
+  price?: number | string;
+  description?: string;
+  repair_description?: string;
+  gallons?: number | string;
+  business_unit_id?: number | string;
+  truck_id?: number | string;
+  trailer_id?: number | string;
+  fuel_station_id?: number | string;
+  attachment_path?: string;
+}
+
 interface ExpenseFormData {
   date: Date | null;
   price: number | '';
@@ -45,7 +64,7 @@ interface ExpenseFormProps {
   category: string;
   categoryLabel: string;
   onSubmit: (data: ExpenseFormData) => Promise<void>;
-  initialData?: any;
+  initialData?: ExpenseInitialData;
   isEditing?: boolean;
   loading?: boolean;
   returnTo?: string;
@@ -53,7 +72,7 @@ interface ExpenseFormProps {
 
 type FieldType = 'date' | 'businessUnit' | 'truck' | 'trailer' | 'repairDescription' | 'price' | 'fuelStation' | 'gallons' | 'description';
 
-export function ExpenseForm({ category, categoryLabel, onSubmit, initialData, isEditing, loading: formLoading, returnTo = '/dashboard' }: ExpenseFormProps) {
+export function ExpenseForm({ category, categoryLabel, onSubmit, initialData, isEditing, returnTo = '/dashboard' }: ExpenseFormProps) {
   const navigate = useNavigate();
   const { selectedCompany } = useCompany();
   const [loading, setLoading] = useState(false);
@@ -87,10 +106,10 @@ export function ExpenseForm({ category, categoryLabel, onSubmit, initialData, is
         console.log('Trailers:', trailersData);
         console.log('Fuel Stations:', fuelStationsData);
 
-        setBusinessUnits(businessUnitsData.map((item: any) => ({ value: item.id.toString(), label: item.name || item.number })));
-        setTrucks(trucksData.map((item: any) => ({ value: item.id.toString(), label: item.number })));
-        setTrailers(trailersData.map((item: any) => ({ value: item.id.toString(), label: item.number })));
-        setFuelStations(fuelStationsData.map((item: any) => ({ value: item.id.toString(), label: item.name })));
+        setBusinessUnits(businessUnitsData.map((item: ManagementDataItem) => ({ value: item.id.toString(), label: item.name || item.number })));
+        setTrucks(trucksData.map((item: ManagementDataItem) => ({ value: item.id.toString(), label: item.number })));
+        setTrailers(trailersData.map((item: ManagementDataItem) => ({ value: item.id.toString(), label: item.number })));
+        setFuelStations(fuelStationsData.map((item: ManagementDataItem) => ({ value: item.id.toString(), label: item.name })));
       } catch (error) {
         console.error('Failed to load management data:', error);
       }
@@ -174,10 +193,10 @@ export function ExpenseForm({ category, categoryLabel, onSubmit, initialData, is
     if (initialData && isEditing) {
       form.setValues({
         date: initialData.date ? new Date(initialData.date) : new Date(),
-        price: initialData.price || '',
+        price: typeof initialData.price === 'number' ? initialData.price : (initialData.price ? parseFloat(initialData.price) : ''),
         description: initialData.description || '',
         repairDescription: initialData.repair_description || '',
-        gallons: initialData.gallons || '',
+        gallons: typeof initialData.gallons === 'number' ? initialData.gallons : (initialData.gallons ? parseFloat(initialData.gallons) : ''),
         businessUnitId: initialData.business_unit_id?.toString() || null,
         truckId: initialData.truck_id?.toString() || null,
         trailerId: initialData.trailer_id?.toString() || null,
@@ -187,7 +206,7 @@ export function ExpenseForm({ category, categoryLabel, onSubmit, initialData, is
         attachment: null,
       });
     }
-  }, [initialData, isEditing]);
+  }, [initialData, isEditing, form]);
 
   // Early return after hooks
   if (!selectedCompany) {

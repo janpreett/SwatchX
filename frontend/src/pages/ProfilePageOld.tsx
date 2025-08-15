@@ -14,12 +14,11 @@ import {
   ActionIcon,
   Card,
   Anchor,
-  Modal,
-  Badge,
+  Divider,
 } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { notifications } from '@mantine/notifications';
-import { IconArrowLeft, IconAlertCircle, IconShield, IconLock, IconUser, IconEdit, IconEye, IconEyeOff } from '@tabler/icons-react';
+import { IconArrowLeft, IconAlertCircle, IconShield, IconLock, IconUser } from '@tabler/icons-react';
 import { Layout } from '../components/Layout';
 import { useAuth } from '../hooks/useAuth';
 import { authService } from '../services/auth';

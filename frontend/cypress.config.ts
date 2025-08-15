@@ -11,7 +11,7 @@ export default defineConfig({
   responseTimeout: 10000,
   chromeWebSecurity: false,
   e2e: {
-    setupNodeEvents(on, config) {
+    setupNodeEvents() {
       // implement node event listeners here
     },
     specPattern: 'cypress/e2e/**/*.cy.{js,jsx,ts,tsx}',
@@ -22,6 +22,7 @@ export default defineConfig({
       framework: 'vite',
       bundler: 'vite'
     },
-    specPattern: 'cypress/component/**/*.cy.{js,jsx,ts,tsx}'
+    specPattern: 'cypress/component/**/*.cy.{js,jsx,ts,tsx}',
+    supportFile: 'cypress/support/component.ts'
   }
 })

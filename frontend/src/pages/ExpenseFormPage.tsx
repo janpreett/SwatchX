@@ -2,13 +2,13 @@ import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { notifications } from '@mantine/notifications';
 import { IconCheck } from '@tabler/icons-react';
-import { ExpenseForm } from '../components/ExpenseForm';
+import { ExpenseForm, type ExpenseInitialData } from '../components/ExpenseForm';
 import { expenseService } from '../services/api';
 import { useCompany } from '../hooks/useCompany';
 
 interface ExpenseFormData {
   date: Date | null;
-  cost: number | '';
+  price: number | '';
   description?: string;
   repairDescription?: string;
   gallons?: number | '';
@@ -79,7 +79,7 @@ export function ExpenseFormPage() {
       company: selectedCompany,
       category: category,
       date: data.date instanceof Date ? data.date.toISOString() : new Date(data.date || new Date()).toISOString(),
-      cost: Number(data.cost),
+      cost: Number(data.price),
       description: data.description || undefined,
       repair_description: data.repairDescription || undefined,
       gallons: data.gallons ? Number(data.gallons) : undefined,
@@ -120,12 +120,26 @@ export function ExpenseFormPage() {
     }
   };
 
+  // Convert ExpenseFormData to ExpenseInitialData format
+  const convertToInitialData = (data: ExpenseFormData): ExpenseInitialData => ({
+    date: data.date || undefined,
+    price: data.price,
+    description: data.description,
+    repair_description: data.repairDescription,
+    gallons: data.gallons,
+    business_unit_id: data.businessUnitId ? Number(data.businessUnitId) : undefined,
+    truck_id: data.truckId ? Number(data.truckId) : undefined,
+    trailer_id: data.trailerId ? Number(data.trailerId) : undefined,
+    fuel_station_id: data.fuelStationId ? Number(data.fuelStationId) : undefined,
+    attachment_path: data.currentAttachmentPath,
+  });
+
   return (
     <ExpenseForm
       category={category}
       categoryLabel={categoryLabel}
       onSubmit={handleSubmit}
-      initialData={initialData}
+      initialData={initialData ? convertToInitialData(initialData) : undefined}
       isEditing={!!editId}
       loading={loading}
       returnTo={returnTo}
