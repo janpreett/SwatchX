@@ -10,7 +10,6 @@ interface ExpenseFormData {
   date: Date | null;
   price: number | '';
   description?: string;
-  repairDescription?: string;
   gallons?: number | '';
   businessUnitId?: string | null;
   truckId?: string | null;
@@ -79,9 +78,8 @@ export function ExpenseFormPage() {
       company: selectedCompany,
       category: category,
       date: data.date instanceof Date ? data.date.toISOString() : new Date(data.date || new Date()).toISOString(),
-      cost: Number(data.price),
+                price: Number(data.price),
       description: data.description || undefined,
-      repair_description: data.repairDescription || undefined,
       gallons: data.gallons ? Number(data.gallons) : undefined,
       business_unit_id: data.businessUnitId ? Number(data.businessUnitId) : undefined,
       truck_id: data.truckId ? Number(data.truckId) : undefined,
@@ -125,7 +123,6 @@ export function ExpenseFormPage() {
     date: data.date || undefined,
     price: data.price,
     description: data.description,
-    repair_description: data.repairDescription,
     gallons: data.gallons,
     business_unit_id: data.businessUnitId ? Number(data.businessUnitId) : undefined,
     truck_id: data.truckId ? Number(data.truckId) : undefined,

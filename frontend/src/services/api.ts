@@ -145,9 +145,8 @@ export interface ExpenseData {
   company: 'Swatch' | 'SWS';
   category: string;
   date: string;
-  cost: number;
+  price: number;
   description?: string;
-  repair_description?: string;
   gallons?: number;
   business_unit_id?: number;
   truck_id?: number;

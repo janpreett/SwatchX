@@ -1,3 +1,40 @@
+/* Fix Mantine Select dropdown overlap and dark mode background */
+.mantine-Select-dropdown {
+  z-index: 9999 !important;
+  background: #fff !important;
+  border: 1.5px solid #1971c2 !important;
+  box-shadow: 0 8px 32px rgba(60, 60, 60, 0.18), 0 1.5px 6px rgba(0,0,0,0.08) !important;
+  border-radius: 10px !important;
+  padding: 8px 0 !important;
+  margin-top: 4px !important;
+  font-size: 1.05rem !important;
+  transition: box-shadow 0.2s;
+}
+
+[data-mantine-color-scheme="dark"] .mantine-Select-dropdown {
+  background: #181c24 !important;
+  color: #f1f3f5 !important;
+  border: 1.5px solid #4dabf7 !important;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.45), 0 1.5px 6px rgba(0,0,0,0.18) !important;
+}
+
+.mantine-Select-item {
+  padding: 10px 18px !important;
+  border-radius: 6px !important;
+  margin: 2px 6px !important;
+  font-size: 1.04rem !important;
+  transition: background 0.15s;
+}
+.mantine-Select-item[data-selected],
+.mantine-Select-item:hover {
+  background: #e7f5ff !important;
+  color: #1864ab !important;
+}
+[data-mantine-color-scheme="dark"] .mantine-Select-item[data-selected],
+[data-mantine-color-scheme="dark"] .mantine-Select-item:hover {
+  background: #24304b !important;
+  color: #4dabf7 !important;
+}
 /* Reset and minimal base styles for Mantine compatibility */
 *, *::before, *::after {
   box-sizing: border-box;

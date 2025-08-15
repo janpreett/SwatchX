@@ -65,7 +65,6 @@ class Expense(Base):
     
     # Optional fields based on category
     description = Column(String(500), nullable=True)
-    repair_description = Column(String(500), nullable=True)
     gallons = Column(Float, nullable=True)
     
     # Foreign key relationships

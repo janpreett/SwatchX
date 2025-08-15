@@ -48,8 +48,6 @@ interface Expense {
   company: string;
   price: number;
   description?: string;
-  repair_description?: string; // Backend uses snake_case
-  repairDescription?: string; // Keep for compatibility
   gallons?: number;
   businessUnit?: { name: string };
   truck?: { number: string };
@@ -295,8 +293,6 @@ export function ExpenseTablePage() {
       const matchesSearch = !searchTerm || 
         // Basic expense fields
         expense.description?.toLowerCase().includes(searchLower) ||
-        expense.repair_description?.toLowerCase().includes(searchLower) ||
-        expense.repairDescription?.toLowerCase().includes(searchLower) ||
         expense.price?.toString().includes(searchLower) ||
         expense.gallons?.toString().includes(searchLower) ||
         // Date field (format: YYYY-MM-DD and readable format)
@@ -558,9 +554,6 @@ export function ExpenseTablePage() {
                           {requiredFields.includes('description') && expense.description && (
                             <Text size="sm"><Text fw={600} span>Description:</Text> <Text span ml="xs">{expense.description}</Text></Text>
                           )}
-                          {requiredFields.includes('repairDescription') && (expense.repairDescription || expense.repair_description) && (
-                            <Text size="sm"><Text fw={600} span>Repair:</Text> <Text span ml="xs">{expense.repairDescription || expense.repair_description}</Text></Text>
-                          )}
                           
                           {expense.attachment_path && (
                             <Group gap="xs">
@@ -628,9 +621,6 @@ export function ExpenseTablePage() {
                           {requiredFields.includes('description') && (
                             <Table.Th w={150}>Description</Table.Th>
                           )}
-                          {requiredFields.includes('repairDescription') && (
-                            <Table.Th w={150}>Repair Description</Table.Th>
-                          )}
                           
                           <Table.Th w={100}><SortButton field="price">Price</SortButton></Table.Th>
                           <Table.Th w={100}>Attachment</Table.Th>
@@ -668,9 +658,6 @@ export function ExpenseTablePage() {
                         )}
                         {requiredFields.includes('description') && (
                           <Table.Td>{expense.description || '-'}</Table.Td>
-                        )}
-                        {requiredFields.includes('repairDescription') && (
-                          <Table.Td>{expense.repair_description || expense.repairDescription || '-'}</Table.Td>
                         )}
                         
                         <Table.Td>

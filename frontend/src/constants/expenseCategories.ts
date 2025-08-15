@@ -15,14 +15,14 @@ export const EXPENSE_CATEGORIES: ExpenseCategoryConfig[] = [
     label: 'Truck Repair',
     color: 'blue.6',
     icon: '',
-    fields: ['date', 'businessUnit', 'truck', 'repairDescription', 'price']
+    fields: ['date', 'businessUnit', 'truck', 'description', 'price']
   },
   {
     key: 'trailer',
     label: 'Trailer Repair',
     color: 'teal.6',
     icon: '',
-    fields: ['date', 'businessUnit', 'trailer', 'repairDescription', 'price']
+    fields: ['date', 'businessUnit', 'trailer', 'description', 'price']
   },
   {
     key: 'fuel-diesel',

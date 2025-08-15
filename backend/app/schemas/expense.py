@@ -78,7 +78,6 @@ class ExpenseBase(BaseModel):
     date: datetime
     price: float = Field(..., gt=0)
     description: Optional[str] = Field(None, max_length=500)
-    repair_description: Optional[str] = Field(None, max_length=500)
     gallons: Optional[float] = Field(None, gt=0)
     business_unit_id: Optional[int] = None
     truck_id: Optional[int] = None
@@ -109,7 +108,6 @@ class ExpenseUpdate(BaseModel):
     date: Optional[datetime] = None
     price: Optional[float] = Field(None, gt=0)
     description: Optional[str] = Field(None, max_length=500)
-    repair_description: Optional[str] = Field(None, max_length=500)
     gallons: Optional[float] = Field(None, gt=0)
     business_unit_id: Optional[int] = None
     truck_id: Optional[int] = None

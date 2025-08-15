@@ -49,7 +49,6 @@ interface ExpenseFormData {
   date: Date | null;
   price: number | '';
   description?: string;
-  repairDescription?: string;
   gallons?: number | '';
   businessUnitId?: string | null;
   truckId?: string | null;
@@ -70,7 +69,7 @@ interface ExpenseFormProps {
   returnTo?: string;
 }
 
-type FieldType = 'date' | 'businessUnit' | 'truck' | 'trailer' | 'repairDescription' | 'price' | 'fuelStation' | 'gallons' | 'description';
+type FieldType = 'date' | 'businessUnit' | 'truck' | 'trailer' | 'price' | 'fuelStation' | 'gallons' | 'description';
 
 export function ExpenseForm({ category, categoryLabel, onSubmit, initialData, isEditing, returnTo = '/dashboard' }: ExpenseFormProps) {
   const navigate = useNavigate();
@@ -123,7 +122,6 @@ export function ExpenseForm({ category, categoryLabel, onSubmit, initialData, is
       date: new Date(),
       price: '',
       description: '',
-      repairDescription: '',
       gallons: '',
       businessUnitId: null,
       truckId: null,
@@ -145,12 +143,6 @@ export function ExpenseForm({ category, categoryLabel, onSubmit, initialData, is
       description: (value) => {
         if (requiredFields.includes('description') && (!value || value.trim() === '')) {
           return 'Description is required';
-        }
-        return null;
-      },
-      repairDescription: (value) => {
-        if (requiredFields.includes('repairDescription') && (!value || value.trim() === '')) {
-          return 'Repair description is required';
         }
         return null;
       },
@@ -194,8 +186,7 @@ export function ExpenseForm({ category, categoryLabel, onSubmit, initialData, is
       form.setValues({
         date: initialData.date ? new Date(initialData.date) : new Date(),
         price: typeof initialData.price === 'number' ? initialData.price : (initialData.price ? parseFloat(initialData.price) : ''),
-        description: initialData.description || '',
-        repairDescription: initialData.repair_description || '',
+        description: initialData.description || initialData.repair_description || '',
         gallons: typeof initialData.gallons === 'number' ? initialData.gallons : (initialData.gallons ? parseFloat(initialData.gallons) : ''),
         businessUnitId: initialData.business_unit_id?.toString() || null,
         truckId: initialData.truck_id?.toString() || null,
@@ -374,19 +365,6 @@ export function ExpenseForm({ category, categoryLabel, onSubmit, initialData, is
                     maxRows={10}
                     resize="vertical"
                     {...form.getInputProps('description')}
-                  />
-                )}
-
-                {/* Repair Description - for truck/trailer */}
-                {requiredFields.includes('repairDescription') && (
-                  <Textarea
-                    label="Repair Description"
-                    placeholder="Describe the repair work"
-                    required
-                    minRows={3}
-                    maxRows={10}
-                    resize="vertical"
-                    {...form.getInputProps('repairDescription')}
                   />
                 )}
 

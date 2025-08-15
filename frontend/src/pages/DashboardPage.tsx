@@ -34,8 +34,6 @@ interface DashboardExpense {
   company: string;
   price: number;
   description?: string;
-  repair_description?: string;
-  repairDescription?: string;
   gallons?: number;
   businessUnit?: { name: string };
   truck?: { number: string };
@@ -675,12 +673,6 @@ export function DashboardPage() {
                               <Text size="sm">
                                 <Text fw={600} span c={themeColors.strongText}>Description:</Text> 
                                 <Text span ml="xs" c={themeColors.subtleText}>{expense.description}</Text>
-                              </Text>
-                            )}
-                            {(expense.repairDescription || expense.repair_description) && (
-                              <Text size="sm">
-                                <Text fw={600} span c={themeColors.strongText}>Repair Description:</Text> 
-                                <Text span ml="xs" c={themeColors.subtleText}>{expense.repairDescription || expense.repair_description}</Text>
                               </Text>
                             )}
                           </Stack>

@@ -37,7 +37,8 @@ def validate_expense_data(expense_data: dict, db: Session) -> dict:
     try:
         date_obj = datetime.fromisoformat(expense_data['date'].replace('Z', '+00:00'))
         # Check if date is not in the future
-        if date_obj > datetime.now():
+        from datetime import timezone
+        if date_obj > datetime.now(timezone.utc):
             raise HTTPException(status_code=400, detail="Date cannot be in the future")
     except ValueError:
         raise HTTPException(status_code=400, detail="Invalid date format")
@@ -80,7 +81,6 @@ def serialize_expense_with_relationships(expense: Expense) -> dict:
         "date": expense.date,
         "price": expense.price,
         "description": expense.description,
-        "repair_description": expense.repair_description,
         "gallons": expense.gallons,
         "business_unit_id": expense.business_unit_id,
         "truck_id": expense.truck_id,
@@ -845,8 +845,8 @@ def export_company_data(
         
         # Define expense categories and their fields
         categories = {
-            'truck': ['Date', 'Business Unit', 'Truck Number', 'Repair Description', 'Price ($)'],
-            'trailer': ['Date', 'Business Unit', 'Trailer Number', 'Repair Description', 'Price ($)'],
+            'truck': ['Date', 'Business Unit', 'Truck Number', 'Description', 'Price ($)'],
+            'trailer': ['Date', 'Business Unit', 'Trailer Number', 'Description', 'Price ($)'],
             'dmv': ['Date', 'Description', 'Price ($)'],
             'parts': ['Date', 'Description', 'Price ($)'],
             'phone-tracker': ['Date', 'Description', 'Price ($)'],
@@ -891,16 +891,14 @@ def export_company_data(
                     # Business Unit
                     ws.cell(row=row, column=col, value=expense.business_unit.name if expense.business_unit else '')
                     col += 1
-                    
                     # Truck/Trailer Number
                     if category == 'truck':
                         ws.cell(row=row, column=col, value=expense.truck.number if expense.truck else '')
                     else:
                         ws.cell(row=row, column=col, value=expense.trailer.number if expense.trailer else '')
                     col += 1
-                    
-                    # Repair Description
-                    ws.cell(row=row, column=col, value=expense.repair_description or '')
+                    # Description (use only description)
+                    ws.cell(row=row, column=col, value=expense.description or '')
                     col += 1
                     
                 elif category == 'fuel-diesel':
