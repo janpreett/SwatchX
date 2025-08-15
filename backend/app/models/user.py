@@ -11,3 +11,11 @@ class User(Base):
     is_active = Column(Boolean, default=True, nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    
+    # Security questions for password reset
+    security_question_1 = Column(String(500), nullable=True)
+    security_answer_1_hash = Column(String(255), nullable=True)
+    security_question_2 = Column(String(500), nullable=True)
+    security_answer_2_hash = Column(String(255), nullable=True)
+    security_question_3 = Column(String(500), nullable=True)
+    security_answer_3_hash = Column(String(255), nullable=True)

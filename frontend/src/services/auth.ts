@@ -143,6 +143,178 @@ class AuthService {
   logout(): void {
     this.removeToken();
   }
+
+  // Security Questions Methods
+  async getSecurityQuestions() {
+    const response = await fetch(`${API_BASE_URL}/auth/security-questions`, {
+      method: 'GET',
+      headers: this.getHeaders(),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to get security questions');
+    }
+
+    return response.json();
+  }
+
+  async setupSecurityQuestions(questions: { question: string; answer: string }[]) {
+    const response = await fetch(`${API_BASE_URL}/auth/security-questions`, {
+      method: 'POST',
+      headers: this.getHeaders(),
+      body: JSON.stringify({ questions }),
+    });
+
+    if (!response.ok) {
+      let errorMessage = 'Failed to set up security questions';
+      try {
+        const error = await response.json();
+        if (error.detail) {
+          errorMessage = Array.isArray(error.detail) 
+            ? error.detail.map((err: { msg: string }) => err.msg).join(', ')
+            : error.detail;
+        }
+      } catch {
+        errorMessage = `Failed to set up security questions (${response.status})`;
+      }
+      throw new Error(errorMessage);
+    }
+
+    return response.json();
+  }
+
+  async updateSecurityQuestions(questions: { question: string; answer: string }[]) {
+    const response = await fetch(`${API_BASE_URL}/auth/security-questions`, {
+      method: 'PUT',
+      headers: this.getHeaders(),
+      body: JSON.stringify({ questions }),
+    });
+
+    if (!response.ok) {
+      let errorMessage = 'Failed to update security questions';
+      try {
+        const error = await response.json();
+        if (error.detail) {
+          errorMessage = Array.isArray(error.detail) 
+            ? error.detail.map((err: { msg: string }) => err.msg).join(', ')
+            : error.detail;
+        }
+      } catch {
+        errorMessage = `Failed to update security questions (${response.status})`;
+      }
+      throw new Error(errorMessage);
+    }
+
+    return response.json();
+  }
+
+  async updateIndividualSecurityQuestion(data: { 
+    question: string; 
+    answer: string; 
+    current_password: string; 
+    question_index: number 
+  }) {
+    const response = await fetch(`${API_BASE_URL}/auth/security-questions/individual`, {
+      method: 'PUT',
+      headers: this.getHeaders(),
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      let errorMessage = 'Failed to update security question';
+      try {
+        const error = await response.json();
+        if (error.detail) {
+          errorMessage = Array.isArray(error.detail) 
+            ? error.detail.map((err: { msg: string }) => err.msg).join(', ')
+            : error.detail;
+        }
+      } catch {
+        errorMessage = `Failed to update security question (${response.status})`;
+      }
+      throw new Error(errorMessage);
+    }
+
+    return response.json();
+  }
+
+  async changePassword(data: { current_password: string; new_password: string; confirm_password: string }) {
+    const response = await fetch(`${API_BASE_URL}/auth/password/change`, {
+      method: 'POST',
+      headers: this.getHeaders(),
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      let errorMessage = 'Failed to change password';
+      try {
+        const error = await response.json();
+        if (error.detail) {
+          errorMessage = Array.isArray(error.detail) 
+            ? error.detail.map((err: { msg: string }) => err.msg).join(', ')
+            : error.detail;
+        }
+      } catch {
+        errorMessage = `Failed to change password (${response.status})`;
+      }
+      throw new Error(errorMessage);
+    }
+
+    return response.json();
+  }
+
+  async requestPasswordReset(email: string) {
+    const response = await fetch(`${API_BASE_URL}/auth/password/reset-request`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email }),
+    });
+
+    if (!response.ok) {
+      let errorMessage = 'Failed to request password reset';
+      try {
+        const error = await response.json();
+        if (error.detail) {
+          errorMessage = error.detail;
+        }
+      } catch {
+        errorMessage = `Failed to request password reset (${response.status})`;
+      }
+      throw new Error(errorMessage);
+    }
+
+    return response.json();
+  }
+
+  async verifyPasswordReset(data: { 
+    email: string; 
+    answers: string[]; 
+    new_password: string; 
+    confirm_password: string;
+  }) {
+    const response = await fetch(`${API_BASE_URL}/auth/password/reset-verify`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      let errorMessage = 'Failed to reset password';
+      try {
+        const error = await response.json();
+        if (error.detail) {
+          errorMessage = Array.isArray(error.detail) 
+            ? error.detail.map((err: { msg: string }) => err.msg).join(', ')
+            : error.detail;
+        }
+      } catch {
+        errorMessage = `Failed to reset password (${response.status})`;
+      }
+      throw new Error(errorMessage);
+    }
+
+    return response.json();
+  }
 }
 
 export const authService = new AuthService();

@@ -17,6 +17,10 @@ export function Layout({ children }: LayoutProps) {
     navigate('/login');
   };
 
+  const handleProfileClick = () => {
+    navigate('/profile');
+  };
+
   return (
     <AppShell 
       header={{ height: 60 }} 
@@ -66,7 +70,10 @@ export function Layout({ children }: LayoutProps) {
 
               <Menu.Dropdown>
                 <Menu.Label>Account</Menu.Label>
-                <Menu.Item leftSection={<IconUserCircle size="0.9rem" stroke={1.5} />}>
+                <Menu.Item 
+                  leftSection={<IconUserCircle size="0.9rem" stroke={1.5} />}
+                  onClick={handleProfileClick}
+                >
                   Profile
                 </Menu.Item>
                 <Menu.Item leftSection={<IconSettings size="0.9rem" stroke={1.5} />}>

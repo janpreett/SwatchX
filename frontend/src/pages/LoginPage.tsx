@@ -128,10 +128,11 @@ export function LoginPage() {
 
                   {/* Forgot password link */}
                   <Anchor 
+                    component={Link}
+                    to="/forgot-password"
                     size="sm" 
                     ta="right" 
                     c="blue"
-                    href="#"
                     underline="hover"
                   >
                     Forgot password?
