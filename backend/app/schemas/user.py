@@ -5,6 +5,7 @@ import re
 
 class UserBase(BaseModel):
     email: EmailStr
+    name: Optional[str] = None
 
 class UserCreate(UserBase):
     password: str
@@ -226,6 +227,28 @@ class UserResponse(UserBase):
     has_security_questions: bool = False
     
     model_config = ConfigDict(from_attributes=True)
+
+class ProfileUpdateRequest(BaseModel):
+    name: Optional[str] = None
+    
+    @field_validator('name')
+    @classmethod
+    def validate_name(cls, v):
+        # Convert empty string to None, otherwise keep as is
+        if v is not None and v.strip() == '':
+            return None
+        return v
+
+class AccountDeleteRequest(BaseModel):
+    password: str
+    confirmation_text: str
+    
+    @field_validator('confirmation_text')
+    @classmethod
+    def validate_confirmation(cls, v):
+        if v.strip().lower() != 'delete my account':
+            raise ValueError('Please type "delete my account" to confirm')
+        return v
 
 class Token(BaseModel):
     access_token: str

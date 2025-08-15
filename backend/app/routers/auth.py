@@ -11,7 +11,7 @@ from ..schemas.user import (
     UserCreate, UserLogin, UserResponse, Token,
     SecurityQuestionsSetup, SecurityQuestionsResponse, 
     PasswordResetRequest, PasswordResetVerify, PasswordChangeRequest,
-    SecurityQuestionUpdate
+    SecurityQuestionUpdate, ProfileUpdateRequest, AccountDeleteRequest
 )
 
 router = APIRouter(prefix="/auth", tags=["authentication"])
@@ -272,3 +272,51 @@ def verify_password_reset(reset_data: PasswordResetVerify, db: Session = Depends
     db.commit()
     
     return {"message": "Password reset successfully"}
+
+@router.put("/profile", response_model=UserResponse)
+def update_profile(
+    profile_data: ProfileUpdateRequest,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Update user profile information"""
+    
+    # Always update name (including setting to None to clear it)
+    current_user.name = profile_data.name
+    
+    db.commit()
+    db.refresh(current_user)
+    
+    return UserResponse(
+        id=current_user.id,
+        email=current_user.email,
+        name=current_user.name,
+        is_active=current_user.is_active,
+        created_at=current_user.created_at,
+        has_security_questions=user_has_security_questions(current_user)
+    )
+
+@router.delete("/account", response_model=dict)
+def delete_account(
+    delete_data: AccountDeleteRequest,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Delete user account and all associated data"""
+    
+    # Verify password
+    if not verify_password(delete_data.password, current_user.hashed_password):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid password"
+        )
+    
+    # Delete the user account
+    # Note: In current design, expenses are not user-specific, so we only delete the user
+    db.delete(current_user)
+    db.commit()
+    
+    return {
+        "message": "Account deleted successfully",
+        "detail": "Your account and all associated data have been permanently deleted"
+    }

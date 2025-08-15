@@ -5,6 +5,7 @@ import { authService } from '../services/api';
 interface User {
   id: number;
   email: string;
+  name?: string;
   is_active: boolean;
 }
 
@@ -15,6 +16,7 @@ interface AuthContextType {
   signup: (email: string, password: string, confirmPassword: string) => Promise<void>;
   logout: () => void;
   isAuthenticated: boolean;
+  refreshUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -72,6 +74,19 @@ export function AuthProvider({ children }: AuthProviderProps) {
     setUser(null);
   };
 
+  const refreshUser = async () => {
+    try {
+      if (authService.isAuthenticated()) {
+        const userData = await authService.getCurrentUser();
+        setUser(userData);
+      }
+    } catch (error) {
+      console.error('Failed to refresh user data:', error);
+      // If refresh fails, user might be logged out
+      logout();
+    }
+  };
+
   const value = {
     user,
     loading,
@@ -79,6 +94,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     signup,
     logout,
     isAuthenticated,
+    refreshUser,
   };
 
   return (

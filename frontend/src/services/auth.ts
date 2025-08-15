@@ -315,6 +315,48 @@ class AuthService {
 
     return response.json();
   }
+
+  async updateProfile(profileData: { name?: string | null }) {
+    const response = await fetch(`${API_BASE_URL}/auth/profile`, {
+      method: 'PUT',
+      headers: this.getHeaders(),
+      body: JSON.stringify(profileData),
+    });
+
+    if (!response.ok) {
+      let errorMessage = 'Failed to update profile';
+      try {
+        const errorData = await response.json();
+        errorMessage = errorData.detail || errorMessage;
+      } catch {
+        errorMessage = `Failed to update profile (${response.status})`;
+      }
+      throw new Error(errorMessage);
+    }
+
+    return response.json();
+  }
+
+  async deleteAccount(deleteData: { password: string; confirmation_text: string }) {
+    const response = await fetch(`${API_BASE_URL}/auth/account`, {
+      method: 'DELETE',
+      headers: this.getHeaders(),
+      body: JSON.stringify(deleteData),
+    });
+
+    if (!response.ok) {
+      let errorMessage = 'Failed to delete account';
+      try {
+        const errorData = await response.json();
+        errorMessage = errorData.detail || errorMessage;
+      } catch {
+        errorMessage = `Failed to delete account (${response.status})`;
+      }
+      throw new Error(errorMessage);
+    }
+
+    return response.json();
+  }
 }
 
 export const authService = new AuthService();

@@ -61,7 +61,7 @@ export function Layout({ children }: LayoutProps) {
                       <IconUser size="1rem" />
                     </Avatar>
                     <Text fw={500} size="sm" lh={1} mr={3} visibleFrom="sm">
-                      {user?.email}
+                      {user?.name || user?.email}
                     </Text>
                     <IconChevronDown size="0.8rem" stroke={1.5} />
                   </Group>

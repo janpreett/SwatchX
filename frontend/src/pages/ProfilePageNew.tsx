@@ -19,7 +19,7 @@ import {
 } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { notifications } from '@mantine/notifications';
-import { IconArrowLeft, IconAlertCircle, IconShield, IconLock, IconUser, IconEdit, IconTrash } from '@tabler/icons-react';
+import { IconArrowLeft, IconAlertCircle, IconShield, IconLock, IconUser, IconEdit, IconEye, IconEyeOff } from '@tabler/icons-react';
 import { Layout } from '../components/Layout';
 import { useAuth } from '../hooks/useAuth';
 import { authService } from '../services/auth';
@@ -27,7 +27,6 @@ import { authService } from '../services/auth';
 interface SecurityQuestion {
   question: string;
   answer: string;
-  current_password: string;
 }
 
 interface SecurityQuestionsData {
@@ -41,15 +40,6 @@ interface PasswordChangeData {
   current_password: string;
   new_password: string;
   confirm_password: string;
-}
-
-interface ProfileUpdateData {
-  name: string;
-}
-
-interface AccountDeleteData {
-  password: string;
-  confirmation_text: string;
 }
 
 const COMMON_SECURITY_QUESTIONS = [
@@ -72,41 +62,12 @@ const COMMON_SECURITY_QUESTIONS = [
 
 export function ProfilePage() {
   const navigate = useNavigate();
-  const { user, refreshUser } = useAuth();
+  const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>('');
   const [securityQuestions, setSecurityQuestions] = useState<SecurityQuestionsData | null>(null);
   const [editingQuestion, setEditingQuestion] = useState<number | null>(null);
-  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
-  const [accountDeleted, setAccountDeleted] = useState(false);
-  
-  // Profile Update Form
-  const profileForm = useForm<ProfileUpdateData>({
-    initialValues: {
-      name: user?.name || ''
-    },
-    validate: {
-      // No validation on name - allow anything
-    }
-  });
-  
-  // Account Delete Form
-  const deleteForm = useForm<AccountDeleteData>({
-    initialValues: {
-      password: '',
-      confirmation_text: ''
-    },
-    validate: {
-      password: (value) => {
-        if (!value) return 'Password is required';
-        return null;
-      },
-      confirmation_text: (value) => {
-        if (value.toLowerCase() !== 'delete my account') return 'Please type "delete my account" to confirm';
-        return null;
-      }
-    }
-  });
+  const [showAnswers, setShowAnswers] = useState<boolean[]>([false, false, false]);
   
   // Password Change Form
   const passwordForm = useForm<PasswordChangeData>({
@@ -141,8 +102,7 @@ export function ProfilePage() {
   const questionForm = useForm<SecurityQuestion>({
     initialValues: {
       question: '',
-      answer: '',
-      current_password: ''
+      answer: ''
     },
     validate: {
       question: (value) => {
@@ -151,10 +111,6 @@ export function ProfilePage() {
       },
       answer: (value) => {
         if (!value || value.length < 2) return 'Answer must be at least 2 characters long';
-        return null;
-      },
-      current_password: (value) => {
-        if (!value) return 'Current password is required to modify security questions';
         return null;
       }
     }
@@ -174,17 +130,6 @@ export function ProfilePage() {
     loadSecurityQuestions();
   }, []);
 
-  // Handle navigation after account deletion
-  useEffect(() => {
-    if (accountDeleted) {
-      const timer = setTimeout(() => {
-        navigate('/login');
-      }, 2000);
-      
-      return () => clearTimeout(timer);
-    }
-  }, [accountDeleted, navigate]);
-
   const handlePasswordChangeSubmit = async (values: PasswordChangeData) => {
     setLoading(true);
     setError('');
@@ -194,27 +139,15 @@ export function ProfilePage() {
       
       // Show success notification
       notifications.show({
-        title: 'Password Changed Successfully!',
-        message: 'Your password has been updated. Please use your new password for future logins.',
+        title: 'Password Changed!',
+        message: 'Your password has been updated successfully.',
         color: 'green',
-        icon: <IconLock size="1rem" />,
-        autoClose: 5000,
-        withCloseButton: true
+        icon: <IconLock size="1rem" />
       });
       
       passwordForm.reset();
     } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to change password';
-      setError(errorMessage);
-      
-      notifications.show({
-        title: 'Password Change Failed',
-        message: errorMessage,
-        color: 'red',
-        icon: <IconAlertCircle size="1rem" />,
-        autoClose: 5000,
-        withCloseButton: true
-      });
+      setError(err instanceof Error ? err.message : 'Failed to change password');
     } finally {
       setLoading(false);
     }
@@ -229,8 +162,7 @@ export function ProfilePage() {
     
     questionForm.setValues({
       question: questions[index],
-      answer: '',
-      current_password: ''
+      answer: ''
     });
     
     setEditingQuestion(index);
@@ -243,22 +175,42 @@ export function ProfilePage() {
     setError('');
 
     try {
-      // Use the new individual question update API
-      await authService.updateIndividualSecurityQuestion({
-        question: values.question,
-        answer: values.answer,
-        current_password: values.current_password,
-        question_index: editingQuestion
-      });
+      // Get current questions
+      const currentQuestions: SecurityQuestion[] = [
+        { question: securityQuestions?.question_1 || '', answer: '' },
+        { question: securityQuestions?.question_2 || '', answer: '' },
+        { question: securityQuestions?.question_3 || '', answer: '' }
+      ];
 
-      notifications.show({
-        title: 'Security Question Updated!',
-        message: `Security question ${editingQuestion + 1} has been updated successfully.`,
-        color: 'green',
-        icon: <IconShield size="1rem" />,
-        autoClose: 5000,
-        withCloseButton: true
-      });
+      // Update the specific question
+      currentQuestions[editingQuestion] = values;
+
+      // Check for duplicates
+      const questions = currentQuestions.map(q => q.question.toLowerCase()).filter(q => q);
+      const uniqueQuestions = new Set(questions);
+      if (uniqueQuestions.size !== questions.length) {
+        setError('All security questions must be unique');
+        setLoading(false);
+        return;
+      }
+
+      if (securityQuestions?.has_security_questions) {
+        await authService.updateSecurityQuestions(currentQuestions);
+        notifications.show({
+          title: 'Question Updated!',
+          message: `Security question ${editingQuestion + 1} has been updated successfully.`,
+          color: 'green',
+          icon: <IconShield size="1rem" />
+        });
+      } else {
+        await authService.setupSecurityQuestions(currentQuestions);
+        notifications.show({
+          title: 'Question Added!',
+          message: `Security question ${editingQuestion + 1} has been set up successfully.`,
+          color: 'green',
+          icon: <IconShield size="1rem" />
+        });
+      }
 
       // Refresh security questions data
       const data = await authService.getSecurityQuestions();
@@ -266,110 +218,27 @@ export function ProfilePage() {
       setEditingQuestion(null);
       questionForm.reset();
     } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to save security question';
-      setError(errorMessage);
-      
-      notifications.show({
-        title: 'Update Failed',
-        message: errorMessage,
-        color: 'red',
-        icon: <IconAlertCircle size="1rem" />,
-        autoClose: 5000,
-        withCloseButton: true
-      });
+      setError(err instanceof Error ? err.message : 'Failed to save security question');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleProfileUpdate = async (values: ProfileUpdateData) => {
-    console.log('Form values received:', values);
-    setLoading(true);
-    setError('');
-
-    try {
-      const nameValue = values.name ? values.name.trim() : '';
-      console.log('Name value being sent:', nameValue === '' ? 'NULL' : nameValue);
-      
-      const updatedUser = await authService.updateProfile({ 
-        name: nameValue === '' ? null : nameValue
-      });
-      
-      console.log('Updated user from API:', updatedUser);
-      
-      // Refresh the user context with updated data
-      await refreshUser();
-      
-      notifications.show({
-        title: 'Profile Updated!',
-        message: 'Your profile information has been updated successfully.',
-        color: 'green',
-        icon: <IconUser size="1rem" />,
-        autoClose: 5000,
-        withCloseButton: true
-      });
-      
-    } catch (err: unknown) {
-      console.error('Profile update error:', err);
-      const errorMessage = err instanceof Error ? err.message : 'Failed to update profile';
-      setError(errorMessage);
-      
-      notifications.show({
-        title: 'Update Failed',
-        message: errorMessage,
-        color: 'red',
-        icon: <IconAlertCircle size="1rem" />,
-        autoClose: 5000,
-        withCloseButton: true
-      });
-    } finally {
-      setLoading(false);
-    }
+  const maskAnswer = (answer: string) => {
+    if (!answer) return '';
+    return '*'.repeat(Math.min(answer.length, 8));
   };
 
-  const handleAccountDelete = async (values: AccountDeleteData) => {
-    setLoading(true);
-    setError('');
-
-    try {
-      await authService.deleteAccount({
-        password: values.password,
-        confirmation_text: values.confirmation_text
-      });
-      
-      notifications.show({
-        title: 'Account Deleted',
-        message: 'Your account and all data have been permanently deleted.',
-        color: 'red',
-        icon: <IconTrash size="1rem" />,
-        autoClose: 3000,
-        withCloseButton: true
-      });
-      
-      // Set flag to trigger navigation via useEffect
-      setAccountDeleted(true);
-      
-    } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to delete account';
-      setError(errorMessage);
-      
-      notifications.show({
-        title: 'Deletion Failed',
-        message: errorMessage,
-        color: 'red',
-        icon: <IconAlertCircle size="1rem" />,
-        autoClose: 5000,
-        withCloseButton: true
-      });
-    } finally {
-      setLoading(false);
-      setDeleteModalOpen(false);
-      deleteForm.reset();
-    }
+  const toggleShowAnswer = (index: number) => {
+    setShowAnswers(prev => {
+      const newState = [...prev];
+      newState[index] = !newState[index];
+      return newState;
+    });
   };
 
   const handleBack = () => {
-    navigate('/home');
+    navigate('/dashboard');
   };
 
   if (!user) {
@@ -405,33 +274,13 @@ export function ProfilePage() {
                 <Title order={3}>Account Information</Title>
               </Group>
               
-              <form onSubmit={profileForm.onSubmit(handleProfileUpdate)}>
-                <Stack gap="md">
-                  <TextInput
-                    label="Display Name"
-                    placeholder="Enter your name (optional)"
-                    leftSection={<IconUser size="1rem" />}
-                    description="This will be shown instead of your email in the navigation"
-                    {...profileForm.getInputProps('name')}
-                  />
-                  
-                  <TextInput
-                    label="Email Address"
-                    value={user.email}
-                    disabled
-                    leftSection={<IconUser size="1rem" />}
-                    description="Your email address cannot be changed"
-                  />
-
-                  <Button 
-                    type="submit" 
-                    loading={loading}
-                    leftSection={<IconUser size="1rem" />}
-                  >
-                    Update Profile
-                  </Button>
-                </Stack>
-              </form>
+              <TextInput
+                label="Email Address"
+                value={user.email}
+                disabled
+                leftSection={<IconUser size="1rem" />}
+                description="Your email address cannot be changed"
+              />
             </Stack>
           </Card>
 
@@ -527,7 +376,21 @@ export function ProfilePage() {
                       </Group>
                       
                       {questions[index] ? (
-                        <Text size="sm" c="dimmed">{questions[index]}</Text>
+                        <Stack gap="xs">
+                          <Text size="sm" c="dimmed">{questions[index]}</Text>
+                          <Group gap="xs">
+                            <Text size="xs" c="gray.6">
+                              Answer: {showAnswers[index] ? '(hidden for security)' : maskAnswer('sample answer')}
+                            </Text>
+                            <ActionIcon
+                              size="xs"
+                              variant="subtle"
+                              onClick={() => toggleShowAnswer(index)}
+                            >
+                              {showAnswers[index] ? <IconEyeOff size="0.7rem" /> : <IconEye size="0.7rem" />}
+                            </ActionIcon>
+                          </Group>
+                        </Stack>
                       ) : (
                         <Text size="sm" c="dimmed" fs="italic">
                           Click "Edit" to set up this security question
@@ -537,29 +400,6 @@ export function ProfilePage() {
                   </Card>
                 ))}
               </Stack>
-            </Stack>
-          </Card>
-
-          {/* Account Deletion */}
-          <Card withBorder shadow="sm" padding="xl" radius="md" style={{ borderColor: 'var(--mantine-color-red-3)' }}>
-            <Stack gap="md">
-              <Group gap="sm">
-                <IconTrash size={20} color="red" />
-                <Title order={3} c="red">Delete Account</Title>
-              </Group>
-              
-              <Text size="sm" c="dimmed">
-                Permanently delete your account and all associated data. This action cannot be undone.
-              </Text>
-
-              <Button 
-                color="red"
-                variant="light"
-                leftSection={<IconTrash size="1rem" />}
-                onClick={() => setDeleteModalOpen(true)}
-              >
-                Delete My Account
-              </Button>
             </Stack>
           </Card>
         </Stack>
@@ -608,14 +448,6 @@ export function ProfilePage() {
               {...questionForm.getInputProps('answer')}
             />
 
-            <PasswordInput
-              label="Current Password"
-              placeholder="Enter your current password to verify changes"
-              required
-              description="Required to modify security questions"
-              {...questionForm.getInputProps('current_password')}
-            />
-
             <Group justify="flex-end" gap="sm">
               <Button
                 variant="light"
@@ -637,78 +469,6 @@ export function ProfilePage() {
             </Group>
           </Stack>
         </form>
-      </Modal>
-
-      {/* Delete Account Modal */}
-      <Modal
-        opened={deleteModalOpen}
-        onClose={() => {
-          setDeleteModalOpen(false);
-          deleteForm.reset();
-          setError('');
-        }}
-        title="Delete Account"
-        size="md"
-      >
-        <Stack gap="md">
-          <Alert 
-            color="red" 
-            variant="light"
-            title="Warning"
-          >
-            This action cannot be undone. All your data including expenses, security questions, and account information will be permanently deleted.
-          </Alert>
-
-          {error && (
-            <Alert 
-              icon={<IconAlertCircle size="1rem" />} 
-              color="red" 
-              variant="light"
-            >
-              {error}
-            </Alert>
-          )}
-          
-          <form onSubmit={deleteForm.onSubmit(handleAccountDelete)}>
-            <Stack gap="md">
-              <PasswordInput
-                label="Current Password"
-                placeholder="Enter your password to verify"
-                required
-                {...deleteForm.getInputProps('password')}
-              />
-              
-              <TextInput
-                label="Confirmation"
-                placeholder="Type 'delete my account' to confirm"
-                required
-                description="Please type exactly 'delete my account' to confirm deletion"
-                {...deleteForm.getInputProps('confirmation_text')}
-              />
-
-              <Group justify="flex-end" gap="sm">
-                <Button
-                  variant="light"
-                  onClick={() => {
-                    setDeleteModalOpen(false);
-                    deleteForm.reset();
-                    setError('');
-                  }}
-                >
-                  Cancel
-                </Button>
-                <Button 
-                  type="submit" 
-                  loading={loading}
-                  color="red"
-                  leftSection={<IconTrash size="1rem" />}
-                >
-                  Delete Account Permanently
-                </Button>
-              </Group>
-            </Stack>
-          </form>
-        </Stack>
       </Modal>
     </Layout>
   );
