@@ -302,13 +302,13 @@ class TestExpenseModel:
     def test_expense_decimal_precision(self, db_session: Session):
         """Test that expense amounts handle decimal precision correctly."""
         # Arrange
-        price= Decimal("123.456")  # More precision than expected
+        price = Decimal("123.456")  # More precision than expected
         
         expense = Expense(
             date=date.today(),
-            price=amount,
+            price=price,
             description="Precision test",
-            category="fuel",
+            category="fuel-diesel",
             company="Swatch"
         )
         
@@ -318,7 +318,7 @@ class TestExpenseModel:
         db_session.refresh(expense)
         
         # Assert - Should maintain precision
-        assert expense.price== amount
+        assert float(expense.price) == float(price)
 
     def test_expense_optional_fields(self, db_session: Session):
         """Test expense creation with only required fields."""
@@ -327,7 +327,7 @@ class TestExpenseModel:
             date=date.today(),
             price=Decimal("50.00"),
             description="Basic expense",
-            category="maintenance",
+            category="truck",
             company="Swatch"
         )
         

@@ -53,7 +53,7 @@ class TestAPIResponseTimes:
                     date=date.today(),
                     price=Decimal(f"{100 + i}.00"),
                     description=f"Performance test expense {i}",
-                    category="fuel",
+                    category="fuel-diesel",
                     company="Swatch"
                 )
                 expenses.append(expense)
@@ -110,9 +110,9 @@ class TestAPIResponseTimes:
 
         expense_data = {
             "date": "2024-01-15",
-            "amount": 125.50,
+            "price": 125.50,
             "description": "Performance test expense",
-            "category": "fuel",
+            "category": "fuel-diesel",
             "company": "Swatch",
             "business_unit_id": business_unit.id,
             "truck_id": truck.id
@@ -123,7 +123,7 @@ class TestAPIResponseTimes:
         
         response = await async_client.post(
             "/api/v1/expenses/",
-            data={"expense_data": str(expense_data).replace("'", '"')},
+            json=expense_data,
             headers=headers
         )
         
@@ -261,7 +261,7 @@ class TestConcurrentUsers:
                 date=date.today(),
                 price=Decimal(f"{50 + i}.00"),
                 description=f"Concurrent test expense {i}",
-                category="fuel",
+                category="fuel-diesel",
                 company="Swatch"
             )
             expenses.append(expense)
@@ -392,7 +392,7 @@ class TestDatabaseQueryPerformance:
                 date=date.today(),
                 price=Decimal(f"{100 + i}.00"),
                 description=f"Relationship test {i}",
-                category="fuel",
+                category="fuel-diesel",
                 company="Swatch",
                 business_unit_id=business_units[i % len(business_units)].id,
                 truck_id=trucks[i % len(trucks)].id,
@@ -450,7 +450,7 @@ class TestDatabaseQueryPerformance:
                 date=date.today(),
                 price=Decimal(f"{10 + i}.00"),
                 description=f"Pagination test {i}",
-                category="fuel",
+                category="fuel-diesel",
                 company="Swatch"
             )
             expenses.append(expense)
@@ -525,7 +525,7 @@ class TestMemoryUsage:
                 date=date.today(),
                 price=Decimal(f"{100 + i}.00"),
                 description=f"{large_description} {i}",
-                category="fuel",
+                category="fuel-diesel",
                 company="Swatch"
             )
             expenses.append(expense)

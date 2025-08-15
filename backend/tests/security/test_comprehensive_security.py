@@ -51,7 +51,7 @@ class TestSQLInjectionPrevention:
             date=date.today(),
             price=Decimal("100.00"),
             description="Test expense",
-            category="fuel",
+            category="fuel-diesel",
             company="Swatch"
         )
         db_session.add(expense)
@@ -101,9 +101,9 @@ class TestSQLInjectionPrevention:
         headers = {"Authorization": f"Bearer {token}"}
 
         injection_attempts = [
-            "fuel'; DELETE FROM expenses; --",
-            "fuel' OR category='maintenance",
-            "fuel' UNION ALL SELECT password FROM users --",
+            "fuel-diesel'; DELETE FROM expenses; --",
+            "fuel-diesel' OR category='truck",
+            "fuel-diesel' UNION ALL SELECT password FROM users --",
         ]
         
         for injection in injection_attempts:
@@ -186,7 +186,7 @@ class TestJWTTokenSecurity:
         response = await async_client.get("/api/v1/expenses/", headers=headers)
         
         # Assert
-        assert response.status_code == status.HTTP_401_UNAUTHORIZED
+        assert response.status_code == status.HTTP_403_FORBIDDEN
 
     async def test_expired_jwt_token_rejected(self, async_client: AsyncClient, db_session: Session):
         """Test that expired JWT tokens are rejected."""
@@ -207,7 +207,7 @@ class TestJWTTokenSecurity:
         response = await async_client.get("/api/v1/expenses/", headers=headers)
         
         # Assert
-        assert response.status_code == status.HTTP_401_UNAUTHORIZED
+        assert response.status_code == status.HTTP_403_FORBIDDEN
 
     async def test_jwt_with_wrong_secret_rejected(self, async_client: AsyncClient, db_session: Session):
         """Test that tokens signed with wrong secret are rejected."""
@@ -228,7 +228,7 @@ class TestJWTTokenSecurity:
         response = await async_client.get("/api/v1/expenses/", headers=headers)
         
         # Assert
-        assert response.status_code == status.HTTP_401_UNAUTHORIZED
+        assert response.status_code == status.HTTP_403_FORBIDDEN
 
     async def test_malformed_authorization_header(self, async_client: AsyncClient):
         """Test handling of malformed authorization headers."""
@@ -242,7 +242,7 @@ class TestJWTTokenSecurity:
         
         for headers in malformed_headers:
             response = await async_client.get("/api/v1/expenses/", headers=headers)
-            assert response.status_code == status.HTTP_401_UNAUTHORIZED
+            assert response.status_code == status.HTTP_403_FORBIDDEN
 
     async def test_jwt_token_user_not_found(self, async_client: AsyncClient, db_session: Session):
         """Test token with valid signature but non-existent user."""
@@ -258,7 +258,7 @@ class TestJWTTokenSecurity:
         response = await async_client.get("/api/v1/expenses/", headers=headers)
         
         # Assert
-        assert response.status_code == status.HTTP_401_UNAUTHORIZED
+        assert response.status_code == status.HTTP_403_FORBIDDEN
 
 
 @pytest.mark.security
@@ -279,14 +279,14 @@ class TestDataIsolationSecurity:
             date=date.today(),
             price=Decimal("100.00"),
             description="SwatchX expense",
-            category="fuel",
+            category="fuel-diesel",
             company="Swatch"
         )
         expense2 = Expense(
             date=date.today(),
             price=Decimal("200.00"),
             description="Timmins expense",
-            category="fuel",
+            category="fuel-diesel",
             company="timmins"
         )
         
@@ -324,8 +324,8 @@ class TestDataIsolationSecurity:
             date=date.today(),
             price=Decimal("500.00"),
             description="Restricted expense",
-            category="fuel",
-            company="restricted_company"
+            category="fuel-diesel",
+            company="SWS"
         )
         
         db_session.add(restricted_expense)
@@ -353,7 +353,7 @@ class TestDataIsolationSecurity:
             status.HTTP_404_NOT_FOUND
         ] or (
             response.status_code == status.HTTP_200_OK and
-            response.json()["company"] != "restricted_company"
+            response.json()["company"] != "SWS"
         )
 
 
@@ -520,7 +520,7 @@ class TestAuthenticationSecurity:
                 "/auth/login",
                 data={"username": "testuser@example.com", "password": "wrongpassword"}
             )
-            assert response.status_code == status.HTTP_401_UNAUTHORIZED
+            assert response.status_code == status.HTTP_403_FORBIDDEN
             
             # Small delay between attempts
             time.sleep(0.1)

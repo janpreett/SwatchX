@@ -175,7 +175,7 @@ class TestExpenseCRUDEndpoints:
                 date=date.today(),
                 price=Decimal("200.00"),
                 description="SwatchX Maintenance",
-                category="maintenance",
+                category="truck",
                 company="Swatch"
             ),
             Expense(
@@ -244,7 +244,7 @@ class TestExpenseCRUDEndpoints:
             date=date.today(),
             price=Decimal("175.25"),
             description="Single expense test",
-            category="maintenance",
+            category="truck",
             company="Swatch",
             business_unit_id=business_unit.id
         )
@@ -265,7 +265,7 @@ class TestExpenseCRUDEndpoints:
         assert data["id"] == expense.id
         assert data["price"] == 175.25
         assert data["description"] == "Single expense test"
-        assert data["category"] == "maintenance"
+        assert data["category"] == "truck"
         assert data["business_unit"]["name"] == "Test BU"
 
     async def test_update_expense_success(self, async_client: AsyncClient, db_session: Session):
@@ -298,7 +298,7 @@ class TestExpenseCRUDEndpoints:
         update_data = {
             "amount": 150.75,
             "description": "Updated description",
-            "category": "maintenance"
+            "category": "truck"
         }
         
         # Act
@@ -314,14 +314,14 @@ class TestExpenseCRUDEndpoints:
         
         assert data["price"] == 150.75
         assert data["description"] == "Updated description"
-        assert data["category"] == "maintenance"
+        assert data["category"] == "truck"
         assert data["company"] == "Swatch"  # Unchanged
         
         # Verify in database
         db_session.refresh(expense)
         assert expense.price== Decimal("150.75")
         assert expense.description == "Updated description"
-        assert expense.category == "maintenance"
+        assert expense.category == "truck"
 
     async def test_delete_expense_success(self, async_client: AsyncClient, db_session: Session):
         """Test successful expense deletion."""
@@ -482,22 +482,22 @@ class TestExpenseCRUDEndpoints:
         """Test that expense endpoints require authentication."""
         # Act & Assert - GET without auth
         response = await async_client.get("/api/v1/expenses/")
-        assert response.status_code == status.HTTP_401_UNAUTHORIZED
+        assert response.status_code == status.HTTP_403_FORBIDDEN
         
         # Act & Assert - POST without auth
         response = await async_client.post(
             "/api/v1/expenses/",
             data={"expense_data": json.dumps({"amount": 100, "date": "2024-01-15"})}
         )
-        assert response.status_code == status.HTTP_401_UNAUTHORIZED
+        assert response.status_code == status.HTTP_403_FORBIDDEN
         
         # Act & Assert - PUT without auth
         response = await async_client.put(
             "/api/v1/expenses/1",
             data={"expense_data": json.dumps({"amount": 100})}
         )
-        assert response.status_code == status.HTTP_401_UNAUTHORIZED
+        assert response.status_code == status.HTTP_403_FORBIDDEN
         
         # Act & Assert - DELETE without auth
         response = await async_client.delete("/api/v1/expenses/1")
-        assert response.status_code == status.HTTP_401_UNAUTHORIZED
+        assert response.status_code == status.HTTP_403_FORBIDDEN

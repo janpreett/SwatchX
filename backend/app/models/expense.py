@@ -25,7 +25,7 @@ class BusinessUnit(Base):
     __tablename__ = "business_units"
     
     id = Column(Integer, primary_key=True, index=True)
-    name = Column(String(100), nullable=False)
+    name = Column(String(100), nullable=False, unique=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
@@ -33,7 +33,7 @@ class Truck(Base):
     __tablename__ = "trucks"
     
     id = Column(Integer, primary_key=True, index=True)
-    number = Column(String(50), nullable=False)
+    number = Column(String(50), nullable=False, unique=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
@@ -41,7 +41,7 @@ class Trailer(Base):
     __tablename__ = "trailers"
     
     id = Column(Integer, primary_key=True, index=True)
-    number = Column(String(50), nullable=False)
+    number = Column(String(50), nullable=False, unique=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
@@ -49,7 +49,7 @@ class FuelStation(Base):
     __tablename__ = "fuel_stations"
     
     id = Column(Integer, primary_key=True, index=True)
-    name = Column(String(100), nullable=False)
+    name = Column(String(100), nullable=False, unique=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 

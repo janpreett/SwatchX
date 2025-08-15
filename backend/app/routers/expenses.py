@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Query, UploadFile, File, Form
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session, joinedload
+from sqlalchemy.exc import IntegrityError
 from typing import List, Optional
 from datetime import datetime, timedelta
 import json
@@ -26,6 +27,46 @@ from ..schemas.expense import (
 from ..utils.file_handler import file_handler
 
 router = APIRouter()
+
+def validate_expense_data(expense_data: dict, db: Session) -> dict:
+    """Validate expense data including date, price, and description requirements."""
+    # Validate date
+    if not expense_data.get('date'):
+        raise HTTPException(status_code=400, detail="Date is required")
+    
+    try:
+        date_obj = datetime.fromisoformat(expense_data['date'].replace('Z', '+00:00'))
+        # Check if date is not in the future
+        if date_obj > datetime.now():
+            raise HTTPException(status_code=400, detail="Date cannot be in the future")
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid date format")
+    
+    # Validate price
+    price = expense_data.get('price')
+    if price is None:
+        raise HTTPException(status_code=400, detail="Price is required")
+    
+    try:
+        price_float = float(price)
+        if price_float <= 0:
+            raise HTTPException(status_code=400, detail="Price must be greater than 0")
+        expense_data['price'] = price_float  # Ensure price is float
+    except (ValueError, TypeError):
+        raise HTTPException(status_code=400, detail="Price must be a valid number")
+    
+    # Validate description is provided
+    if not expense_data.get('description') or str(expense_data['description']).strip() == '':
+        raise HTTPException(status_code=400, detail="Description is required")
+    
+    return expense_data
+
+def check_duplicate_entity(db: Session, model, field_name: str, value: str, exclude_id: int = None) -> bool:
+    """Check if an entity with the same field value already exists."""
+    query = db.query(model).filter(getattr(model, field_name) == value)
+    if exclude_id:
+        query = query.filter(model.id != exclude_id)
+    return query.first() is not None
 
 def serialize_expense_with_relationships(expense: Expense) -> dict:
     """
@@ -126,6 +167,10 @@ async def create_expense(
     try:
         # Parse JSON data from form
         expense_dict = json.loads(expense_data)
+        
+        # Validate expense data
+        expense_dict = validate_expense_data(expense_dict, db)
+        
         expense = ExpenseCreate(**expense_dict)
     except (json.JSONDecodeError, ValueError) as e:
         raise HTTPException(status_code=400, detail=f"Invalid expense data: {str(e)}")
@@ -135,18 +180,29 @@ async def create_expense(
     if attachment:
         attachment_path = await file_handler.save_file(attachment)
     
-    # Create expense with attachment path
-    expense_data_dict = expense.model_dump()
-    expense_data_dict["attachment_path"] = attachment_path
-    
-    db_expense = Expense(**expense_data_dict)
-    db.add(db_expense)
-    db.commit()
-    db.refresh(db_expense)
-    
-    # Return with relationships
-    expense_with_relationships = get_expense_with_relationships(db, db_expense.id)
-    return serialize_expense_with_relationships(expense_with_relationships)
+    try:
+        # Create expense with attachment path
+        expense_data_dict = expense.model_dump()
+        expense_data_dict["attachment_path"] = attachment_path
+        
+        db_expense = Expense(**expense_data_dict)
+        db.add(db_expense)
+        db.commit()
+        db.refresh(db_expense)
+        
+        # Return with relationships
+        expense_with_relationships = get_expense_with_relationships(db, db_expense.id)
+        response_data = serialize_expense_with_relationships(expense_with_relationships)
+        response_data["message"] = "Expense created successfully"
+        response_data["status"] = "success"
+        return response_data
+        
+    except IntegrityError as e:
+        db.rollback()
+        raise HTTPException(status_code=400, detail="Database integrity error - check for duplicate values")
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Failed to create expense: {str(e)}")
 
 @router.get("/expenses/", response_model=List[dict])
 async def read_expenses(
@@ -194,51 +250,78 @@ async def update_expense(
     try:
         # Parse JSON data from form
         expense_dict = json.loads(expense_data)
+        
+        # Validate expense data
+        expense_dict = validate_expense_data(expense_dict, db)
+        
         expense = ExpenseUpdate(**expense_dict)
     except (json.JSONDecodeError, ValueError) as e:
         raise HTTPException(status_code=400, detail=f"Invalid expense data: {str(e)}")
     
-    # Handle file upload if provided
-    if attachment:
-        # Delete old attachment if it exists
-        if db_expense.attachment_path:
-            file_handler.delete_file(db_expense.attachment_path)
+    try:
+        # Handle file upload if provided
+        if attachment:
+            # Delete old attachment if it exists
+            if db_expense.attachment_path:
+                file_handler.delete_file(db_expense.attachment_path)
+            
+            # Save new attachment
+            attachment_path = await file_handler.save_file(attachment)
+            expense.attachment_path = attachment_path
+        elif attachment is None and 'attachment_path' not in expense_dict:
+            # If no file provided and no attachment_path in data, remove existing attachment
+            if db_expense.attachment_path:
+                file_handler.delete_file(db_expense.attachment_path)
+                expense.attachment_path = None
         
-        # Save new attachment
-        attachment_path = await file_handler.save_file(attachment)
-        expense.attachment_path = attachment_path
-    elif attachment is None and 'attachment_path' not in expense_dict:
-        # If no file provided and no attachment_path in data, remove existing attachment
-        if db_expense.attachment_path:
-            file_handler.delete_file(db_expense.attachment_path)
-            expense.attachment_path = None
-    
-    # Update expense
-    update_data = expense.dict(exclude_unset=True)
-    for field, value in update_data.items():
-        setattr(db_expense, field, value)
-    
-    db.commit()
-    db.refresh(db_expense)
-    return serialize_expense_with_relationships(db_expense)
+        # Update expense
+        update_data = expense.model_dump(exclude_unset=True)
+        for field, value in update_data.items():
+            setattr(db_expense, field, value)
+        
+        db.commit()
+        db.refresh(db_expense)
+        
+        response_data = serialize_expense_with_relationships(db_expense)
+        response_data["message"] = "Expense updated successfully"
+        response_data["status"] = "success"
+        return response_data
+        
+    except IntegrityError as e:
+        db.rollback()
+        raise HTTPException(status_code=400, detail="Database integrity error - check for duplicate values")
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Failed to update expense: {str(e)}")
 
-@router.delete("/expenses/{expense_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/expenses/{expense_id}", response_model=dict)
 def delete_expense(
     expense_id: int,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user)
 ):
+    """Delete an expense by ID with confirmation message."""
     expense = db.query(Expense).filter(Expense.id == expense_id).first()
     if expense is None:
         raise HTTPException(status_code=404, detail="Expense not found")
     
-    # Delete associated file if it exists
-    if expense.attachment_path:
-        file_handler.delete_file(expense.attachment_path)
-    
-    db.delete(expense)
-    db.commit()
-    return
+    try:
+        # Delete associated file if it exists
+        if expense.attachment_path:
+            file_handler.delete_file(expense.attachment_path)
+        
+        db.delete(expense)
+        db.commit()
+        
+        return {
+            "message": f"Expense with ID {expense_id} deleted successfully", 
+            "status": "success",
+            "deleted_id": expense_id
+        }
+        
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Failed to delete expense: {str(e)}")
 
 @router.get("/expenses/{expense_id}/attachment")
 async def download_attachment(
@@ -291,17 +374,38 @@ async def remove_attachment(
     return
 
 # Business Unit endpoints
-@router.post("/business-units/", response_model=BusinessUnitSchema, status_code=status.HTTP_201_CREATED)
+@router.post("/business-units/", response_model=dict, status_code=status.HTTP_201_CREATED)
 def create_business_unit(
     business_unit: BusinessUnitCreate,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user)
 ):
-    db_business_unit = BusinessUnit(**business_unit.model_dump())
-    db.add(db_business_unit)
-    db.commit()
-    db.refresh(db_business_unit)
-    return db_business_unit
+    """Create a new business unit with duplicate checking."""
+    # Check for duplicate name
+    if check_duplicate_entity(db, BusinessUnit, "name", business_unit.name):
+        raise HTTPException(status_code=400, detail=f"Business unit with name '{business_unit.name}' already exists")
+    
+    try:
+        db_business_unit = BusinessUnit(**business_unit.model_dump())
+        db.add(db_business_unit)
+        db.commit()
+        db.refresh(db_business_unit)
+        
+        return {
+            **business_unit.model_dump(),
+            "id": db_business_unit.id,
+            "created_at": db_business_unit.created_at,
+            "updated_at": db_business_unit.updated_at,
+            "message": "Business unit created successfully",
+            "status": "success"
+        }
+        
+    except IntegrityError as e:
+        db.rollback()
+        raise HTTPException(status_code=400, detail="Business unit name must be unique")
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Failed to create business unit: {str(e)}")
 
 @router.get("/business-units/", response_model=List[BusinessUnitSchema])
 async def read_business_units(
@@ -345,17 +449,38 @@ def delete_business_unit(
     check_entity_usage_and_delete(db, business_unit, business_unit_id, "business_unit")
 
 # Truck endpoints
-@router.post("/trucks/", response_model=TruckSchema, status_code=status.HTTP_201_CREATED)
+@router.post("/trucks/", response_model=dict, status_code=status.HTTP_201_CREATED)
 def create_truck(
     truck: TruckCreate,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user)
 ):
-    db_truck = Truck(**truck.model_dump())
-    db.add(db_truck)
-    db.commit()
-    db.refresh(db_truck)
-    return db_truck
+    """Create a new truck with duplicate number checking."""
+    # Check for duplicate number
+    if check_duplicate_entity(db, Truck, "number", truck.number):
+        raise HTTPException(status_code=400, detail=f"Truck with number '{truck.number}' already exists")
+    
+    try:
+        db_truck = Truck(**truck.model_dump())
+        db.add(db_truck)
+        db.commit()
+        db.refresh(db_truck)
+        
+        return {
+            **truck.model_dump(),
+            "id": db_truck.id,
+            "created_at": db_truck.created_at,
+            "updated_at": db_truck.updated_at,
+            "message": "Truck created successfully",
+            "status": "success"
+        }
+        
+    except IntegrityError as e:
+        db.rollback()
+        raise HTTPException(status_code=400, detail="Truck number must be unique")
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Failed to create truck: {str(e)}")
 
 @router.get("/trucks/", response_model=List[TruckSchema])
 async def read_trucks(
@@ -399,17 +524,38 @@ def delete_truck(
     check_entity_usage_and_delete(db, truck, truck_id, "truck")
 
 # Trailer endpoints
-@router.post("/trailers/", response_model=TrailerSchema, status_code=status.HTTP_201_CREATED)
+@router.post("/trailers/", response_model=dict, status_code=status.HTTP_201_CREATED)
 def create_trailer(
     trailer: TrailerCreate,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user)
 ):
-    db_trailer = Trailer(**trailer.model_dump())
-    db.add(db_trailer)
-    db.commit()
-    db.refresh(db_trailer)
-    return db_trailer
+    """Create a new trailer with duplicate number checking."""
+    # Check for duplicate number
+    if check_duplicate_entity(db, Trailer, "number", trailer.number):
+        raise HTTPException(status_code=400, detail=f"Trailer with number '{trailer.number}' already exists")
+    
+    try:
+        db_trailer = Trailer(**trailer.model_dump())
+        db.add(db_trailer)
+        db.commit()
+        db.refresh(db_trailer)
+        
+        return {
+            **trailer.model_dump(),
+            "id": db_trailer.id,
+            "created_at": db_trailer.created_at,
+            "updated_at": db_trailer.updated_at,
+            "message": "Trailer created successfully",
+            "status": "success"
+        }
+        
+    except IntegrityError as e:
+        db.rollback()
+        raise HTTPException(status_code=400, detail="Trailer number must be unique")
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Failed to create trailer: {str(e)}")
 
 @router.get("/trailers/", response_model=List[TrailerSchema])
 async def read_trailers(
@@ -453,17 +599,38 @@ def delete_trailer(
     check_entity_usage_and_delete(db, trailer, trailer_id, "trailer")
 
 # Fuel Station endpoints
-@router.post("/fuel-stations/", response_model=FuelStationSchema, status_code=status.HTTP_201_CREATED)
+@router.post("/fuel-stations/", response_model=dict, status_code=status.HTTP_201_CREATED)
 def create_fuel_station(
     fuel_station: FuelStationCreate,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user)
 ):
-    db_fuel_station = FuelStation(**fuel_station.model_dump())
-    db.add(db_fuel_station)
-    db.commit()
-    db.refresh(db_fuel_station)
-    return db_fuel_station
+    """Create a new fuel station with duplicate name checking."""
+    # Check for duplicate name
+    if check_duplicate_entity(db, FuelStation, "name", fuel_station.name):
+        raise HTTPException(status_code=400, detail=f"Fuel station with name '{fuel_station.name}' already exists")
+    
+    try:
+        db_fuel_station = FuelStation(**fuel_station.model_dump())
+        db.add(db_fuel_station)
+        db.commit()
+        db.refresh(db_fuel_station)
+        
+        return {
+            **fuel_station.model_dump(),
+            "id": db_fuel_station.id,
+            "created_at": db_fuel_station.created_at,
+            "updated_at": db_fuel_station.updated_at,
+            "message": "Fuel station created successfully",
+            "status": "success"
+        }
+        
+    except IntegrityError as e:
+        db.rollback()
+        raise HTTPException(status_code=400, detail="Fuel station name must be unique")
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Failed to create fuel station: {str(e)}")
 
 @router.get("/fuel-stations/", response_model=List[FuelStationSchema])
 async def read_fuel_stations(
