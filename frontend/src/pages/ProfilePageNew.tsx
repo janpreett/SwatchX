@@ -361,7 +361,7 @@ export function ProfilePage() {
 
               <Stack gap="lg">
                 {[0, 1, 2].map((index) => (
-                  <Card key={index} withBorder p="md" radius="sm" bg="gray.0">
+                  <Card key={index} withBorder p="md" radius="sm">
                     <Stack gap="sm">
                       <Group justify="space-between">
                         <Text fw={500} size="sm">Security Question {index + 1}</Text>

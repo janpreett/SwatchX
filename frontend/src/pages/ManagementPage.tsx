@@ -21,6 +21,7 @@ import { useForm } from '@mantine/form';
 import { notifications } from '@mantine/notifications';
 import { IconArrowLeft, IconAlertCircle, IconPlus, IconEdit, IconTrash, IconCheck } from '@tabler/icons-react';
 import { Layout } from '../components/Layout';
+import { useThemeColors } from '../hooks/useThemeColors';
 import { managementService } from '../services/api';
 
 interface ManagementItem {
@@ -73,6 +74,7 @@ const managementConfigs = {
 export function ManagementPage() {
   const { type } = useParams<{ type: string }>();
   const navigate = useNavigate();
+  const themeColors = useThemeColors();
   const [items, setItems] = useState<ManagementItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -350,7 +352,7 @@ export function ManagementPage() {
                 <Group gap="sm">
                   <Title order={1}>{config.title}</Title>
                 </Group>
-                <Text c="dimmed">Manage {config.title.toLowerCase()}</Text>
+                <Text c={themeColors.secondaryText}>Manage {config.title.toLowerCase()}</Text>
               </Box>
             </Group>
             
@@ -419,13 +421,13 @@ export function ManagementPage() {
                             checked={selectedIds.includes(item.id)}
                             onChange={(event) => handleSelectItem(item.id, event.currentTarget.checked)}
                           />
-                          <Text fw={700} size="lg" c="dark">
+                          <Text fw={700} size="lg" c={themeColors.primaryText}>
                             {item[config.field as keyof ManagementItem]}
                           </Text>
                         </Group>
                         
                         <Stack gap="xs">
-                          <Text size="sm" c="dimmed">
+                          <Text size="sm" c={themeColors.secondaryText}>
                             <Text fw={600} span>Created:</Text> <Text span ml="xs">{new Date(item.created_at).toLocaleDateString()}</Text>
                           </Text>
                           

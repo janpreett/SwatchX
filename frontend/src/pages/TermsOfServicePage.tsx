@@ -1,14 +1,17 @@
 import { Container, Paper, Title, Text, Stack, Anchor } from '@mantine/core';
 import { Link } from 'react-router-dom';
+import { useThemeColors } from '../hooks/useThemeColors';
 
 export function TermsOfServicePage() {
+  const themeColors = useThemeColors();
+  
   return (
     <Container size="md" py="xl">
       <Paper shadow="sm" radius="md" p="xl">
         <Stack gap="md">
           <Title order={1} mb="lg">Terms of Service</Title>
           
-          <Text size="sm" c="dimmed">Last updated: August 14, 2025</Text>
+          <Text size="sm" c={themeColors.secondaryText}>Last updated: August 14, 2025</Text>
 
           <Stack gap="lg">
             <section>

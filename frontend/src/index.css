@@ -44,3 +44,87 @@ a {
   text-decoration: none;
   color: inherit;
 }
+
+/* Dark mode placeholder text - make ALL placeholders white everywhere */
+[data-mantine-color-scheme="dark"] input::placeholder,
+[data-mantine-color-scheme="dark"] textarea::placeholder,
+[data-mantine-color-scheme="dark"] .mantine-TextInput-input::placeholder,
+[data-mantine-color-scheme="dark"] .mantine-Select-input::placeholder,
+[data-mantine-color-scheme="dark"] .mantine-Textarea-input::placeholder,
+[data-mantine-color-scheme="dark"] .mantine-NumberInput-input::placeholder,
+[data-mantine-color-scheme="dark"] .mantine-DateInput-input::placeholder,
+[data-mantine-color-scheme="dark"] .mantine-FileInput-input::placeholder,
+[data-mantine-color-scheme="dark"] .mantine-PasswordInput-input::placeholder {
+  color: #ffffff !important;
+  opacity: 0.8 !important;
+}
+
+/* Dark mode form inputs - better visibility */
+[data-mantine-color-scheme="dark"] .mantine-TextInput-input,
+[data-mantine-color-scheme="dark"] .mantine-Select-input,
+[data-mantine-color-scheme="dark"] .mantine-Textarea-input,
+[data-mantine-color-scheme="dark"] .mantine-NumberInput-input,
+[data-mantine-color-scheme="dark"] .mantine-DateInput-input,
+[data-mantine-color-scheme="dark"] .mantine-FileInput-input,
+[data-mantine-color-scheme="dark"] .mantine-PasswordInput-input {
+  background-color: #2a2a2a !important;
+  border: 1px solid #555555 !important;
+  color: #ffffff !important;
+}
+
+[data-mantine-color-scheme="dark"] .mantine-TextInput-input:focus,
+[data-mantine-color-scheme="dark"] .mantine-Select-input:focus,
+[data-mantine-color-scheme="dark"] .mantine-Textarea-input:focus,
+[data-mantine-color-scheme="dark"] .mantine-NumberInput-input:focus,
+[data-mantine-color-scheme="dark"] .mantine-DateInput-input:focus,
+[data-mantine-color-scheme="dark"] .mantine-FileInput-input:focus,
+[data-mantine-color-scheme="dark"] .mantine-PasswordInput-input:focus {
+  border-color: #ffffff !important;
+}
+
+/* Dark mode button text for expense cards */
+[data-mantine-color-scheme="dark"] .mantine-Button-inner {
+  color: #ffffff !important;
+}
+
+/* Dark mode select dropdown text and icons */
+[data-mantine-color-scheme="dark"] .mantine-Select-item {
+  color: #ffffff !important;
+}
+
+[data-mantine-color-scheme="dark"] .mantine-Select-rightSection svg {
+  color: #ffffff !important;
+}
+
+/* Dark mode checkbox styling */
+[data-mantine-color-scheme="dark"] .mantine-Checkbox-input:checked {
+  background-color: #ffffff !important;
+  border-color: #ffffff !important;
+}
+
+[data-mantine-color-scheme="dark"] .mantine-Checkbox-icon {
+  color: #000000 !important;
+}
+
+/* Dark mode ALL icons in inputs - search, calendar, etc */
+[data-mantine-color-scheme="dark"] .mantine-TextInput-section svg,
+[data-mantine-color-scheme="dark"] .mantine-Select-section svg,
+[data-mantine-color-scheme="dark"] .mantine-DateInput-section svg,
+[data-mantine-color-scheme="dark"] .mantine-FileInput-section svg,
+[data-mantine-color-scheme="dark"] .mantine-PasswordInput-section svg,
+[data-mantine-color-scheme="dark"] .mantine-Input-section svg {
+  color: #ffffff !important;
+}
+
+/* Fix textarea spacing - prevent sticking to top */
+.mantine-Textarea-input {
+  padding-top: 12px !important;
+  line-height: 1.5 !important;
+}
+
+/* Ensure proper textarea resizing */
+.mantine-Textarea-input[data-resize="vertical"] {
+  resize: vertical !important;
+}
+
+/* Remove table border overrides - let them be normal */

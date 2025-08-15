@@ -55,7 +55,7 @@ export function SecurityQuestionsHelpPage() {
                 <Title order={3} size="h4">Suggested Security Questions:</Title>
                 <Stack gap="xs">
                   {SECURITY_QUESTION_SUGGESTIONS.map((question, index) => (
-                    <Card key={index} withBorder p="sm" radius="sm" bg="gray.0">
+                    <Card key={index} withBorder p="sm" radius="sm">
                       <Text size="sm">{question}</Text>
                     </Card>
                   ))}

@@ -23,6 +23,7 @@ import { useNavigate } from 'react-router-dom';
 import { IconPlus, IconTable, IconSettings, IconArrowLeft, IconTrendingUp, IconTrendingDown, IconChartPie } from '@tabler/icons-react';
 import { Layout } from '../components/Layout';
 import { useCompany } from '../hooks/useCompany';
+import { useThemeColors } from '../hooks/useThemeColors';
 import { expenseService, managementService } from '../services/api';
 import { EXPENSE_CATEGORIES } from '../constants/expenseCategories';
 
@@ -66,6 +67,7 @@ interface PieChartData {
 export function DashboardPage() {
   const navigate = useNavigate();
   const { selectedCompany, clearSelectedCompany } = useCompany();
+  const themeColors = useThemeColors();
   const [recentExpenses, setRecentExpenses] = useState<DashboardExpense[]>([]);
   const [loading, setLoading] = useState(true);
   const [analyticsLoading, setAnalyticsLoading] = useState(true);
@@ -252,7 +254,6 @@ export function DashboardPage() {
               shadow="sm" 
               padding="xl" 
               radius="md" 
-              bg="gray.0"
               style={{ 
                 cursor: 'pointer',
                 transition: 'all 0.2s ease',
@@ -267,7 +268,7 @@ export function DashboardPage() {
               }}
             >
               <Stack gap="sm">
-                <Text size="md" c="dimmed" fw={500}>This Month</Text>
+                <Text size="md" fw={500}>This Month</Text>
                 <Text size="3xl" fw={700} c="blue">${totals.thisMonth.toFixed(2)}</Text>
                 <Text size="sm" c="green" fw={500}>Current month expenses</Text>
               </Stack>
@@ -277,7 +278,6 @@ export function DashboardPage() {
               shadow="sm" 
               padding="xl" 
               radius="md" 
-              bg="gray.0"
               style={{ 
                 cursor: 'pointer',
                 transition: 'all 0.2s ease',
@@ -292,7 +292,7 @@ export function DashboardPage() {
               }}
             >
               <Stack gap="sm">
-                <Text size="md" c="dimmed" fw={500}>Month-over-Month Change</Text>
+                <Text size="md" fw={500}>Month-over-Month Change</Text>
                 {analyticsLoading ? (
                   <Center>
                     <Loader size="sm" />
@@ -313,12 +313,12 @@ export function DashboardPage() {
                         {Math.abs(monthlyChange.percentage_change).toFixed(1)}%
                       </Text>
                     </Group>
-                    <Text size="sm" c="dimmed" fw={500}>
+                    <Text size="sm" fw={500}>
                       vs last month
                     </Text>
                   </>
                 ) : (
-                  <Text size="lg" c="dimmed">No data</Text>
+                  <Text size="lg">No data</Text>
                 )}
               </Stack>
             </Card>
@@ -327,7 +327,6 @@ export function DashboardPage() {
               shadow="sm" 
               padding="xl" 
               radius="md" 
-              bg="gray.0"
               style={{ 
                 cursor: 'pointer',
                 transition: 'all 0.2s ease',
@@ -347,7 +346,7 @@ export function DashboardPage() {
             >
               <Stack gap="sm">
                 <Group justify="space-between" align="center">
-                  <Text size="md" c="dimmed" fw={500}>Category Breakdown</Text>
+                  <Text size="md" fw={500}>Category Breakdown</Text>
                   <ActionIcon variant="light" color="blue" size="sm">
                     <IconChartPie size={16} />
                   </ActionIcon>
@@ -372,9 +371,9 @@ export function DashboardPage() {
                     />
                   </Center>
                 ) : (
-                  <Text size="sm" c="dimmed">No category data</Text>
+                  <Text size="sm">No category data</Text>
                 )}
-                <Text size="sm" c="dimmed" fw={500}>Click to expand</Text>
+                <Text size="sm" fw={500}>Click to expand</Text>
               </Stack>
             </Card>
             
@@ -382,7 +381,6 @@ export function DashboardPage() {
               shadow="sm" 
               padding="xl" 
               radius="md" 
-              bg="gray.0"
               style={{ 
                 cursor: 'pointer',
                 transition: 'all 0.2s ease',
@@ -397,9 +395,9 @@ export function DashboardPage() {
               }}
             >
               <Stack gap="sm">
-                <Text size="md" c="dimmed" fw={500}>All Time Total</Text>
+                <Text size="md" fw={500}>All Time Total</Text>
                 <Text size="3xl" fw={700} c="grape">${totals.total.toFixed(2)}</Text>
-                <Text size="sm" c="dimmed" fw={500}>All categories</Text>
+                <Text size="sm" fw={500}>All categories</Text>
               </Stack>
             </Card>
           </SimpleGrid>
@@ -411,7 +409,7 @@ export function DashboardPage() {
             title={
               <Group gap="sm">
                 <IconChartPie size={24} color="var(--mantine-color-blue-6)" />
-                <Text size="xl" fw={700}>Expense Categories Breakdown</Text>
+                <Text size="xl" fw={700} c={themeColors.primaryText}>Expense Categories Breakdown</Text>
               </Group>
             }
             size="xl"
@@ -489,7 +487,7 @@ export function DashboardPage() {
                       </Badge>
                     </Group>
                     <Group justify="space-between">
-                      <Text size="sm" c="dimmed">Total Amount:</Text>
+                      <Text size="sm">Total Amount:</Text>
                       <Text fw={600} size="lg" c="blue">
                         ${pieChartData.total_amount.toFixed(2)}
                       </Text>
@@ -519,8 +517,8 @@ export function DashboardPage() {
               ) : (
                 <Center h={500}>
                   <Stack align="center" gap="md">
-                    <Text size="lg" c="dimmed">No category data available</Text>
-                    <Text size="sm" c="dimmed" ta="center">
+                    <Text size="lg">No category data available</Text>
+                    <Text size="sm" ta="center">
                       Try switching between "This Month" and "Total" or add some expenses first.
                     </Text>
                   </Stack>
@@ -533,7 +531,7 @@ export function DashboardPage() {
           {/* Expense Categories */}
           <Box>
             <Group justify="space-between" align="center" mb="xl">
-              <Text size="5xl" fw={700} c="dark" gradient={{ from: 'blue', to: 'cyan', deg: 45 }} variant="gradient">
+              <Text size="5xl" fw={700} {...themeColors.getGradientOrSolid({ from: 'blue', to: 'cyan', deg: 45 })}>
                 Expense Categories
               </Text>
               <Badge variant="light" color="blue" size="lg">
@@ -563,7 +561,7 @@ export function DashboardPage() {
                   >
                     <Stack gap="md">
                       <Group justify="space-between" align="flex-start">
-                        <Text fw={700} size="md" c="dark">
+                        <Text fw={700} size="md" c={themeColors.primaryText}>
                           {category.label}
                         </Text>
                         <Badge color={category.color} variant="light" size="lg">
@@ -603,7 +601,7 @@ export function DashboardPage() {
           {/* Recent Activity */}
           <Box>
             <Group justify="space-between" align="center" mb="xl">
-              <Text size="5xl" fw={700} c="dark" gradient={{ from: 'green', to: 'teal', deg: 45 }} variant="gradient">
+              <Text size="5xl" fw={700} {...themeColors.getGradientOrSolid({ from: 'green', to: 'teal', deg: 45 })}>
                 Recent Activity
               </Text>
               <Badge variant="light" color="green" size="lg">
@@ -613,12 +611,12 @@ export function DashboardPage() {
             <Card shadow="sm" padding="2xl" radius="md">
               {loading ? (
                 <Stack align="center" gap="md" py="xl">
-                  <Text size="lg" c="dimmed">Loading recent expenses...</Text>
+                  <Text size="lg" c={themeColors.secondaryText}>Loading recent expenses...</Text>
                 </Stack>
               ) : recentExpenses.length === 0 ? (
                 <Stack align="center" gap="md" py="xl">
-                  <Text size="lg" c="dimmed">No recent expenses</Text>
-                  <Text size="sm" c="dimmed" ta="center">
+                  <Text size="lg" c={themeColors.secondaryText}>No recent expenses</Text>
+                  <Text size="sm" c={themeColors.secondaryText} ta="center">
                     Start adding expenses to see recent activity here
                   </Text>
                 </Stack>
@@ -631,59 +629,58 @@ export function DashboardPage() {
                       shadow="xs" 
                       padding="lg" 
                       radius="md"
-                      bg="gray.0"
                     >
                       <Group justify="space-between" align="flex-start" mb="sm">
                         <Box flex={1}>
                           <Group justify="space-between" align="flex-start" mb="xs">
-                            <Text fw={700} size="lg" c="dark">
+                            <Text fw={700} size="lg" c={themeColors.primaryText}>
                               {expense.category?.charAt(0).toUpperCase() + expense.category?.slice(1) || 'Expense'}
                             </Text>
-                            <Text size="xs" c="dimmed">
+                            <Text size="xs" c={themeColors.secondaryText}>
                               {new Date(expense.date).toLocaleDateString()}
                             </Text>
                           </Group>
                           <Stack gap="xs">
                             {expense.businessUnit && (
                               <Text size="sm">
-                                <Text fw={600} span c="dark.8">Business Unit:</Text> 
-                                <Text span ml="xs" c="dark.6">{expense.businessUnit.name}</Text>
+                                <Text fw={600} span c={themeColors.strongText}>Business Unit:</Text> 
+                                <Text span ml="xs" c={themeColors.subtleText}>{expense.businessUnit.name}</Text>
                               </Text>
                             )}
                             {expense.truck && (
                               <Text size="sm">
-                                <Text fw={600} span c="dark.8">Truck:</Text> 
-                                <Text span ml="xs" c="dark.6">{expense.truck.number}</Text>
+                                <Text fw={600} span c={themeColors.strongText}>Truck:</Text> 
+                                <Text span ml="xs" c={themeColors.subtleText}>{expense.truck.number}</Text>
                               </Text>
                             )}
                             {expense.trailer && (
                               <Text size="sm">
-                                <Text fw={600} span c="dark.8">Trailer:</Text> 
-                                <Text span ml="xs" c="dark.6">{expense.trailer.number}</Text>
+                                <Text fw={600} span c={themeColors.strongText}>Trailer:</Text> 
+                                <Text span ml="xs" c={themeColors.subtleText}>{expense.trailer.number}</Text>
                               </Text>
                             )}
                             {expense.fuelStation && (
                               <Text size="sm">
-                                <Text fw={600} span c="dark.8">Fuel Station:</Text> 
-                                <Text span ml="xs" c="dark.6">{expense.fuelStation.name}</Text>
+                                <Text fw={600} span c={themeColors.strongText}>Fuel Station:</Text> 
+                                <Text span ml="xs" c={themeColors.subtleText}>{expense.fuelStation.name}</Text>
                               </Text>
                             )}
                             {expense.gallons && (
                               <Text size="sm">
-                                <Text fw={600} span c="dark.8">Gallons:</Text> 
-                                <Text span ml="xs" c="dark.6">{expense.gallons}</Text>
+                                <Text fw={600} span c={themeColors.strongText}>Gallons:</Text> 
+                                <Text span ml="xs" c={themeColors.subtleText}>{expense.gallons}</Text>
                               </Text>
                             )}
                             {expense.description && (
                               <Text size="sm">
-                                <Text fw={600} span c="dark.8">Description:</Text> 
-                                <Text span ml="xs" c="dark.6">{expense.description}</Text>
+                                <Text fw={600} span c={themeColors.strongText}>Description:</Text> 
+                                <Text span ml="xs" c={themeColors.subtleText}>{expense.description}</Text>
                               </Text>
                             )}
                             {(expense.repairDescription || expense.repair_description) && (
                               <Text size="sm">
-                                <Text fw={600} span c="dark.8">Repair Description:</Text> 
-                                <Text span ml="xs" c="dark.6">{expense.repairDescription || expense.repair_description}</Text>
+                                <Text fw={600} span c={themeColors.strongText}>Repair Description:</Text> 
+                                <Text span ml="xs" c={themeColors.subtleText}>{expense.repairDescription || expense.repair_description}</Text>
                               </Text>
                             )}
                           </Stack>

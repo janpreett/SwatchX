@@ -154,7 +154,7 @@ export function ManagementIndexPage() {
                   </Text>
                 </Group>
                 
-                <Text size="md" c="dimmed" fw={500}>
+                <Text size="md" fw={500}>
                   {option.description}
                 </Text>
               </Card>
@@ -170,7 +170,7 @@ export function ManagementIndexPage() {
             <Title order={2}>Data Export</Title>
           </Group>
           
-          <Text size="md" c="dimmed">
+          <Text size="md">
             Export all expense data for {selectedCompany} company to Excel format
           </Text>
           

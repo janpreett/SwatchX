@@ -129,7 +129,6 @@ export function ForgotPasswordPage() {
         align="center" 
         justify="center" 
         p={{ base: 'md', sm: 'xl' }}
-        bg="gray.0"
       >
         <Container size="xs" w="100%">
           <Stack align="center" gap="xl">
@@ -174,7 +173,6 @@ export function ForgotPasswordPage() {
       align="center" 
       justify="center" 
       p={{ base: 'md', sm: 'xl' }}
-      bg="gray.0"
     >
       <Container size="sm" w="100%">
         <Stack align="center" gap="xl">

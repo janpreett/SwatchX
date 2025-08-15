@@ -29,6 +29,7 @@ import { CATEGORY_CONFIG_MAP } from '../constants/expenseCategories';
 interface ExpenseFormData {
   date: Date | null;
   cost: number | '';
+  price: number | '';
   description?: string;
   repairDescription?: string;
   gallons?: number | '';
@@ -51,7 +52,7 @@ interface ExpenseFormProps {
   returnTo?: string;
 }
 
-type FieldType = 'date' | 'businessUnit' | 'truck' | 'trailer' | 'repairDescription' | 'cost' | 'fuelStation' | 'gallons' | 'description';
+type FieldType = 'date' | 'businessUnit' | 'truck' | 'trailer' | 'repairDescription' | 'cost' | 'price' | 'fuelStation' | 'gallons' | 'description';
 
 export function ExpenseForm({ category, categoryLabel, onSubmit, initialData, isEditing, loading: formLoading, returnTo = '/dashboard' }: ExpenseFormProps) {
   const navigate = useNavigate();
@@ -68,7 +69,7 @@ export function ExpenseForm({ category, categoryLabel, onSubmit, initialData, is
   const [fuelStations, setFuelStations] = useState<Array<{value: string, label: string}>>([]);
 
   const config = CATEGORY_CONFIG_MAP[category];
-  const requiredFields = config?.fields || ['date', 'cost'] as FieldType[];
+  const requiredFields = config?.fields || ['date', 'price'] as FieldType[];
 
   // Load management data on component mount
   useEffect(() => {
@@ -103,6 +104,7 @@ export function ExpenseForm({ category, categoryLabel, onSubmit, initialData, is
     initialValues: {
       date: new Date(),
       cost: '',
+      price: '',
       description: '',
       repairDescription: '',
       gallons: '',
@@ -117,8 +119,17 @@ export function ExpenseForm({ category, categoryLabel, onSubmit, initialData, is
     validate: {
       date: (value) => (!value ? 'Date is required' : null),
       cost: (value) => {
-        if (!value && value !== 0) return 'Cost is required';
-        if (typeof value === 'number' && value <= 0) return 'Cost must be greater than 0';
+        if (requiredFields.includes('cost')) {
+          if (!value && value !== 0) return 'Cost is required';
+          if (typeof value === 'number' && value <= 0) return 'Cost must be greater than 0';
+        }
+        return null;
+      },
+      price: (value) => {
+        if (requiredFields.includes('price')) {
+          if (!value && value !== 0) return 'Price is required';
+          if (typeof value === 'number' && value <= 0) return 'Price must be greater than 0';
+        }
         return null;
       },
       description: (value) => {
@@ -256,7 +267,7 @@ export function ExpenseForm({ category, categoryLabel, onSubmit, initialData, is
               <IconArrowLeft size={18} />
             </ActionIcon>
             <Group gap="md">
-              <Text size="3xl" lh={1}>{config?.icon || '📝'}</Text>
+              {config?.icon && <Text size="3xl" lh={1}>{config.icon}</Text>}
               <Box>
                 <Title order={1} c={config?.color || 'blue'}>
                   {isEditing ? 'Edit' : 'Add'} {categoryLabel}
@@ -350,7 +361,8 @@ export function ExpenseForm({ category, categoryLabel, onSubmit, initialData, is
                     placeholder="Enter description"
                     required
                     minRows={3}
-                    maxRows={5}
+                    maxRows={10}
+                    resize="vertical"
                     {...form.getInputProps('description')}
                   />
                 )}
@@ -362,7 +374,8 @@ export function ExpenseForm({ category, categoryLabel, onSubmit, initialData, is
                     placeholder="Describe the repair work"
                     required
                     minRows={3}
-                    maxRows={5}
+                    maxRows={10}
+                    resize="vertical"
                     {...form.getInputProps('repairDescription')}
                   />
                 )}
@@ -418,16 +431,31 @@ export function ExpenseForm({ category, categoryLabel, onSubmit, initialData, is
                   />
                 </Stack>
 
-                {/* Cost - always required */}
-                <NumberInput
-                  label="Cost (USD)"
-                  placeholder="Enter cost"
-                  required
-                  min={0}
-                  decimalScale={2}
-                  prefix="$"
-                  {...form.getInputProps('cost')}
-                />
+                {/* Cost - for backward compatibility */}
+                {requiredFields.includes('cost') && (
+                  <NumberInput
+                    label="Cost (USD)"
+                    placeholder="Enter cost"
+                    required
+                    min={0}
+                    decimalScale={2}
+                    prefix="$"
+                    {...form.getInputProps('cost')}
+                  />
+                )}
+
+                {/* Price - new field name */}
+                {requiredFields.includes('price') && (
+                  <NumberInput
+                    label="Price (USD)"
+                    placeholder="Enter price"
+                    required
+                    min={0}
+                    decimalScale={2}
+                    prefix="$"
+                    {...form.getInputProps('price')}
+                  />
+                )}
 
                 {/* Submit buttons */}
                 <Group justify="flex-end" mt="md">

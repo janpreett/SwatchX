@@ -37,6 +37,7 @@ import {
 } from '@tabler/icons-react';
 import { Layout } from '../components/Layout';
 import { useCompany } from '../hooks/useCompany';
+import { useThemeColors } from '../hooks/useThemeColors';
 import { expenseService } from '../services/api';
 import { CATEGORY_CONFIG_MAP } from '../constants/expenseCategories';
 
@@ -75,6 +76,7 @@ export function ExpenseTablePage() {
   const { category } = useParams<{ category: string }>();
   const navigate = useNavigate();
   const { selectedCompany } = useCompany();
+  const themeColors = useThemeColors();
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [loading, setLoading] = useState(true);
   const [error] = useState<string | null>(null);
@@ -402,7 +404,7 @@ export function ExpenseTablePage() {
                 <Group gap="sm">
                   <Title order={1}>{categoryLabel} Expenses</Title>
                 </Group>
-                <Text c="dimmed">
+                <Text>
                   {selectedCompany} • View and manage expenses
                 </Text>
               </Box>
@@ -501,8 +503,8 @@ export function ExpenseTablePage() {
             ) : filteredExpenses.length === 0 ? (
               <Center py="xl">
                 <Stack align="center" gap="md">
-                  <Text size="lg" c="dimmed">No expenses found</Text>
-                  <Text size="sm" c="dimmed" ta="center">
+                  <Text size="lg">No expenses found</Text>
+                  <Text size="sm" ta="center">
                     {expenses.length === 0 
                       ? `No ${categoryLabel.toLowerCase()} expenses for ${selectedCompany} yet.`
                       : 'Try adjusting your filters to see more results.'
@@ -535,7 +537,7 @@ export function ExpenseTablePage() {
                         </Group>
                         
                         <Stack gap="xs">
-                          <Text fw={700} size="md" c="dark">{new Date(expense.date).toLocaleDateString()}</Text>
+                          <Text fw={700} size="md" c={themeColors.primaryText}>{new Date(expense.date).toLocaleDateString()}</Text>
                           
                           {requiredFields.includes('businessUnit') && expense.businessUnit && (
                             <Text size="sm"><Text fw={600} span>Business Unit:</Text> <Text span ml="xs">{expense.businessUnit.name}</Text></Text>
@@ -698,7 +700,7 @@ export function ExpenseTablePage() {
                               </ActionIcon>
                             </Group>
                           ) : (
-                            <Text c="dimmed" size="sm">-</Text>
+                            <Text size="sm">-</Text>
                           )}
                         </Table.Td>
                         <Table.Td>

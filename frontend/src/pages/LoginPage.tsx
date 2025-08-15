@@ -4,12 +4,14 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { IconAlertCircle, IconMail, IconLock } from '@tabler/icons-react';
 import { useAuth } from '../hooks/useAuth';
+import { useThemeColors } from '../hooks/useThemeColors';
 
 export function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>('');
   const { login } = useAuth();
   const navigate = useNavigate();
+  const themeColors = useThemeColors();
 
   const form = useForm({
     initialValues: {
@@ -50,7 +52,6 @@ export function LoginPage() {
       align="center" 
       justify="center" 
       p={{ base: 'md', sm: 'xl' }}
-      bg="gray.0"
     >
       <Container size="xs" w="100%">
         <Stack align="center" gap="xl">
@@ -132,7 +133,6 @@ export function LoginPage() {
                     to="/forgot-password"
                     size="sm" 
                     ta="right" 
-                    c="blue"
                     underline="hover"
                   >
                     Forgot password?
@@ -151,9 +151,9 @@ export function LoginPage() {
                 </Stack>
               </form>
 
-              <Text ta="center" size="sm" c="dimmed">
+              <Text ta="center" size="sm" c={themeColors.secondaryText}>
                 Don't have an account?{' '}
-                <Anchor component={Link} to="/signup" fw={500} c="blue">
+                <Anchor component={Link} to="/signup" fw={500}>
                   Create account
                 </Anchor>
               </Text>

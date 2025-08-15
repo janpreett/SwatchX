@@ -3,6 +3,7 @@ import { IconLogout, IconUser, IconChevronDown, IconSettings, IconUserCircle } f
 import { useAuth } from '../hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
 import { Footer } from './Footer';
+import { useThemeColors } from '../hooks/useThemeColors';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -11,6 +12,7 @@ interface LayoutProps {
 export function Layout({ children }: LayoutProps) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const themeColors = useThemeColors();
 
   const handleLogout = () => {
     logout();
@@ -19,6 +21,10 @@ export function Layout({ children }: LayoutProps) {
 
   const handleProfileClick = () => {
     navigate('/profile');
+  };
+
+  const handleSettingsClick = () => {
+    navigate('/settings');
   };
 
   return (
@@ -36,8 +42,10 @@ export function Layout({ children }: LayoutProps) {
                 size="xl"
                 fw={700} 
                 variant="gradient"
-                gradient={{ from: 'blue', to: 'cyan', deg: 90 }}
+                {...themeColors.getGradientOrSolid({ from: 'blue', to: 'cyan', deg: 90 })}
                 hiddenFrom="sm"
+                style={{ cursor: 'pointer' }}
+                onClick={() => navigate('/home')}
               >
                 SwatchX
               </Text>
@@ -45,8 +53,10 @@ export function Layout({ children }: LayoutProps) {
                 size="2rem"
                 fw={700} 
                 variant="gradient"
-                gradient={{ from: 'blue', to: 'cyan', deg: 90 }}
+                {...themeColors.getGradientOrSolid({ from: 'blue', to: 'cyan', deg: 90 })}
                 visibleFrom="sm"
+                style={{ cursor: 'pointer' }}
+                onClick={() => navigate('/home')}
               >
                 SwatchX
               </Text>
@@ -60,7 +70,7 @@ export function Layout({ children }: LayoutProps) {
                     <Avatar size={32} radius="xl" color="blue">
                       <IconUser size="1rem" />
                     </Avatar>
-                    <Text fw={500} size="sm" lh={1} mr={3} visibleFrom="sm">
+                    <Text fw={500} size="sm" lh={1} mr={3} visibleFrom="sm" c={themeColors.primaryText}>
                       {user?.name || user?.email}
                     </Text>
                     <IconChevronDown size="0.8rem" stroke={1.5} />
@@ -76,7 +86,7 @@ export function Layout({ children }: LayoutProps) {
                 >
                   Profile
                 </Menu.Item>
-                <Menu.Item leftSection={<IconSettings size="0.9rem" stroke={1.5} />}>
+                <Menu.Item leftSection={<IconSettings size="0.9rem" stroke={1.5} />} onClick={handleSettingsClick}>
                   Settings
                 </Menu.Item>
 

@@ -22,6 +22,7 @@ import { notifications } from '@mantine/notifications';
 import { IconArrowLeft, IconAlertCircle, IconShield, IconLock, IconUser, IconEdit, IconTrash } from '@tabler/icons-react';
 import { Layout } from '../components/Layout';
 import { useAuth } from '../hooks/useAuth';
+import { useThemeColors } from '../hooks/useThemeColors';
 import { authService } from '../services/auth';
 
 interface SecurityQuestion {
@@ -73,6 +74,7 @@ const COMMON_SECURITY_QUESTIONS = [
 export function ProfilePage() {
   const navigate = useNavigate();
   const { user, refreshUser } = useAuth();
+  const themeColors = useThemeColors();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>('');
   const [securityQuestions, setSecurityQuestions] = useState<SecurityQuestionsData | null>(null);
@@ -393,7 +395,7 @@ export function ProfilePage() {
             </ActionIcon>
             <Box>
               <Title order={1}>Profile Settings</Title>
-              <Text c="dimmed">Manage your account and security settings</Text>
+              <Text c={themeColors.secondaryText}>Manage your account and security settings</Text>
             </Box>
           </Group>
 
@@ -506,13 +508,13 @@ export function ProfilePage() {
                 </Anchor>
               </Group>
               
-              <Text size="sm" c="dimmed">
+              <Text size="sm" c={themeColors.secondaryText}>
                 Security questions help you reset your password if you forget it. Click "Edit" to update individual questions.
               </Text>
 
               <Stack gap="lg">
                 {[0, 1, 2].map((index) => (
-                  <Card key={index} withBorder p="md" radius="sm" bg="gray.0">
+                  <Card key={index} withBorder p="md" radius="sm">
                     <Stack gap="sm">
                       <Group justify="space-between">
                         <Text fw={500} size="sm">Security Question {index + 1}</Text>
@@ -527,9 +529,9 @@ export function ProfilePage() {
                       </Group>
                       
                       {questions[index] ? (
-                        <Text size="sm" c="dimmed">{questions[index]}</Text>
+                        <Text size="sm" c={themeColors.secondaryText}>{questions[index]}</Text>
                       ) : (
-                        <Text size="sm" c="dimmed" fs="italic">
+                        <Text size="sm" c={themeColors.secondaryText} fs="italic">
                           Click "Edit" to set up this security question
                         </Text>
                       )}
@@ -548,7 +550,7 @@ export function ProfilePage() {
                 <Title order={3} c="red">Delete Account</Title>
               </Group>
               
-              <Text size="sm" c="dimmed">
+              <Text size="sm" c={themeColors.secondaryText}>
                 Permanently delete your account and all associated data. This action cannot be undone.
               </Text>
 
@@ -596,7 +598,7 @@ export function ProfilePage() {
               {...questionForm.getInputProps('question')}
             />
             
-            <Text size="xs" c="dimmed">
+            <Text size="xs" c={themeColors.secondaryText}>
               Suggestions: {COMMON_SECURITY_QUESTIONS.slice(0, 5).join(' • ')}
             </Text>
 

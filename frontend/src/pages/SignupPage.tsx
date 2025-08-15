@@ -17,6 +17,7 @@ import {
 import { useForm } from '@mantine/form';
 import { IconAlertCircle, IconMail, IconLock } from '@tabler/icons-react';
 import { useAuth } from '../hooks/useAuth';
+import { useThemeColors } from '../hooks/useThemeColors';
 
 interface SignupFormData {
   email: string;
@@ -28,6 +29,7 @@ interface SignupFormData {
 export function SignupPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const themeColors = useThemeColors();
   const [success, setSuccess] = useState(false);
   const navigate = useNavigate();
   const { signup } = useAuth();
@@ -92,7 +94,6 @@ export function SignupPage() {
       align="center" 
       justify="center" 
       p={{ base: 'md', sm: 'xl' }}
-      bg="gray.0"
     >
       <Container size="xs" w="100%">
         <Stack align="center" gap="xl">
@@ -139,7 +140,7 @@ export function SignupPage() {
                     <Title order={2} fw={600} c="green">
                       Account Created Successfully!
                     </Title>
-                    <Text size="sm" c="dimmed">
+                    <Text size="sm" c={themeColors.secondaryText}>
                       Welcome to SwatchX! You will be redirected to the login page in a moment.
                     </Text>
                   </Stack>
@@ -202,11 +203,11 @@ export function SignupPage() {
                         label={
                           <Text size="sm">
                             I agree to the{' '}
-                            <Anchor component={Link} to="/terms" size="sm" c="blue">
+                            <Anchor component={Link} to="/terms" size="sm">
                               Terms of Service
                             </Anchor>{' '}
                             and{' '}
-                            <Anchor component={Link} to="/privacy" size="sm" c="blue">
+                            <Anchor component={Link} to="/privacy" size="sm">
                               Privacy Policy
                             </Anchor>
                           </Text>
@@ -228,9 +229,9 @@ export function SignupPage() {
                     </Stack>
                   </form>
 
-                  <Text ta="center" size="sm" c="dimmed">
+                  <Text ta="center" size="sm" c={themeColors.secondaryText}>
                     Already have an account?{' '}
-                    <Anchor component={Link} to="/login" fw={500} c="blue">
+                    <Anchor component={Link} to="/login" fw={500}>
                       Sign in
                     </Anchor>
                   </Text>
