@@ -2,10 +2,12 @@ from fastapi import APIRouter, Depends, HTTPException, status, Query, UploadFile
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session, joinedload
 from typing import List, Optional
-from datetime import datetime
+from datetime import datetime, timedelta
 import json
 import os
 import tempfile
+from calendar import monthrange
+from sqlalchemy import func, extract
 from openpyxl import Workbook
 from openpyxl.styles import Font, PatternFill, Alignment, NamedStyle
 from openpyxl.styles.numbers import FORMAT_CURRENCY_USD_SIMPLE
@@ -503,6 +505,154 @@ def delete_fuel_station(
         raise HTTPException(status_code=404, detail="Fuel station not found")
     
     check_entity_usage_and_delete(db, fuel_station, fuel_station_id, "fuel_station")
+
+# Analytics endpoints
+@router.get("/analytics/monthly-change/{company}")
+def get_monthly_change(
+    company: CompanyEnum,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    """Get month-over-month percentage change in expenses for a company."""
+    try:
+        now = datetime.now()
+        
+        # Current month
+        current_month_start = datetime(now.year, now.month, 1)
+        current_month_end = datetime(now.year, now.month, monthrange(now.year, now.month)[1], 23, 59, 59)
+        
+        # Previous month
+        if now.month == 1:
+            prev_month = 12
+            prev_year = now.year - 1
+        else:
+            prev_month = now.month - 1
+            prev_year = now.year
+        
+        prev_month_start = datetime(prev_year, prev_month, 1)
+        prev_month_end = datetime(prev_year, prev_month, monthrange(prev_year, prev_month)[1], 23, 59, 59)
+        
+        # Calculate current month total
+        current_total = db.query(func.sum(Expense.cost)).filter(
+            Expense.company == company,
+            Expense.date >= current_month_start,
+            Expense.date <= current_month_end
+        ).scalar() or 0
+        
+        # Calculate previous month total
+        prev_total = db.query(func.sum(Expense.cost)).filter(
+            Expense.company == company,
+            Expense.date >= prev_month_start,
+            Expense.date <= prev_month_end
+        ).scalar() or 0
+        
+        # Calculate percentage change
+        if prev_total > 0:
+            percentage_change = ((current_total - prev_total) / prev_total) * 100
+        else:
+            percentage_change = 0 if current_total == 0 else 100
+        
+        # Get monthly data for the last 6 months for trend
+        monthly_data = []
+        for i in range(5, -1, -1):  # Last 6 months including current
+            if now.month - i <= 0:
+                month = 12 + (now.month - i)
+                year = now.year - 1
+            else:
+                month = now.month - i
+                year = now.year
+            
+            month_start = datetime(year, month, 1)
+            month_end = datetime(year, month, monthrange(year, month)[1], 23, 59, 59)
+            
+            month_total = db.query(func.sum(Expense.cost)).filter(
+                Expense.company == company,
+                Expense.date >= month_start,
+                Expense.date <= month_end
+            ).scalar() or 0
+            
+            monthly_data.append({
+                "month": datetime(year, month, 1).strftime('%b %Y'),
+                "total": float(month_total)
+            })
+        
+        return {
+            "current_month": float(current_total),
+            "previous_month": float(prev_total),
+            "percentage_change": round(percentage_change, 2),
+            "monthly_trend": monthly_data
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Analytics failed: {str(e)}")
+
+@router.get("/analytics/top-categories/{company}")
+def get_top_categories(
+    company: CompanyEnum,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    """Get top 3 expense categories with monthly trends for a company."""
+    try:
+        # Get total by category for the last 6 months
+        now = datetime.now()
+        six_months_ago = now - timedelta(days=180)
+        
+        # Get category totals
+        category_totals = db.query(
+            Expense.category,
+            func.sum(Expense.cost).label('total')
+        ).filter(
+            Expense.company == company,
+            Expense.date >= six_months_ago
+        ).group_by(Expense.category).order_by(func.sum(Expense.cost).desc()).limit(3).all()
+        
+        # Get monthly trends for each top category
+        top_categories_data = []
+        for category_total in category_totals:
+            category = category_total.category
+            
+            # Get monthly data for this category
+            monthly_data = []
+            for i in range(5, -1, -1):  # Last 6 months including current
+                if now.month - i <= 0:
+                    month = 12 + (now.month - i)
+                    year = now.year - 1
+                else:
+                    month = now.month - i
+                    year = now.year
+                
+                month_start = datetime(year, month, 1)
+                month_end = datetime(year, month, monthrange(year, month)[1], 23, 59, 59)
+                
+                month_total = db.query(func.sum(Expense.cost)).filter(
+                    Expense.company == company,
+                    Expense.category == category,
+                    Expense.date >= month_start,
+                    Expense.date <= month_end
+                ).scalar() or 0
+                
+                monthly_data.append({
+                    "month": datetime(year, month, 1).strftime('%b %Y'),
+                    "amount": float(month_total)
+                })
+            
+            # Format category name for display
+            category_display = category.replace('-', ' ').title()
+            
+            top_categories_data.append({
+                "category": category,
+                "category_display": category_display,
+                "total": float(category_total.total),
+                "monthly_data": monthly_data
+            })
+        
+        return {
+            "top_categories": top_categories_data
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Analytics failed: {str(e)}")
 
 @router.get("/export/{company}")
 def export_company_data(

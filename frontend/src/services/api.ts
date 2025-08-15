@@ -374,4 +374,13 @@ export const managementService = {
 
     return response.blob();
   },
+
+  // Analytics
+  async getMonthlyChange(company: string) {
+    return apiRequest(`/api/v1/analytics/monthly-change/${company}`);
+  },
+
+  async getTopCategories(company: string) {
+    return apiRequest(`/api/v1/analytics/top-categories/${company}`);
+  },
 };
