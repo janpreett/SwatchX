@@ -327,7 +327,10 @@ export function DashboardPage() {
                 e.currentTarget.style.transform = 'translateY(0)';
                 e.currentTarget.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.12)';
               }}
-              onClick={openPieModal}
+              onClick={() => {
+                console.log('Opening pie modal, current data:', pieChartData);
+                openPieModal();
+              }}
             >
               <Stack gap="sm">
                 <Group justify="space-between" align="center">
@@ -341,15 +344,15 @@ export function DashboardPage() {
                     <Loader size="sm" />
                   </Center>
                 ) : pieChartData?.data && pieChartData.data.length > 0 ? (
-                  <PieChart
-                    h={80}
-                    data={pieChartData.data.map(item => ({
-                      ...item,
-                      color: item.color || '#fd7e14'
-                    }))}
-                    withTooltip={false}
-                    size={80}
-                  />
+                  <Box style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                    <PieChart
+                      h={80}
+                      data={pieChartData.data}
+                      withTooltip={false}
+                      size={70}
+                      strokeWidth={1}
+                    />
+                  </Box>
                 ) : (
                   <Text size="sm" c="dimmed">No category data</Text>
                 )}
@@ -389,11 +392,12 @@ export function DashboardPage() {
             onClose={closePieModal}
             title={
               <Group gap="sm">
-                <IconChartPie size={24} color="blue" />
+                <IconChartPie size={24} color="var(--mantine-color-blue-6)" />
                 <Text size="xl" fw={700}>Expense Categories Breakdown</Text>
               </Group>
             }
             size="xl"
+            centered
           >
             <Stack gap="lg">
               {/* Period Toggle Buttons */}
@@ -426,10 +430,7 @@ export function DashboardPage() {
                   <Center>
                     <PieChart
                       h={400}
-                      data={pieChartData.data.map(item => ({
-                        ...item,
-                        color: item.color || '#fd7e14'
-                      }))}
+                      data={pieChartData.data}
                       withTooltip={true}
                       size={300}
                       withLabels
@@ -454,7 +455,12 @@ export function DashboardPage() {
                 </Box>
               ) : (
                 <Center py="xl">
-                  <Text size="lg" c="dimmed">No category data available</Text>
+                  <Stack align="center" gap="md">
+                    <Text size="lg" c="dimmed">No category data available</Text>
+                    <Text size="sm" c="dimmed" ta="center">
+                      Try switching between "This Month" and "Total" or add some expenses first.
+                    </Text>
+                  </Stack>
                 </Center>
               )}
             </Stack>

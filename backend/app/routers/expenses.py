@@ -880,18 +880,18 @@ async def get_pie_chart_data(
             else:
                 category_totals[category] = cost
         
-        # Convert to pie chart format with orange color scheme
+        # Convert to pie chart format with default Mantine colors
         category_colors = {
-            'fuel_diesel': '#fd7e14',  # orange
-            'vehicle_repair': '#ff8c00',  # dark orange
-            'inventory': '#ff6347',  # tomato
-            'payroll': '#ffa500',  # orange
-            'insurance': '#ff7f50',  # coral
-            'office_supplies': '#ff4500',  # red orange
-            'marketing': '#ff8c69',  # salmon
-            'travel': '#ffa07a',  # light salmon
-            'maintenance': '#f4a460',  # sandy brown
-            'utilities': '#daa520'  # golden rod
+            'fuel_diesel': '#1c7ed6',  # blue
+            'vehicle_repair': '#37b24d',  # green
+            'inventory': '#f59f00',  # orange
+            'payroll': '#e64980',  # pink
+            'insurance': '#7950f2',  # violet
+            'office_supplies': '#15aabf',  # cyan
+            'marketing': '#fd7e14',  # orange.6
+            'travel': '#51cf66',  # lime
+            'maintenance': '#ffd43b',  # yellow
+            'utilities': '#f06292'  # pink.5
         }
         
         pie_data = []
