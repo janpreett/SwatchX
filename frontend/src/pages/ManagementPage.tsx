@@ -37,11 +37,11 @@ interface ManagementFormData {
 }
 
 const managementConfigs = {
-  'business-units': {
-    title: 'Business Units',
-    singular: 'Business Unit',
+  'service-providers': {
+    title: 'Service Providers',
+    singular: 'Service Provider',
     field: 'name',
-    placeholder: 'Enter business unit name',
+    placeholder: 'Enter service provider name',
     icon: '🏢',
     color: 'blue'
   },
@@ -76,11 +76,13 @@ export function ManagementPage() {
   const navigate = useNavigate();
   const themeColors = useThemeColors();
   const [items, setItems] = useState<ManagementItem[]>([]);
+  const [filteredItems, setFilteredItems] = useState<ManagementItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [modalOpened, setModalOpened] = useState(false);
   const [editingItem, setEditingItem] = useState<ManagementItem | null>(null);
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
 
   const form = useForm<ManagementFormData>({
     initialValues: {
@@ -99,8 +101,8 @@ export function ManagementPage() {
       setLoading(true);
       try {
         let data;
-        if (type === 'business-units') {
-          data = await managementService.getBusinessUnits();
+        if (type === 'service-providers') {
+          data = await managementService.getServiceProviders();
         } else if (type === 'trucks') {
           data = await managementService.getTrucks();
         } else if (type === 'trailers') {
@@ -110,6 +112,7 @@ export function ManagementPage() {
         }
         
         setItems(data || []);
+        setFilteredItems(data || []);
       } catch (error) {
         console.error('Failed to load items:', error);
         setError('Failed to load data');
@@ -120,6 +123,25 @@ export function ManagementPage() {
 
     loadItems();
   }, [type]);
+
+  // Filter items based on search term
+  useEffect(() => {
+    if (!searchTerm.trim()) {
+      setFilteredItems(items);
+      return;
+    }
+
+    const config = managementConfigs[type as keyof typeof managementConfigs];
+    const filtered = items.filter(item => {
+      const searchValue = searchTerm.toLowerCase();
+      if (config?.field === 'name') {
+        return item.name?.toLowerCase().includes(searchValue);
+      } else {
+        return item.number?.toLowerCase().includes(searchValue);
+      }
+    });
+    setFilteredItems(filtered);
+  }, [searchTerm, items, type]);
 
   if (!type || !(type in managementConfigs)) {
     navigate('/dashboard');
@@ -158,8 +180,8 @@ export function ManagementPage() {
       // Call appropriate API based on type and whether we're editing or creating
       if (editingItem) {
         // Update existing item
-        if (type === 'business-units') {
-          updatedItem = await managementService.updateBusinessUnit(editingItem.id, { name: values.name || '' });
+        if (type === 'service-providers') {
+          updatedItem = await managementService.updateServiceProvider(editingItem.id, { name: values.name || '' });
         } else if (type === 'trucks') {
           updatedItem = await managementService.updateTruck(editingItem.id, { number: values.number || '' });
         } else if (type === 'trailers') {
@@ -182,8 +204,8 @@ export function ManagementPage() {
       } else {
         // Create new item  
         let newItem: ManagementItem | undefined;
-        if (type === 'business-units') {
-          newItem = await managementService.createBusinessUnit({ name: values.name || '' });
+        if (type === 'service-providers') {
+          newItem = await managementService.createServiceProvider({ name: values.name || '' });
         } else if (type === 'trucks') {
           newItem = await managementService.createTruck({ number: values.number || '' });
         } else if (type === 'trailers') {
@@ -206,7 +228,15 @@ export function ManagementPage() {
       handleCloseModal();
     } catch (err) {
       console.error('Failed to save item:', err);
-      setError(err instanceof Error ? err.message : `Failed to save ${config.singular.toLowerCase()}`);
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      
+      // Handle specific duplicate entry errors
+      if (errorMessage.includes('already exists')) {
+        const fieldValue = config.field === 'name' ? values.name : values.number;
+        setError(`${config.singular} with ${config.field === 'name' ? 'name' : 'number'} '${fieldValue}' already exists. Please use a different ${config.field === 'name' ? 'name' : 'number'}.`);
+      } else {
+        setError(`Failed to save ${config.singular.toLowerCase()}: ${errorMessage}`);
+      }
     } finally {
       setLoading(false);
     }
@@ -225,8 +255,8 @@ export function ManagementPage() {
     if (confirm(`Are you sure you want to delete this ${config.singular.toLowerCase()}?`)) {
       setError(null); // Clear any previous errors
       try {
-        if (type === 'business-units') {
-          await managementService.deleteBusinessUnit(item.id);
+        if (type === 'service-providers') {
+          await managementService.deleteServiceProvider(item.id);
         } else if (type === 'trucks') {
           await managementService.deleteTruck(item.id);
         } else if (type === 'trailers') {
@@ -266,8 +296,8 @@ export function ManagementPage() {
       
       for (const id of selectedIds) {
         try {
-          if (type === 'business-units') {
-            await managementService.deleteBusinessUnit(id);
+          if (type === 'service-providers') {
+            await managementService.deleteServiceProvider(id);
           } else if (type === 'trucks') {
             await managementService.deleteTruck(id);
           } else if (type === 'trailers') {
@@ -357,6 +387,12 @@ export function ManagementPage() {
             </Group>
             
             <Group gap="sm">
+              <TextInput
+                placeholder={`Search ${config.singular.toLowerCase()}s...`}
+                value={searchTerm}
+                onChange={(event) => setSearchTerm(event.currentTarget.value)}
+                w={300}
+              />
               <Button
                 leftSection={<IconPlus size={16} />}
                 color={config.color}
@@ -390,7 +426,7 @@ export function ManagementPage() {
 
           {/* Items Table */}
           <Card shadow="sm" padding="xl" radius="md">
-            {items.length === 0 ? (
+            {filteredItems.length === 0 ? (
               <Stack align="center" gap="md" py="xl">
                 <Text size="lg" c="dimmed">No {config.title.toLowerCase()} found</Text>
                 <Text size="sm" c="dimmed" ta="center">
@@ -413,7 +449,7 @@ export function ManagementPage() {
                 {/* Mobile Card View */}
                 <Box hiddenFrom="md">
                   <Stack gap="md">
-                    {items.map((item) => (
+                    {filteredItems.map((item) => (
                       <Card key={item.id} withBorder shadow="xs" padding="md" radius="md">
                         <Group justify="space-between" align="flex-start" mb="xs">
                           <Checkbox
@@ -469,8 +505,8 @@ export function ManagementPage() {
                           <Table.Th w={40}>
                             <Checkbox
                               size="sm"
-                              checked={selectedIds.length === items.length && items.length > 0}
-                              indeterminate={selectedIds.length > 0 && selectedIds.length < items.length}
+                              checked={selectedIds.length === filteredItems.length && filteredItems.length > 0}
+                              indeterminate={selectedIds.length > 0 && selectedIds.length < filteredItems.length}
                               onChange={(event) => handleSelectAll(event.currentTarget.checked)}
                             />
                           </Table.Th>
@@ -480,7 +516,7 @@ export function ManagementPage() {
                         </Table.Tr>
                       </Table.Thead>
                       <Table.Tbody>
-                        {items.map((item) => (
+                        {filteredItems.map((item) => (
                           <Table.Tr key={item.id}>
                             <Table.Td>
                               <Checkbox
@@ -539,7 +575,7 @@ export function ManagementPage() {
 
               <TextInput
                 label={config.field === 'name' ? 'Name' : 'Number'}
-                placeholder={config.placeholder}
+                placeholder={`Enter ${config.field === 'name' ? 'name' : 'number'}`}
                 required
                 {...form.getInputProps(config.field)}
               />

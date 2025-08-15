@@ -32,12 +32,10 @@ interface DashboardExpense {
   date: string;
   category: string;
   company: string;
-  cost: number;
+  price: number;
   description?: string;
-  repair_description?: string;
-  repairDescription?: string;
   gallons?: number;
-  businessUnit?: { name: string };
+  serviceProvider?: { name: string };
   truck?: { number: string };
   trailer?: { number: string };
   fuelStation?: { name: string };
@@ -103,20 +101,20 @@ export function DashboardPage() {
         const currentMonth = now.getMonth();
         const currentYear = now.getFullYear();
         
-        const total = companyExpenses.reduce((sum: number, expense: DashboardExpense) => sum + Number(expense.cost || 0), 0);
+        const total = companyExpenses.reduce((sum: number, expense: DashboardExpense) => sum + Number(expense.price || 0), 0);
         const thisMonth = companyExpenses
           .filter((expense: DashboardExpense) => {
             const expenseDate = new Date(expense.date);
             return expenseDate.getMonth() === currentMonth && expenseDate.getFullYear() === currentYear;
           })
-          .reduce((sum: number, expense: DashboardExpense) => sum + Number(expense.cost || 0), 0);
+          .reduce((sum: number, expense: DashboardExpense) => sum + Number(expense.price || 0), 0);
         
         // Calculate category totals
         const categoryTotals: Record<string, number> = {};
         EXPENSE_CATEGORIES.forEach(category => {
           categoryTotals[category.key] = companyExpenses
             .filter((expense: DashboardExpense) => expense.category === category.key)
-            .reduce((sum: number, expense: DashboardExpense) => sum + Number(expense.cost || 0), 0);
+            .reduce((sum: number, expense: DashboardExpense) => sum + Number(expense.price || 0), 0);
         });
 
         setTotals({
@@ -134,9 +132,7 @@ export function DashboardPage() {
                 managementService.getPieChartData(selectedCompany, 'total') // Always start with total
               ]);
               
-              console.log('Pie chart data received:', pieChartData);
-              console.log('Data array:', pieChartData?.data);
-              console.log('First item:', pieChartData?.data?.[0]);
+                      // Pie chart data received
               setMonthlyChange(monthlyChangeData);
               setPieChartData(pieChartData);
             }
@@ -340,7 +336,7 @@ export function DashboardPage() {
                 e.currentTarget.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.12)';
               }}
               onClick={() => {
-                console.log('Opening pie modal, current data:', pieChartData);
+                // Opening pie modal
                 openPieModal();
               }}
             >
@@ -641,10 +637,10 @@ export function DashboardPage() {
                             </Text>
                           </Group>
                           <Stack gap="xs">
-                            {expense.businessUnit && (
+                            {expense.serviceProvider && (
                               <Text size="sm">
-                                <Text fw={600} span c={themeColors.strongText}>Business Unit:</Text> 
-                                <Text span ml="xs" c={themeColors.subtleText}>{expense.businessUnit.name}</Text>
+                                <Text fw={600} span c={themeColors.strongText}>Service Provider:</Text> 
+                                <Text span ml="xs" c={themeColors.subtleText}>{expense.serviceProvider.name}</Text>
                               </Text>
                             )}
                             {expense.truck && (
@@ -677,17 +673,11 @@ export function DashboardPage() {
                                 <Text span ml="xs" c={themeColors.subtleText}>{expense.description}</Text>
                               </Text>
                             )}
-                            {(expense.repairDescription || expense.repair_description) && (
-                              <Text size="sm">
-                                <Text fw={600} span c={themeColors.strongText}>Repair Description:</Text> 
-                                <Text span ml="xs" c={themeColors.subtleText}>{expense.repairDescription || expense.repair_description}</Text>
-                              </Text>
-                            )}
                           </Stack>
                         </Box>
                         <Badge color="green" variant="filled" size="lg" radius="md">
                           <Text fw={700} size="sm">
-                            ${Number(expense.cost || 0).toFixed(2)}
+                            ${Number(expense.price || 0).toFixed(2)}
                           </Text>
                         </Badge>
                       </Group>

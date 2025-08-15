@@ -1,3 +1,24 @@
+"""
+Security and Authentication Utilities
+
+This module provides comprehensive security functionality including password hashing,
+JWT token creation and validation, and user authentication. It handles all aspects
+of user security from password management to token-based authentication.
+
+Key Functions:
+- Password hashing and verification using bcrypt
+- JWT token creation and validation
+- User authentication and authorization
+- Current user dependency injection
+- Active user status checking
+
+Security Features:
+- bcrypt password hashing with salt
+- JWT tokens with configurable expiration
+- Secure token validation
+- User session management
+"""
+
 from passlib.context import CryptContext
 from datetime import datetime, timedelta, timezone
 from jose import JWTError, jwt

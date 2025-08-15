@@ -285,19 +285,19 @@ export function ProfilePage() {
   };
 
   const handleProfileUpdate = async (values: ProfileUpdateData) => {
-    console.log('Form values received:', values);
+            // Form values received
     setLoading(true);
     setError('');
 
     try {
       const nameValue = values.name ? values.name.trim() : '';
-      console.log('Name value being sent:', nameValue === '' ? 'NULL' : nameValue);
+              // Name value being sent
       
       const updatedUser = await authService.updateProfile({ 
         name: nameValue === '' ? null : nameValue
       });
       
-      console.log('Updated user from API:', updatedUser);
+              // Updated user from API
       
       // Refresh the user context with updated data
       await refreshUser();
@@ -542,26 +542,25 @@ export function ProfilePage() {
             </Stack>
           </Card>
 
-          {/* Account Deletion */}
-          <Card withBorder shadow="sm" padding="xl" radius="md" style={{ borderColor: 'var(--mantine-color-red-3)' }}>
+          {/* Account Deletion Section */}
+          <Card shadow="sm" padding="xl" radius="md" withBorder>
             <Stack gap="md">
-              <Group gap="sm">
-                <IconTrash size={20} color="red" />
-                <Title order={3} c="red">Delete Account</Title>
+              <Group justify="space-between" align="center">
+                <Box>
+                  <Title order={3} c="red">Delete Account</Title>
+                  <Text size="sm" c="dimmed">
+                    This action cannot be undone. Your account will be permanently deleted.
+                  </Text>
+                </Box>
+                <Button
+                  variant="outline"
+                  color="red"
+                  leftSection={<IconTrash size={16} />}
+                  onClick={() => setDeleteModalOpen(true)}
+                >
+                  Delete Account
+                </Button>
               </Group>
-              
-              <Text size="sm" c={themeColors.secondaryText}>
-                Permanently delete your account and all associated data. This action cannot be undone.
-              </Text>
-
-              <Button 
-                color="red"
-                variant="light"
-                leftSection={<IconTrash size="1rem" />}
-                onClick={() => setDeleteModalOpen(true)}
-              >
-                Delete My Account
-              </Button>
             </Stack>
           </Card>
         </Stack>
@@ -641,71 +640,57 @@ export function ProfilePage() {
         </form>
       </Modal>
 
-      {/* Delete Account Modal */}
+      {/* Account Deletion Confirmation Modal */}
       <Modal
         opened={deleteModalOpen}
-        onClose={() => {
-          setDeleteModalOpen(false);
-          deleteForm.reset();
-          setError('');
-        }}
-        title="Delete Account"
+        onClose={() => setDeleteModalOpen(false)}
+        title="Delete Account Confirmation"
         size="md"
       >
         <Stack gap="md">
-          <Alert 
-            color="red" 
-            variant="light"
-            title="Warning"
-          >
-            This action cannot be undone. All your data including expenses, security questions, and account information will be permanently deleted.
+          <Alert color="red" variant="light" title="⚠️ Warning">
+            <Text size="sm">
+              This action will permanently delete your account and cannot be undone.
+            </Text>
           </Alert>
-
-          {error && (
-            <Alert 
-              icon={<IconAlertCircle size="1rem" />} 
-              color="red" 
-              variant="light"
-            >
-              {error}
-            </Alert>
-          )}
           
+          <Text size="sm" c="dimmed">
+            To confirm deletion, please enter your password and type "delete my account" below.
+          </Text>
+
           <form onSubmit={deleteForm.onSubmit(handleAccountDelete)}>
             <Stack gap="md">
-              <PasswordInput
-                label="Current Password"
-                placeholder="Enter your password to verify"
+              <TextInput
+                label="Password"
+                type="password"
+                placeholder="Enter your password"
                 required
                 {...deleteForm.getInputProps('password')}
               />
-              
+
               <TextInput
                 label="Confirmation"
                 placeholder="Type 'delete my account' to confirm"
                 required
-                description="Please type exactly 'delete my account' to confirm deletion"
                 {...deleteForm.getInputProps('confirmation_text')}
               />
 
-              <Group justify="flex-end" gap="sm">
-                <Button
-                  variant="light"
-                  onClick={() => {
-                    setDeleteModalOpen(false);
-                    deleteForm.reset();
-                    setError('');
-                  }}
-                >
+              {error && (
+                <Alert icon={<IconAlertCircle size="1rem" />} color="red" variant="light">
+                  {error}
+                </Alert>
+              )}
+
+              <Group justify="flex-end" mt="md">
+                <Button variant="light" onClick={() => setDeleteModalOpen(false)}>
                   Cancel
                 </Button>
                 <Button 
                   type="submit" 
                   loading={loading}
                   color="red"
-                  leftSection={<IconTrash size="1rem" />}
                 >
-                  Delete Account Permanently
+                  Delete Account
                 </Button>
               </Group>
             </Stack>

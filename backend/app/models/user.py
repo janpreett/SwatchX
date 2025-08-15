@@ -1,3 +1,23 @@
+"""
+User Database Model
+
+This module defines the User model for authentication and user management.
+It includes user profile information, security questions for password reset,
+and authentication-related fields.
+
+Fields:
+- id: Primary key identifier
+- email: Unique email address for login
+- name: User's display name
+- hashed_password: Bcrypt-hashed password
+- is_active: Account status flag
+- created_at/updated_at: Automatic timestamps
+- security_questions: Three security questions for password reset
+
+The model supports secure authentication with JWT tokens and includes
+security question functionality for account recovery.
+"""
+
 from sqlalchemy import Boolean, Column, Integer, String, DateTime
 from sqlalchemy.sql import func
 from ..core.database import Base

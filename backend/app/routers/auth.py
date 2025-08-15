@@ -1,12 +1,13 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from datetime import timedelta
 
 from ..core.database import get_db
-from ..core.security import verify_password, get_password_hash, create_access_token
+from ..core.security import verify_password, get_password_hash, create_access_token, get_current_user
 from ..core.config import settings
 from ..models.user import User
+from ..models.expense import Expense, ServiceProvider, Truck, Trailer, FuelStation
 from ..schemas.user import (
     UserCreate, UserLogin, UserResponse, Token,
     SecurityQuestionsSetup, SecurityQuestionsResponse, 
@@ -15,7 +16,6 @@ from ..schemas.user import (
 )
 
 router = APIRouter(prefix="/auth", tags=["authentication"])
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
 
 def get_user(db: Session, email: str):
     return db.query(User).filter(User.email == email).first()
@@ -28,22 +28,7 @@ def authenticate_user(db: Session, email: str, password: str):
         return False
     return user
 
-def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
-    credentials_exception = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Could not validate credentials",
-        headers={"WWW-Authenticate": "Bearer"},
-    )
-    
-    from ..core.security import verify_token
-    email = verify_token(token)
-    if email is None:
-        raise credentials_exception
-        
-    user = get_user(db, email=email)
-    if user is None:
-        raise credentials_exception
-    return user
+# get_current_user function is imported from core.security module
 
 def user_has_security_questions(user: User) -> bool:
     """Check if user has set up security questions"""
@@ -302,7 +287,7 @@ def delete_account(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """Delete user account and all associated data"""
+    """Delete user account while preserving company data integrity"""
     
     # Verify password
     if not verify_password(delete_data.password, current_user.hashed_password):
@@ -311,12 +296,48 @@ def delete_account(
             detail="Invalid password"
         )
     
-    # Delete the user account
-    # Note: In current design, expenses are not user-specific, so we only delete the user
-    db.delete(current_user)
-    db.commit()
+    # Check if user has created any expenses
+    expense_count = db.query(Expense).filter(Expense.user_id == current_user.id).count()
     
-    return {
-        "message": "Account deleted successfully",
-        "detail": "Your account and all associated data have been permanently deleted"
-    }
+    if expense_count > 0:
+        # User has expenses - we need to handle this carefully
+        # Option 1: Transfer expenses to a default user (user_id = 1)
+        # Option 2: Anonymize the user instead of deleting
+        
+        # For now, let's transfer expenses to user_id = 1 (default user)
+        # This preserves all company data while removing the user's access
+        db.query(Expense).filter(Expense.user_id == current_user.id).update(
+            {"user_id": 1}  # Transfer to default user
+        )
+        
+        # Also transfer any management entities created by this user
+        db.query(ServiceProvider).filter(ServiceProvider.user_id == current_user.id).update(
+            {"user_id": 1}
+        )
+        db.query(Truck).filter(Truck.user_id == current_user.id).update(
+            {"user_id": 1}
+        )
+        db.query(Trailer).filter(Trailer.user_id == current_user.id).update(
+            {"user_id": 1}
+        )
+        db.query(FuelStation).filter(FuelStation.user_id == current_user.id).update(
+            {"user_id": 1}
+        )
+        
+        # Now we can safely delete the user
+        db.delete(current_user)
+        db.commit()
+        
+        return {
+            "message": "Account deleted successfully",
+            "detail": f"Your account has been deleted. {expense_count} expense(s) and associated data have been transferred to preserve company records."
+        }
+    else:
+        # User has no expenses - safe to delete completely
+        db.delete(current_user)
+        db.commit()
+        
+        return {
+            "message": "Account deleted successfully",
+            "detail": "Your account and all associated data have been permanently deleted"
+        }

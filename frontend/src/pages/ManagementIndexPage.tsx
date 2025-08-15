@@ -22,9 +22,9 @@ import { managementService } from '../services/api';
 
 const managementOptions = [
   {
-    type: 'business-units',
-    title: 'Business Units',
-    description: 'Manage organizational divisions',
+    type: 'service-providers',
+    title: 'Service Providers',
+    description: 'Manage service providers for truck and trailer expenses',
     icon: '🏢',
     color: 'blue'
   },

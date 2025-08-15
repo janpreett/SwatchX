@@ -100,8 +100,7 @@ export const authService = {
 async function apiRequest(endpoint: string, options: RequestInit = {}) {
   const token = authService.getToken();
   
-  console.log(`Making API request to: ${API_BASE_URL}${endpoint}`);
-  console.log(`Token exists: ${!!token}`);
+      // Making API request
   
   // Build headers, but don't set Content-Type for FormData
   const headers: Record<string, string> = {
@@ -119,11 +118,11 @@ async function apiRequest(endpoint: string, options: RequestInit = {}) {
     headers,
   });
 
-  console.log(`Response status: ${response.status}`);
+          // Response received
 
   if (!response.ok) {
     if (response.status === 401) {
-      console.log('Authentication failed, redirecting to login');
+              // Authentication failed, redirecting to login
       authService.logout();
       window.location.href = '/login';
       return;
@@ -145,14 +144,13 @@ export interface ExpenseData {
   company: 'Swatch' | 'SWS';
   category: string;
   date: string;
-  cost: number;
+  price: number;
   description?: string;
-  repair_description?: string;
   gallons?: number;
-  business_unit_id?: number;
-  truck_id?: number;
-  trailer_id?: number;
-  fuel_station_id?: number;
+  serviceProviderId?: number;
+  truckId?: number;
+  trailerId?: number;
+  fuelStationId?: number;
 }
 
 export const expenseService = {
@@ -258,20 +256,20 @@ export interface ManagementItem {
 }
 
 export const managementService = {
-  // Business Units
-  async getBusinessUnits() {
-    return apiRequest('/api/v1/business-units/');
+  // Service Providers
+  async getServiceProviders() {
+    return apiRequest('/api/v1/service-providers/');
   },
 
-  async createBusinessUnit(data: { name: string }) {
-    return apiRequest('/api/v1/business-units/', {
+  async createServiceProvider(data: { name: string }) {
+    return apiRequest('/api/v1/service-providers/', {
       method: 'POST',
       body: JSON.stringify(data),
     });
   },
 
-  async updateBusinessUnit(id: number, data: { name: string }) {
-    return apiRequest(`/api/v1/business-units/${id}`, {
+  async updateServiceProvider(id: number, data: { name: string }) {
+    return apiRequest(`/api/v1/service-providers/${id}`, {
       method: 'PUT',
       body: JSON.stringify(data),
     });
@@ -334,8 +332,8 @@ export const managementService = {
     });
   },
 
-  async deleteBusinessUnit(id: number) {
-    return apiRequest(`/api/v1/business-units/${id}`, { method: 'DELETE' });
+  async deleteServiceProvider(id: number) {
+    return apiRequest(`/api/v1/service-providers/${id}`, { method: 'DELETE' });
   },
 
   async deleteTruck(id: number) {

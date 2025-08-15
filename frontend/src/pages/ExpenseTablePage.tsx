@@ -46,21 +46,19 @@ interface Expense {
   date: string;
   category: string;
   company: string;
-  cost: number;
+  price: number;
   description?: string;
-  repair_description?: string; // Backend uses snake_case
-  repairDescription?: string; // Keep for compatibility
   gallons?: number;
-  businessUnit?: { name: string };
+  serviceProvider?: { name: string };
   truck?: { number: string };
   trailer?: { number: string };
   fuelStation?: { name: string };
-  attachment_path?: string;
+  attachmentPath?: string;
 }
 
 const categoryLabels = {
-  truck: 'Truck Repair',
-  trailer: 'Trailer Repair',
+  truck: 'Truck',
+  trailer: 'Trailer',
   dmv: 'DMV',
   parts: 'Parts',
   'phone-tracker': 'Phone Tracker',
@@ -261,7 +259,7 @@ export function ExpenseTablePage() {
       // Update the expense in the local state
       setExpenses(prev => prev.map(expense => 
         expense.id === expenseId 
-          ? { ...expense, attachment_path: undefined }
+          ? { ...expense, attachmentPath: undefined }
           : expense
       ));
       
@@ -294,15 +292,11 @@ export function ExpenseTablePage() {
       const matchesSearch = !searchTerm || 
         // Basic expense fields
         expense.description?.toLowerCase().includes(searchLower) ||
-        expense.repair_description?.toLowerCase().includes(searchLower) ||
-        expense.repairDescription?.toLowerCase().includes(searchLower) ||
-        expense.cost?.toString().includes(searchLower) ||
-        expense.gallons?.toString().includes(searchLower) ||
         // Date field (format: YYYY-MM-DD and readable format)
         expense.date?.toLowerCase().includes(searchLower) ||
         new Date(expense.date).toLocaleDateString().toLowerCase().includes(searchLower) ||
         // Related entity fields
-        expense.businessUnit?.name.toLowerCase().includes(searchLower) ||
+        expense.serviceProvider?.name.toLowerCase().includes(searchLower) ||
         expense.truck?.number.toLowerCase().includes(searchLower) ||
         expense.trailer?.number.toLowerCase().includes(searchLower) ||
         expense.fuelStation?.name.toLowerCase().includes(searchLower) ||
@@ -369,11 +363,11 @@ export function ExpenseTablePage() {
       return 0;
     });
 
-  const totalCost = filteredExpenses.reduce((sum, expense) => sum + expense.cost, 0);
+      const totalPrice = filteredExpenses.reduce((sum, expense) => sum + expense.price, 0);
 
   // Get required fields for this category to show as columns
   const config = CATEGORY_CONFIG_MAP[category];
-  const requiredFields = config?.fields || ['date', 'cost'];
+      const requiredFields = config?.fields || ['date', 'price'];
 
   const SortButton = ({ field, children }: { field: keyof Expense; children: React.ReactNode }) => (
     <Button 
@@ -483,7 +477,7 @@ export function ExpenseTablePage() {
                 {filteredExpenses.length} expense{filteredExpenses.length !== 1 ? 's' : ''}
               </Text>
               <Badge size="lg" variant="light" color="green">
-                Total: ${totalCost.toFixed(2)}
+                Total: ${totalPrice.toFixed(2)}
               </Badge>
             </Group>
           </Card>
@@ -532,15 +526,18 @@ export function ExpenseTablePage() {
                             onChange={(event) => handleSelectExpense(expense.id, event.currentTarget.checked)}
                           />
                           <Badge color="green" variant="filled" size="md">
-                            ${Number(expense.cost || 0).toFixed(2)}
+                            ${Number(expense.price || 0).toFixed(2)}
                           </Badge>
                         </Group>
                         
                         <Stack gap="xs">
                           <Text fw={700} size="md" c={themeColors.primaryText}>{new Date(expense.date).toLocaleDateString()}</Text>
                           
-                          {requiredFields.includes('businessUnit') && expense.businessUnit && (
-                            <Text size="sm"><Text fw={600} span>Business Unit:</Text> <Text span ml="xs">{expense.businessUnit.name}</Text></Text>
+                          {requiredFields.includes('serviceProvider') && expense.serviceProvider && (
+                            <Text size="sm">
+                              <Text fw={600} span c={themeColors.strongText}>Service Provider:</Text> 
+                              <Text span ml="xs" c={themeColors.subtleText}>{expense.serviceProvider.name}</Text>
+                            </Text>
                           )}
                           {requiredFields.includes('truck') && expense.truck && (
                             <Text size="sm"><Text fw={600} span>Truck:</Text> <Text span ml="xs">{expense.truck.number}</Text></Text>
@@ -557,14 +554,11 @@ export function ExpenseTablePage() {
                           {requiredFields.includes('description') && expense.description && (
                             <Text size="sm"><Text fw={600} span>Description:</Text> <Text span ml="xs">{expense.description}</Text></Text>
                           )}
-                          {requiredFields.includes('repairDescription') && (expense.repairDescription || expense.repair_description) && (
-                            <Text size="sm"><Text fw={600} span>Repair:</Text> <Text span ml="xs">{expense.repairDescription || expense.repair_description}</Text></Text>
-                          )}
                           
-                          {expense.attachment_path && (
+                          {expense.attachmentPath && (
                             <Group gap="xs">
                               <Text fw={600} size="sm" span>Attachment:</Text>
-                              <ActionIcon size="sm" variant="light" color="blue" onClick={() => handleDownloadAttachment(expense.id, expense.attachment_path!)}>
+                              <ActionIcon size="sm" variant="light" color="blue" onClick={() => handleDownloadAttachment(expense.id, expense.attachmentPath!)}>
                                 <IconDownload size={12} />
                               </ActionIcon>
                               <ActionIcon size="sm" variant="light" color="red" onClick={() => handleRemoveAttachment(expense.id)}>
@@ -609,8 +603,8 @@ export function ExpenseTablePage() {
                           <Table.Th w={100}><SortButton field="date">Date</SortButton></Table.Th>
                           
                           {/* Dynamic columns based on category */}
-                          {requiredFields.includes('businessUnit') && (
-                            <Table.Th w={120}>Business Unit</Table.Th>
+                          {requiredFields.includes('serviceProvider') && (
+                            <Table.Th w={150}>Service Provider</Table.Th>
                           )}
                           {requiredFields.includes('truck') && (
                             <Table.Th w={80}>Truck</Table.Th>
@@ -627,11 +621,8 @@ export function ExpenseTablePage() {
                           {requiredFields.includes('description') && (
                             <Table.Th w={150}>Description</Table.Th>
                           )}
-                          {requiredFields.includes('repairDescription') && (
-                            <Table.Th w={150}>Repair Description</Table.Th>
-                          )}
                           
-                          <Table.Th w={100}><SortButton field="cost">Cost</SortButton></Table.Th>
+                          <Table.Th w={100}><SortButton field="price">Price</SortButton></Table.Th>
                           <Table.Th w={100}>Attachment</Table.Th>
                           <Table.Th w={120}>Actions</Table.Th>
                         </Table.Tr>
@@ -650,8 +641,8 @@ export function ExpenseTablePage() {
                         </Table.Td>
                         
                         {/* Dynamic columns based on category */}
-                        {requiredFields.includes('businessUnit') && (
-                          <Table.Td>{expense.businessUnit?.name || '-'}</Table.Td>
+                        {requiredFields.includes('serviceProvider') && (
+                          <Table.Td>{expense.serviceProvider?.name || '-'}</Table.Td>
                         )}
                         {requiredFields.includes('truck') && (
                           <Table.Td>{expense.truck?.number || '-'}</Table.Td>
@@ -668,22 +659,19 @@ export function ExpenseTablePage() {
                         {requiredFields.includes('description') && (
                           <Table.Td>{expense.description || '-'}</Table.Td>
                         )}
-                        {requiredFields.includes('repairDescription') && (
-                          <Table.Td>{expense.repair_description || expense.repairDescription || '-'}</Table.Td>
-                        )}
                         
                         <Table.Td>
-                          <Text fw={500}>${expense.cost.toFixed(2)}</Text>
+                          <Text fw={500}>${expense.price.toFixed(2)}</Text>
                         </Table.Td>
                         
                         {/* Attachment column */}
                         <Table.Td>
-                          {expense.attachment_path ? (
+                          {expense.attachmentPath ? (
                             <Group gap="xs">
                               <ActionIcon 
                                 variant="light" 
                                 color="blue"
-                                onClick={() => handleDownloadAttachment(expense.id, expense.attachment_path!)}
+                                onClick={() => handleDownloadAttachment(expense.id, expense.attachmentPath!)}
                                 title="Download attachment"
                                 size="sm"
                               >
@@ -692,7 +680,7 @@ export function ExpenseTablePage() {
                               <ActionIcon 
                                 variant="light" 
                                 color="red"
-                                onClick={() => handleRemoveAttachmentClick(expense.id, expense.attachment_path!)}
+                                onClick={() => handleRemoveAttachmentClick(expense.id, expense.attachmentPath!)}
                                 title="Remove attachment"
                                 size="sm"
                               >

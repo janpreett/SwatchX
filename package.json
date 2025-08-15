@@ -6,13 +6,19 @@
     "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
     "dev:backend": "cd backend && python -m uvicorn app.main:app --reload",
     "dev:frontend": "cd frontend && npm run dev",
-    "install:all": "cd backend && pip install -r requirements.txt && cd ../frontend && npm install",
-    "build": "cd frontend && npm run build"
+    "build": "cd frontend && npm run build",
+    "setup": "npm run setup:db",
+    "setup:db": "cd backend && python -c \"from app.core.database import Base, engine; Base.metadata.create_all(bind=engine)\"",
+    "clean": "npm run clean:node_modules && npm run clean:venv",
+    "clean:node_modules": "rimraf node_modules frontend/node_modules",
+    "clean:venv": "rimraf backend/venv",
+    "reset": "npm run clean && npm install && cd frontend && npm install"
   },
   "keywords": ["react", "fastapi", "mantine", "typescript", "python"],
   "author": "janpreett",
   "license": "MIT",
   "devDependencies": {
-    "concurrently": "^8.2.2"
+    "concurrently": "^8.2.2",
+    "rimraf": "^5.0.5"
   }
 }

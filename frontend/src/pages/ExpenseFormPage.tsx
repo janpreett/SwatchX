@@ -8,16 +8,15 @@ import { useCompany } from '../hooks/useCompany';
 
 interface ExpenseFormData {
   date: Date | null;
-  cost: number | '';
+  price: number | '';
   description?: string;
-  repairDescription?: string;
   gallons?: number | '';
-  businessUnitId?: string | null;
+  serviceProviderId?: string | null;
   truckId?: string | null;
   trailerId?: string | null;
   fuelStationId?: string | null;
   attachment?: File | null;
-  currentAttachmentPath?: string;
+  attachmentPath?: string;
   removeCurrentAttachment?: boolean;
 }
 
@@ -79,14 +78,13 @@ export function ExpenseFormPage() {
       company: selectedCompany,
       category: category,
       date: data.date instanceof Date ? data.date.toISOString() : new Date(data.date || new Date()).toISOString(),
-      cost: Number(data.cost),
+      price: Number(data.price),
       description: data.description || undefined,
-      repair_description: data.repairDescription || undefined,
       gallons: data.gallons ? Number(data.gallons) : undefined,
-      business_unit_id: data.businessUnitId ? Number(data.businessUnitId) : undefined,
-      truck_id: data.truckId ? Number(data.truckId) : undefined,
-      trailer_id: data.trailerId ? Number(data.trailerId) : undefined,
-      fuel_station_id: data.fuelStationId ? Number(data.fuelStationId) : undefined,
+      serviceProviderId: data.serviceProviderId ? Number(data.serviceProviderId) : undefined,
+      truckId: data.truckId ? Number(data.truckId) : undefined,
+      trailerId: data.trailerId ? Number(data.trailerId) : undefined,
+      fuelStationId: data.fuelStationId ? Number(data.fuelStationId) : undefined,
     };
 
     // Handle attachment logic
@@ -125,7 +123,7 @@ export function ExpenseFormPage() {
       category={category}
       categoryLabel={categoryLabel}
       onSubmit={handleSubmit}
-      initialData={initialData}
+      initialData={initialData || undefined}
       isEditing={!!editId}
       loading={loading}
       returnTo={returnTo}

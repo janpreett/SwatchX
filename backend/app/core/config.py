@@ -1,3 +1,21 @@
+"""
+Application Configuration and Settings Management
+
+This module manages all application configuration including environment variables,
+database settings, security keys, and application metadata. It provides a centralized
+way to access configuration values and handles both development and production environments.
+
+Key Features:
+- Environment-based configuration (dev/prod)
+- Database path management for different platforms
+- Security settings (JWT, tokens, etc.)
+- Automatic data directory creation
+- Support for .env file configuration
+
+Classes:
+- Settings: Main configuration class with Pydantic validation
+"""
+
 from pydantic_settings import BaseSettings
 from pydantic import ConfigDict
 from typing import Optional

@@ -1,3 +1,25 @@
+"""
+File Upload and Management Handler
+
+This module provides comprehensive file handling capabilities for expense
+attachments. It handles file validation, secure storage, and management
+with security features to prevent common file-related vulnerabilities.
+
+Features:
+- File type validation (PDF, images)
+- File size limits (10MB max)
+- Secure filename sanitization
+- Unique filename generation
+- File storage and retrieval
+- Automatic directory creation
+
+Security:
+- Prevents path traversal attacks
+- Sanitizes filenames
+- Validates file types and sizes
+- Generates unique identifiers
+"""
+
 import os
 import shutil
 import uuid

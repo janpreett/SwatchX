@@ -1,325 +1,226 @@
-# SwatchX
+# 🚛 SwatchX - Fleet Expense Management System
 
-A modern full-stack web application built with React, Mantine UI, and FastAPI.
+A comprehensive web application for managing fleet expenses, service providers, trucks, trailers, and fuel stations with robust data integrity and user management.
+
+## ✨ Features
+
+### 🔐 Authentication & Security
+- **User Registration & Login**: Secure JWT-based authentication
+- **Security Questions**: Password reset via security questions
+- **Profile Management**: Update display name and change password
+- **Account Deletion**: Safe account removal with company data preservation
+
+### 💰 Expense Management
+- **Multiple Categories**: Truck, trailer, fuel, and general expenses
+- **File Attachments**: Support for expense receipts and documents
+- **Company Separation**: Swatch and SWS company support
+- **Export Functionality**: CSV export for expense reports
+
+### 🏢 Management Entities
+- **Service Providers**: Unique names with no duplicates
+- **Trucks**: Unique truck numbers with no duplicates
+- **Trailers**: Unique trailer numbers with no duplicates
+- **Fuel Stations**: Unique names with no duplicates
+
+### 📱 User Experience
+- **Responsive Design**: Mobile and desktop optimized
+- **Real-time Search**: Find existing entries quickly
+- **Bulk Operations**: Select and manage multiple items
+- **Error Handling**: Clear feedback for all operations
+
+## 🏗️ Architecture
+
+### Backend (FastAPI + SQLAlchemy)
+- **Python 3.8+**: Modern async web framework
+- **SQLite Database**: Lightweight, file-based storage
+- **Unique Constraints**: Database-level duplicate prevention
+- **RESTful API**: Clean, consistent endpoints
+
+### Frontend (React + Mantine)
+- **TypeScript**: Type-safe development
+- **Mantine UI**: Beautiful, accessible components
+- **React Router**: Client-side navigation
+- **Context API**: Global state management
 
 ## 🚀 Quick Start
 
-### Option 1: One-Click Launcher (Recommended)
-
-**Windows (Command Prompt/PowerShell):**
-```bash
-# Double-click or run:
-start.bat
-```
-
-**Windows (PowerShell with better output):**
-```powershell
-.\start.ps1
-```
-
-**Linux/macOS:**
-```bash
-./start.sh
-```
-
-### Option 2: Manual Start
-
-**Terminal 1 - Backend:**
-```bash
-cd backend
-python -m uvicorn app.main:app --reload
-```
-
-**Terminal 2 - Frontend:**
-```bash
-cd frontend  
-npm run dev
-```
-
-## 📖 Application URLs
-
-- **Frontend**: http://localhost:5173 (or next available port)
-- **Backend API**: http://127.0.0.1:8000
-- **API Docs**: http://127.0.0.1:8000/docs (Swagger UI)
-
-## 🛠 Tech Stack
-
-### Frontend
-- **React 18** with TypeScript
-- **Vite** for development and building
-- **Mantine** UI library for components
-- **React Router** for client-side routing
-- **@mantine/form** for form validation
-
-### Backend  
-- **FastAPI** (Python 3.11+)
-- **SQLAlchemy** ORM with SQLite database
-- **Pydantic** for data validation
-- **JWT** authentication with bcrypt password hashing
-- **CORS** middleware for frontend communication
-
-## 🧪 Testing
-
-SwatchX includes comprehensive testing coverage with **90%+ code coverage requirements**:
-
-### Running Tests
-
-**Backend Tests:**
-```bash
-cd backend
-pip install -r requirements.txt
-
-# Run all tests
-pytest
-
-# Run with coverage
-pytest --cov=app --cov-report=html --cov-report=term-missing
-
-# Run specific test categories
-pytest -m unit          # Unit tests
-pytest -m integration   # Integration tests
-pytest -m security      # Security tests
-pytest -m performance   # Performance tests
-```
-
-**Frontend Tests:**
-```bash
-cd frontend
-npm install
-
-# Run unit tests
-npm test
-
-# Run with coverage
-npm run test:coverage
-
-# Run E2E tests
-npm run test:e2e
-```
-
-**Security Scanning:**
-```bash
-# Backend security scans
-cd backend
-bandit -r app/          # Python security scan
-safety check            # Dependency vulnerabilities
-
-# Frontend security scan
-cd frontend
-npm audit
-```
-
-### Test Types
-
-- **Unit Tests**: Individual components and functions
-- **Integration Tests**: API endpoints and database operations
-- **End-to-End Tests**: Complete user workflows with Cypress
-- **Security Tests**: SQL injection, XSS, authentication bypass
-- **Performance Tests**: Response times and load testing
-- **Accessibility Tests**: WCAG compliance
-
-### CI/CD Pipeline
-
-Automated testing runs on every push/PR with GitHub Actions:
-- ✅ Backend pytest suite (unit, integration, security, performance)
-- ✅ Frontend Vitest suite with coverage reporting
-- ✅ Cypress E2E tests
-- ✅ Security scanning (Bandit, Safety, npm audit)
-- ✅ Load testing with Locust
-- ✅ Build and deployment verification
-
-See [TESTING.md](./TESTING.md) for detailed testing documentation.
-
-## 📁 Project Structure
-
-```
-SwatchX/
-├── frontend/                 # React frontend
-│   ├── src/
-│   │   ├── components/      # Reusable UI components
-│   │   ├── pages/          # Page components (Login, Signup, Home)
-│   │   ├── contexts/       # React contexts (AuthContext)
-│   │   ├── hooks/          # Custom React hooks (useAuth)
-│   │   ├── services/       # API service layer
-│   │   └── test/           # Test utilities and setup
-│   ├── cypress/            # E2E tests
-│   ├── package.json
-│   └── vitest.config.ts
-├── backend/                 # FastAPI backend
-│   ├── app/
-│   │   ├── models/         # SQLAlchemy database models
-│   │   ├── schemas/        # Pydantic schemas
-│   │   ├── routers/        # API route handlers
-│   │   └── core/           # Configuration and database setup
-│   ├── tests/              # Test suite
-│   │   ├── unit/          # Unit tests
-│   │   ├── integration/   # Integration tests
-│   │   ├── security/      # Security tests
-│   │   └── performance/   # Performance tests
-│   ├── requirements.txt
-│   ├── pyproject.toml
-│   ├── conftest.py
-│   └── locustfile.py       # Load testing
-├── .github/workflows/       # CI/CD pipelines
-├── start.bat              # Windows launcher script
-├── start.ps1              # PowerShell launcher script
-├── start.sh               # Linux/macOS launcher script
-├── TESTING.md             # Detailed testing documentation
-└── README.md
-```
-
-## 🔧 Development Setup
-
 ### Prerequisites
-- **Python 3.11+**
-- **Node.js 16+** 
-- **npm** or **yarn**
+- Python 3.8+
+- Node.js 16+
+- PowerShell (Windows)
 
-### Backend Setup
-```bash
-cd backend
-pip install -r requirements.txt
-```
+### Installation
+1. **Clone the repository**
+   ```bash
+   git clone <repository-url>
+   cd SwatchX
+   ```
 
-### Frontend Setup
-```bash
-cd frontend
-npm install
-```
+2. **Install dependencies**
+   ```bash
+   # Backend
+   cd backend
+   python -m venv venv
+   .\venv\Scripts\activate
+   pip install -r requirements.txt
+   
+   # Frontend
+   cd ../frontend
+   npm install
+   ```
 
-### Environment Configuration
-The backend uses a `.env` file for configuration. Default values are provided, but you should change the `SECRET_KEY` in production:
+3. **Start the application**
+   ```bash
+   # From root directory
+   .\start.ps1
+   ```
 
-```bash
-# backend/.env
-SECRET_KEY=your-super-secret-jwt-key-change-this-in-production
-DEBUG=true
-ACCESS_TOKEN_EXPIRE_MINUTES=30
-```
+## 📊 Database Schema
 
-## 🔐 Features
+### Core Tables
+- **users**: Authentication and profile data
+- **expenses**: Main expense records with categories
+- **service_providers**: Service provider management
+- **trucks**: Truck fleet tracking
+- **trailers**: Trailer fleet tracking
+- **fuel_stations**: Fuel station information
 
-### Authentication System
-- ✅ **User Registration** with email validation
-- ✅ **Password Requirements**: 8+ characters, uppercase, lowercase, numbers, symbols  
-- ✅ **Secure Login** with JWT token authentication
-- ✅ **Password Hashing** using bcrypt
-- ✅ **Protected Routes** requiring authentication
+### Key Relationships
+- Expenses reference service providers, trucks, trailers, and fuel stations
+- All management entities have unique constraints
+- User deletion preserves company data integrity
 
-### User Interface
-- ✅ **Responsive Design** built with Mantine components
-- ✅ **Professional Navigation** with sticky navbar and user menu
-- ✅ **Form Validation** with real-time feedback
-- ✅ **Modern UI/UX** following Mantine design principles
-- ✅ **Mobile-First** responsive layouts
-
-### Backend API
-- ✅ **RESTful API** with proper HTTP status codes
-- ✅ **Comprehensive Validation** using Pydantic schemas
-- ✅ **Database Integration** with SQLAlchemy ORM
-- ✅ **CORS Support** for frontend communication  
-- ✅ **API Documentation** with automatic Swagger UI
-
-### Quality Assurance
-- ✅ **90%+ Test Coverage** across backend and frontend
-- ✅ **Automated Security Scanning** for vulnerabilities
-- ✅ **Performance Testing** with load testing
-- ✅ **Accessibility Testing** for WCAG compliance
-- ✅ **CI/CD Pipeline** with automated testing and deployment
-
-## 🔒 Security Features
-
-- **JWT Token** authentication with secure token handling
-- **bcrypt** password hashing with salt
-- **Input validation** on both frontend and backend
-- **SQL injection** prevention through ORM
-- **XSS protection** with input sanitization
-- **CORS** configuration for secure cross-origin requests
-- **Environment variables** for sensitive configuration
-- **Security scanning** with Bandit and Safety
-- **Dependency vulnerability** scanning
-
-## 🚀 Production Deployment
-
-### Backend
-```bash
-# Install dependencies
-pip install -r backend/requirements.txt
-
-# Set production environment variables
-export SECRET_KEY="your-production-secret-key"
-export DEBUG=false
-
-# Run with production server
-uvicorn app.main:app --host 0.0.0.0 --port 8000
-```
-
-### Frontend
-```bash
-# Build for production
-cd frontend
-npm run build
-
-# Serve static files (with nginx, apache, or other web server)
-# Built files will be in frontend/dist/
-```
-
-## 📝 API Endpoints
+## 🔧 API Endpoints
 
 ### Authentication
 - `POST /auth/signup` - User registration
-- `POST /auth/login` - User login  
-- `GET /auth/me` - Get current user profile
-- `GET /health` - Health check endpoint
+- `POST /auth/login` - User authentication
+- `GET /auth/me` - Get current user
+- `PUT /auth/profile` - Update profile
+- `DELETE /auth/account` - Delete account
 
-## 🤝 Contributing
+### Expenses
+- `GET /expenses/` - List expenses with filtering
+- `POST /expenses/` - Create new expense
+- `PUT /expenses/{id}` - Update expense
+- `DELETE /expenses/{id}` - Delete expense
 
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. **Write tests** for new functionality (required for 90%+ coverage)
-4. **Run all tests** locally before submitting
-5. Commit your changes (`git commit -m 'Add some amazing feature'`)
-6. Push to the branch (`git push origin feature/amazing-feature`)  
-7. Open a Pull Request (CI/CD tests will run automatically)
+### Management Entities
+- `GET /service-providers/` - List service providers
+- `POST /service-providers/` - Create service provider
+- `PUT /service-providers/{id}` - Update service provider
+- `DELETE /service-providers/{id}` - Delete service provider
 
-### Development Guidelines
-- Maintain **90%+ test coverage**
-- Follow existing code style and patterns
-- Add tests for all new features
-- Update documentation as needed
-- Ensure all CI/CD checks pass
+## 🎯 Data Integrity Features
+
+### Unique Constraints
+- **Service Providers**: No duplicate names allowed
+- **Trucks**: No duplicate numbers allowed
+- **Trailers**: No duplicate numbers allowed
+- **Fuel Stations**: No duplicate names allowed
+
+### Business Logic
+- **Referential Integrity**: Cannot delete entities used by expenses
+- **Data Preservation**: Company data maintained during user management
+- **Automatic Cleanup**: Duplicate prevention at database level
+
+## 🛡️ Security Features
+
+### Password Security
+- **Bcrypt Hashing**: Secure password storage
+- **Complexity Requirements**: Strong password validation
+- **Security Questions**: Account recovery system
+
+### Data Protection
+- **JWT Tokens**: Secure authentication
+- **User Isolation**: Proper data separation
+- **Input Validation**: XSS and injection prevention
+
+## 📱 User Interface
+
+### Management Pages
+- **Service Providers**: Add, edit, delete, and search
+- **Trucks**: Fleet management with unique numbers
+- **Trailers**: Trailer tracking and management
+- **Fuel Stations**: Fuel station database
+
+### Expense Management
+- **Form-based Entry**: Category-specific input fields
+- **File Uploads**: Receipt and document attachments
+- **Bulk Operations**: Efficient data management
+- **Export Tools**: Data analysis and reporting
+
+## 🔄 Data Flow
+
+### Frontend to Backend
+1. **Form Submission**: User input validation
+2. **API Calls**: RESTful endpoint communication
+3. **Data Processing**: Backend business logic
+4. **Database Storage**: Persistent data storage
+5. **Response**: Success/error feedback
+
+### Error Handling
+- **Validation Errors**: Form-level input validation
+- **API Errors**: Backend error responses
+- **User Feedback**: Clear error messages
+- **Fallback Handling**: Graceful error recovery
+
+## 🚀 Performance Features
+
+### Database Optimization
+- **Indexes**: Fast search and retrieval
+- **Unique Constraints**: Efficient duplicate prevention
+- **Query Optimization**: Optimized database queries
+
+### Frontend Performance
+- **Lazy Loading**: Efficient data loading
+- **Search Optimization**: Real-time filtering
+- **Responsive Design**: Mobile-first approach
+
+
+
+## 🔮 Future Enhancements
+
+### Planned Features
+- **Audit Logging**: Track all data changes
+- **Advanced Reporting**: Enhanced analytics
+- **Mobile App**: Native mobile application
+- **API Documentation**: Swagger/OpenAPI specs
+
+### Scalability
+- **Database Migration**: Schema evolution tools
+- **Performance Monitoring**: System health tracking
+- **Load Balancing**: High availability support
+
+## 📝 Development Guidelines
+
+### Code Standards
+- **Naming Conventions**: Consistent file and variable naming
+- **Error Handling**: Comprehensive error management
+- **Documentation**: Clear code comments
+
+### Database Design
+- **Normalization**: Proper data structure
+- **Constraints**: Data integrity rules
+- **Indexes**: Performance optimization
+- **Migrations**: Schema evolution
+
+## 🆘 Support & Troubleshooting
+
+### Common Issues
+- **Database Errors**: Check file permissions and paths
+- **API Errors**: Verify authentication and input data
+- **Frontend Issues**: Check browser console for errors
+
+### Getting Help
+- **Documentation**: Check this README first
+- **Code Comments**: Inline documentation
+- **Error Messages**: Clear feedback for issues
 
 ## 📄 License
 
-This project is licensed under the MIT License.
-
-## 🆘 Troubleshooting
-
-### Common Issues
-
-**Backend not starting:**
-- Ensure Python 3.11+ is installed
-- Install dependencies: `pip install -r backend/requirements.txt`
-- Check if port 8000 is available
-
-**Frontend not starting:**
-- Ensure Node.js 16+ is installed
-- Install dependencies: `cd frontend && npm install`
-- Clear node_modules and reinstall if needed
-
-**Tests failing:**
-- Run `pytest --lf` to run only last failed tests
-- Check test coverage with `pytest --cov=app --cov-report=html`
-- For frontend tests, run `npm run test:coverage`
-
-**CORS errors:**
-- Ensure backend is running on `127.0.0.1:8000`  
-- Check CORS configuration in `backend/app/main.py`
-
-**Database issues:**
-- Database file is created automatically in `data/swatchx.db`
-- Delete database file to reset all data
+This project is proprietary software. All rights reserved.
 
 ---
 
-Built with ❤️ using React, Mantine, and FastAPI
+**SwatchX** - Professional fleet expense management for modern businesses.

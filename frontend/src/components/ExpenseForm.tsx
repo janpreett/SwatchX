@@ -28,17 +28,15 @@ import { CATEGORY_CONFIG_MAP } from '../constants/expenseCategories';
 
 interface ExpenseFormData {
   date: Date | null;
-  cost: number | '';
   price: number | '';
   description?: string;
-  repairDescription?: string;
   gallons?: number | '';
-  businessUnitId?: string | null;
+  serviceProviderId?: string | null;
   truckId?: string | null;
   trailerId?: string | null;
   fuelStationId?: string | null;
   attachment?: File | null;
-  currentAttachmentPath?: string;
+  attachmentPath?: string;
   removeCurrentAttachment?: boolean;
 }
 
@@ -46,24 +44,23 @@ interface ExpenseFormProps {
   category: string;
   categoryLabel: string;
   onSubmit: (data: ExpenseFormData) => Promise<void>;
-  initialData?: any;
+  initialData?: ExpenseFormData;
   isEditing?: boolean;
   loading?: boolean;
   returnTo?: string;
 }
 
-type FieldType = 'date' | 'businessUnit' | 'truck' | 'trailer' | 'repairDescription' | 'cost' | 'price' | 'fuelStation' | 'gallons' | 'description';
+type FieldType = 'date' | 'serviceProviderId' | 'truckId' | 'trailerId' | 'price' | 'fuelStationId' | 'gallons' | 'description';
 
 export function ExpenseForm({ category, categoryLabel, onSubmit, initialData, isEditing, loading: formLoading, returnTo = '/dashboard' }: ExpenseFormProps) {
   const navigate = useNavigate();
   const { selectedCompany } = useCompany();
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [showRemoveConfirmation, setShowRemoveConfirmation] = useState(false);
   
   // Management data state
-  const [businessUnits, setBusinessUnits] = useState<Array<{value: string, label: string}>>([]);
+  const [serviceProviders, setServiceProviders] = useState<Array<{value: string, label: string}>>([]);
   const [trucks, setTrucks] = useState<Array<{value: string, label: string}>>([]);
   const [trailers, setTrailers] = useState<Array<{value: string, label: string}>>([]);
   const [fuelStations, setFuelStations] = useState<Array<{value: string, label: string}>>([]);
@@ -75,25 +72,24 @@ export function ExpenseForm({ category, categoryLabel, onSubmit, initialData, is
   useEffect(() => {
     const loadManagementData = async () => {
       try {
-        console.log('Loading management data...');
-        const [businessUnitsData, trucksData, trailersData, fuelStationsData] = await Promise.all([
-          managementService.getBusinessUnits(),
+        // Loading management data...
+        const [serviceProvidersData, trucksData, trailersData, fuelStationsData] = await Promise.all([
+          managementService.getServiceProviders(),
           managementService.getTrucks(),
           managementService.getTrailers(),
           managementService.getFuelStations(),
         ]);
 
-        console.log('Business Units:', businessUnitsData);
-        console.log('Trucks:', trucksData);
-        console.log('Trailers:', trailersData);
-        console.log('Fuel Stations:', fuelStationsData);
+        // Data loaded successfully
 
-        setBusinessUnits(businessUnitsData.map((item: any) => ({ value: item.id.toString(), label: item.name || item.number })));
-        setTrucks(trucksData.map((item: any) => ({ value: item.id.toString(), label: item.number })));
-        setTrailers(trailersData.map((item: any) => ({ value: item.id.toString(), label: item.number })));
-        setFuelStations(fuelStationsData.map((item: any) => ({ value: item.id.toString(), label: item.name })));
+        setServiceProviders(serviceProvidersData.map((item: { id: number; name: string }) => ({ value: item.id.toString(), label: item.name })));
+        setTrucks(trucksData.map((item: { id: number; number: string }) => ({ value: item.id.toString(), label: item.number })));
+        setTrailers(trailersData.map((item: { id: number; number: string }) => ({ value: item.id.toString(), label: item.number })));
+        setFuelStations(fuelStationsData.map((item: { id: number; name: string }) => ({ value: item.id.toString(), label: item.name })));
       } catch (error) {
         console.error('Failed to load management data:', error);
+        // Set error state to show user that management data couldn't be loaded
+        setError('Failed to load management data. Please refresh the page or contact support.');
       }
     };
 
@@ -103,44 +99,29 @@ export function ExpenseForm({ category, categoryLabel, onSubmit, initialData, is
   const form = useForm<ExpenseFormData>({
     initialValues: {
       date: new Date(),
-      cost: '',
       price: '',
       description: '',
-      repairDescription: '',
       gallons: '',
-      businessUnitId: null,
+      serviceProviderId: null,
       truckId: null,
       trailerId: null,
       fuelStationId: null,
       attachment: null,
-      currentAttachmentPath: undefined,
+      attachmentPath: undefined,
       removeCurrentAttachment: false,
     },
     validate: {
       date: (value) => (!value ? 'Date is required' : null),
-      cost: (value) => {
-        if (requiredFields.includes('cost')) {
-          if (!value && value !== 0) return 'Cost is required';
-          if (typeof value === 'number' && value <= 0) return 'Cost must be greater than 0';
-        }
-        return null;
-      },
-      price: (value) => {
-        if (requiredFields.includes('price')) {
-          if (!value && value !== 0) return 'Price is required';
-          if (typeof value === 'number' && value <= 0) return 'Price must be greater than 0';
-        }
-        return null;
-      },
+          price: (value) => {
+      if (requiredFields.includes('price')) {
+        if (!value && value !== 0) return 'Price is required';
+        if (typeof value === 'number' && value <= 0) return 'Price must be greater than 0';
+      }
+      return null;
+    },
       description: (value) => {
         if (requiredFields.includes('description') && (!value || value.trim() === '')) {
           return 'Description is required';
-        }
-        return null;
-      },
-      repairDescription: (value) => {
-        if (requiredFields.includes('repairDescription') && (!value || value.trim() === '')) {
-          return 'Repair description is required';
         }
         return null;
       },
@@ -151,26 +132,26 @@ export function ExpenseForm({ category, categoryLabel, onSubmit, initialData, is
         if (typeof value === 'number' && value <= 0) return 'Gallons must be greater than 0';
         return null;
       },
-      businessUnitId: (value) => {
-        if (requiredFields.includes('businessUnit') && !value) {
-          return 'Business unit is required';
+      serviceProviderId: (value) => {
+        if (requiredFields.includes('serviceProviderId') && !value) {
+          return 'Service provider is required';
         }
         return null;
       },
       truckId: (value) => {
-        if (requiredFields.includes('truck') && !value) {
+        if (requiredFields.includes('truckId') && !value) {
           return 'Truck is required';
         }
         return null;
       },
       trailerId: (value) => {
-        if (requiredFields.includes('trailer') && !value) {
+        if (requiredFields.includes('trailerId') && !value) {
           return 'Trailer is required';
         }
         return null;
       },
       fuelStationId: (value) => {
-        if (requiredFields.includes('fuelStation') && !value) {
+        if (requiredFields.includes('fuelStationId') && !value) {
           return 'Fuel station is required';
         }
         return null;
@@ -183,15 +164,14 @@ export function ExpenseForm({ category, categoryLabel, onSubmit, initialData, is
     if (initialData && isEditing) {
       form.setValues({
         date: initialData.date ? new Date(initialData.date) : new Date(),
-        cost: initialData.cost || '',
+        price: initialData.price || '',
         description: initialData.description || '',
-        repairDescription: initialData.repair_description || '',
         gallons: initialData.gallons || '',
-        businessUnitId: initialData.business_unit_id?.toString() || null,
-        truckId: initialData.truck_id?.toString() || null,
-        trailerId: initialData.trailer_id?.toString() || null,
-        fuelStationId: initialData.fuel_station_id?.toString() || null,
-        currentAttachmentPath: initialData.attachment_path,
+        serviceProviderId: initialData.serviceProviderId?.toString() || null,
+        truckId: initialData.truckId?.toString() || null,
+        trailerId: initialData.trailerId?.toString() || null,
+        fuelStationId: initialData.fuelStationId?.toString() || null,
+        attachmentPath: initialData.attachmentPath,
         removeCurrentAttachment: false,
         attachment: null,
       });
@@ -205,7 +185,6 @@ export function ExpenseForm({ category, categoryLabel, onSubmit, initialData, is
   }
 
   const handleSubmit = async (values: ExpenseFormData) => {
-    setLoading(true);
     setError(null);
 
     try {
@@ -216,8 +195,6 @@ export function ExpenseForm({ category, categoryLabel, onSubmit, initialData, is
       }, 2000);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to save expense');
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -298,19 +275,19 @@ export function ExpenseForm({ category, categoryLabel, onSubmit, initialData, is
                   {...form.getInputProps('date')}
                 />
 
-                {/* Business Unit - for truck/trailer */}
-                {requiredFields.includes('businessUnit') && (
+                {/* Service Provider - for truck/trailer */}
+                {requiredFields.includes('serviceProviderId') && (
                   <Select
-                    label="Business Unit"
-                    placeholder="Select business unit"
+                    label="Service Provider"
+                    placeholder="Select service provider"
                     required
-                    data={businessUnits}
-                    {...form.getInputProps('businessUnitId')}
+                    data={serviceProviders}
+                    {...form.getInputProps('serviceProviderId')}
                   />
                 )}
 
                 {/* Truck - for truck expenses */}
-                {requiredFields.includes('truck') && (
+                {requiredFields.includes('truckId') && (
                   <Select
                     label="Truck Number"
                     placeholder="Select truck"
@@ -321,7 +298,7 @@ export function ExpenseForm({ category, categoryLabel, onSubmit, initialData, is
                 )}
 
                 {/* Trailer - for trailer expenses */}
-                {requiredFields.includes('trailer') && (
+                {requiredFields.includes('trailerId') && (
                   <Select
                     label="Trailer Number"
                     placeholder="Select trailer"
@@ -332,7 +309,7 @@ export function ExpenseForm({ category, categoryLabel, onSubmit, initialData, is
                 )}
 
                 {/* Fuel Station - for fuel expenses */}
-                {requiredFields.includes('fuelStation') && (
+                {requiredFields.includes('fuelStationId') && (
                   <Select
                     label="Fuel Station"
                     placeholder="Select fuel station"
@@ -367,28 +344,15 @@ export function ExpenseForm({ category, categoryLabel, onSubmit, initialData, is
                   />
                 )}
 
-                {/* Repair Description - for truck/trailer */}
-                {requiredFields.includes('repairDescription') && (
-                  <Textarea
-                    label="Repair Description"
-                    placeholder="Describe the repair work"
-                    required
-                    minRows={3}
-                    maxRows={10}
-                    resize="vertical"
-                    {...form.getInputProps('repairDescription')}
-                  />
-                )}
-
                 {/* File attachment - optional for all categories */}
                 <Stack gap="xs">
                   {/* Show current attachment if editing */}
-                  {isEditing && form.values.currentAttachmentPath && !form.values.removeCurrentAttachment && (
+                  {isEditing && form.values.attachmentPath && !form.values.removeCurrentAttachment && (
                     <Box>
                       <Text size="sm" fw={500} mb="xs">Current Attachment</Text>
                       <Group gap="xs">
                         <Text size="sm" c="dimmed">
-                          {form.values.currentAttachmentPath.split('/').pop()}
+                          {form.values.attachmentPath.split('/').pop()}
                         </Text>
                         <ActionIcon
                           variant="light"
@@ -421,7 +385,7 @@ export function ExpenseForm({ category, categoryLabel, onSubmit, initialData, is
                   
                   {/* File input for new attachment */}
                   <FileInput
-                    label={isEditing && form.values.currentAttachmentPath && !form.values.removeCurrentAttachment ? "Replace Attachment (Optional)" : "Attachment (Optional)"}
+                    label={isEditing && form.values.attachmentPath && !form.values.removeCurrentAttachment ? "Replace Attachment (Optional)" : "Attachment (Optional)"}
                     description="Upload a PDF or image file (max 10MB)"
                     placeholder="Choose file..."
                     leftSection={<IconPaperclip size="1rem" />}
@@ -431,20 +395,7 @@ export function ExpenseForm({ category, categoryLabel, onSubmit, initialData, is
                   />
                 </Stack>
 
-                {/* Cost - for backward compatibility */}
-                {requiredFields.includes('cost') && (
-                  <NumberInput
-                    label="Cost (USD)"
-                    placeholder="Enter cost"
-                    required
-                    min={0}
-                    decimalScale={2}
-                    prefix="$"
-                    {...form.getInputProps('cost')}
-                  />
-                )}
-
-                {/* Price - new field name */}
+                {/* Price field */}
                 {requiredFields.includes('price') && (
                   <NumberInput
                     label="Price (USD)"
@@ -464,7 +415,7 @@ export function ExpenseForm({ category, categoryLabel, onSubmit, initialData, is
                   </Button>
                   <Button 
                     type="submit" 
-                    loading={loading}
+                    loading={formLoading}
                     color={config?.color}
                   >
                     {isEditing ? 'Update' : 'Add'} Expense
@@ -485,7 +436,7 @@ export function ExpenseForm({ category, categoryLabel, onSubmit, initialData, is
       >
         <Stack gap="md">
           <Text>
-            Are you sure you want to remove the current attachment "{form.values.currentAttachmentPath?.split('/').pop()}"? 
+            Are you sure you want to remove the current attachment "{form.values.attachmentPath?.split('/').pop()}"? 
             This action will be applied when you save the expense.
           </Text>
           <Group justify="flex-end" gap="sm">

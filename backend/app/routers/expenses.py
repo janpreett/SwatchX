@@ -15,10 +15,10 @@ from openpyxl.styles.numbers import FORMAT_CURRENCY_USD_SIMPLE
 from ..core.database import get_db
 from ..core.security import get_current_active_user
 from ..models.user import User
-from ..models.expense import Expense, BusinessUnit, Truck, Trailer, FuelStation, CompanyEnum, ExpenseCategoryEnum
+from ..models.expense import Expense, ServiceProvider, Truck, Trailer, FuelStation, CompanyEnum, ExpenseCategoryEnum
 from ..schemas.expense import (
     ExpenseCreate, ExpenseUpdate, Expense as ExpenseSchema,
-    BusinessUnitCreate, BusinessUnitUpdate, BusinessUnit as BusinessUnitSchema,
+    ServiceProviderCreate, ServiceProviderUpdate, ServiceProvider as ServiceProviderSchema,
     TruckCreate, TruckUpdate, Truck as TruckSchema,
     TrailerCreate, TrailerUpdate, Trailer as TrailerSchema,
     FuelStationCreate, FuelStationUpdate, FuelStation as FuelStationSchema
@@ -26,6 +26,18 @@ from ..schemas.expense import (
 from ..utils.file_handler import file_handler
 
 router = APIRouter()
+
+def convert_camel_to_snake(data: dict) -> dict:
+    """
+    Convert camelCase keys to snake_case for backend compatibility.
+    This ensures frontend can send camelCase while backend uses snake_case.
+    """
+    converted = {}
+    for key, value in data.items():
+        # Convert camelCase to snake_case
+        snake_key = ''.join(['_' + c.lower() if c.isupper() else c for c in key]).lstrip('_')
+        converted[snake_key] = value
+    return converted
 
 def serialize_expense_with_relationships(expense: Expense) -> dict:
     """
@@ -37,19 +49,18 @@ def serialize_expense_with_relationships(expense: Expense) -> dict:
         "company": expense.company,
         "category": expense.category,
         "date": expense.date,
-        "cost": expense.cost,
+        "price": expense.price,
         "description": expense.description,
-        "repair_description": expense.repair_description,
         "gallons": expense.gallons,
-        "business_unit_id": expense.business_unit_id,
-        "truck_id": expense.truck_id,
-        "trailer_id": expense.trailer_id,
-        "fuel_station_id": expense.fuel_station_id,
-        "attachment_path": expense.attachment_path,
-        "businessUnit": {
-            "id": expense.business_unit.id, 
-            "name": expense.business_unit.name
-        } if expense.business_unit else None,
+        "serviceProviderId": expense.service_provider_id,
+        "truckId": expense.truck_id,
+        "trailerId": expense.trailer_id,
+        "fuelStationId": expense.fuel_station_id,
+        "attachmentPath": expense.attachment_path,
+        "serviceProvider": {
+            "id": expense.service_provider.id, 
+            "name": expense.service_provider.name
+        } if expense.service_provider else None,
         "truck": {
             "id": expense.truck.id, 
             "number": expense.truck.number
@@ -62,8 +73,8 @@ def serialize_expense_with_relationships(expense: Expense) -> dict:
             "id": expense.fuel_station.id, 
             "name": expense.fuel_station.name
         } if expense.fuel_station else None,
-        "created_at": expense.created_at,
-        "updated_at": expense.updated_at
+        "createdAt": expense.created_at,
+        "updatedAt": expense.updated_at
     }
 
 def get_expense_with_relationships(db: Session, expense_id: int) -> Expense:
@@ -72,7 +83,7 @@ def get_expense_with_relationships(db: Session, expense_id: int) -> Expense:
     Centralizes the query logic to avoid duplication.
     """
     return db.query(Expense).options(
-        joinedload(Expense.business_unit),
+        joinedload(Expense.service_provider),
         joinedload(Expense.truck),
         joinedload(Expense.trailer),
         joinedload(Expense.fuel_station)
@@ -86,7 +97,7 @@ def get_expenses_with_relationships(db: Session, company: Optional[CompanyEnum] 
     Centralizes the query logic to avoid duplication.
     """
     query = db.query(Expense).options(
-        joinedload(Expense.business_unit),
+        joinedload(Expense.service_provider),
         joinedload(Expense.truck),
         joinedload(Expense.trailer),
         joinedload(Expense.fuel_station)
@@ -104,7 +115,17 @@ def check_entity_usage_and_delete(db: Session, entity, entity_id: int, entity_na
     Check if management entity is referenced by expenses and delete if not.
     Centralizes the deletion logic with referential integrity checks.
     """
-    expense_count = db.query(Expense).filter(getattr(Expense, f"{entity_name}_id") == entity_id).count()
+    # Map entity names to the correct column names in the Expense table
+    column_mapping = {
+        "service_provider": "service_provider_id",
+        "truck": "truck_id", 
+        "trailer": "trailer_id",
+        "fuel_station": "fuel_station_id"
+    }
+    
+    column_name = column_mapping.get(entity_name, f"{entity_name}_id")
+    expense_count = db.query(Expense).filter(getattr(Expense, column_name) == entity_id).count()
+    
     if expense_count > 0:
         raise HTTPException(
             status_code=400, 
@@ -126,7 +147,11 @@ async def create_expense(
     try:
         # Parse JSON data from form
         expense_dict = json.loads(expense_data)
-        expense = ExpenseCreate(**expense_dict)
+        
+        # Convert camelCase to snake_case for backend compatibility
+        converted_dict = convert_camel_to_snake(expense_dict)
+        
+        expense = ExpenseCreate(**converted_dict)
     except (json.JSONDecodeError, ValueError) as e:
         raise HTTPException(status_code=400, detail=f"Invalid expense data: {str(e)}")
     
@@ -194,7 +219,11 @@ async def update_expense(
     try:
         # Parse JSON data from form
         expense_dict = json.loads(expense_data)
-        expense = ExpenseUpdate(**expense_dict)
+        
+        # Convert camelCase to snake_case for backend compatibility
+        converted_dict = convert_camel_to_snake(expense_dict)
+        
+        expense = ExpenseUpdate(**converted_dict)
     except (json.JSONDecodeError, ValueError) as e:
         raise HTTPException(status_code=400, detail=f"Invalid expense data: {str(e)}")
     
@@ -290,59 +319,104 @@ async def remove_attachment(
     
     return
 
-# Business Unit endpoints
-@router.post("/business-units/", response_model=BusinessUnitSchema, status_code=status.HTTP_201_CREATED)
-def create_business_unit(
-    business_unit: BusinessUnitCreate,
+# Service Provider endpoints
+@router.post("/service-providers/", response_model=ServiceProviderSchema, status_code=status.HTTP_201_CREATED)
+def create_service_provider(
+    service_provider: ServiceProviderCreate,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user)
 ):
-    db_business_unit = BusinessUnit(**business_unit.dict())
-    db.add(db_business_unit)
-    db.commit()
-    db.refresh(db_business_unit)
-    return db_business_unit
+    try:
+        # Check if service provider with same name already exists
+        existing_provider = db.query(ServiceProvider).filter(
+            ServiceProvider.name == service_provider.name
+        ).first()
+        
+        if existing_provider:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Service provider with name '{service_provider.name}' already exists"
+            )
+        
+        db_service_provider = ServiceProvider(**service_provider.dict())
+        db.add(db_service_provider)
+        db.commit()
+        db.refresh(db_service_provider)
+        return db_service_provider
+    except HTTPException:
+        raise
+    except Exception as e:
+        db.rollback()
+        if "UNIQUE constraint failed" in str(e) or "duplicate key value" in str(e).lower():
+            raise HTTPException(
+                status_code=400,
+                detail=f"Service provider with name '{service_provider.name}' already exists"
+            )
+        raise HTTPException(status_code=500, detail="Failed to create service provider")
 
-@router.get("/business-units/", response_model=List[BusinessUnitSchema])
-async def read_business_units(
+@router.get("/service-providers/", response_model=List[ServiceProviderSchema])
+async def read_service_providers(
     skip: int = 0,
     limit: int = 100,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user)
 ):
-    business_units = db.query(BusinessUnit).offset(skip).limit(limit).all()
-    return business_units
+    service_providers = db.query(ServiceProvider).offset(skip).limit(limit).all()
+    return service_providers
 
-@router.put("/business-units/{business_unit_id}", response_model=BusinessUnitSchema)
-def update_business_unit(
-    business_unit_id: int,
-    business_unit: BusinessUnitCreate,
+@router.put("/service-providers/{service_provider_id}", response_model=ServiceProviderSchema)
+def update_service_provider(
+    service_provider_id: int,
+    service_provider: ServiceProviderCreate,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user)
 ):
-    db_business_unit = db.query(BusinessUnit).filter(BusinessUnit.id == business_unit_id).first()
-    if not db_business_unit:
-        raise HTTPException(status_code=404, detail="Business unit not found")
-    
-    for key, value in business_unit.dict().items():
-        setattr(db_business_unit, key, value)
-    
-    db.commit()
-    db.refresh(db_business_unit)
-    return db_business_unit
+    try:
+        db_service_provider = db.query(ServiceProvider).filter(ServiceProvider.id == service_provider_id).first()
+        if not db_service_provider:
+            raise HTTPException(status_code=404, detail="Service provider not found")
+        
+        # Check if another service provider with same name already exists
+        existing_provider = db.query(ServiceProvider).filter(
+            ServiceProvider.name == service_provider.name,
+            ServiceProvider.id != service_provider_id
+        ).first()
+        
+        if existing_provider:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Service provider with name '{service_provider.name}' already exists"
+            )
+        
+        for key, value in service_provider.dict().items():
+            setattr(db_service_provider, key, value)
+        
+        db.commit()
+        db.refresh(db_service_provider)
+        return db_service_provider
+    except HTTPException:
+        raise
+    except Exception as e:
+        db.rollback()
+        if "UNIQUE constraint failed" in str(e) or "duplicate key value" in str(e).lower():
+            raise HTTPException(
+                status_code=400,
+                detail=f"Service provider with name '{service_provider.name}' already exists"
+            )
+        raise HTTPException(status_code=500, detail="Failed to update service provider")
 
-@router.delete("/business-units/{business_unit_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_business_unit(
-    business_unit_id: int,
+@router.delete("/service-providers/{service_provider_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_service_provider(
+    service_provider_id: int,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user)
 ):
-    """Delete a business unit if not referenced by expenses."""
-    business_unit = db.query(BusinessUnit).filter(BusinessUnit.id == business_unit_id).first()
-    if not business_unit:
-        raise HTTPException(status_code=404, detail="Business unit not found")
+    """Delete a service provider if not referenced by expenses."""
+    service_provider = db.query(ServiceProvider).filter(ServiceProvider.id == service_provider_id).first()
+    if not service_provider:
+        raise HTTPException(status_code=404, detail="Service provider not found")
     
-    check_entity_usage_and_delete(db, business_unit, business_unit_id, "business_unit")
+    check_entity_usage_and_delete(db, service_provider, service_provider_id, "service_provider")
 
 # Truck endpoints
 @router.post("/trucks/", response_model=TruckSchema, status_code=status.HTTP_201_CREATED)
@@ -351,11 +425,33 @@ def create_truck(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user)
 ):
-    db_truck = Truck(**truck.dict())
-    db.add(db_truck)
-    db.commit()
-    db.refresh(db_truck)
-    return db_truck
+    try:
+        # Check if truck with same number already exists
+        existing_truck = db.query(Truck).filter(
+            Truck.number == truck.number
+        ).first()
+        
+        if existing_truck:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Truck with number '{truck.number}' already exists"
+            )
+        
+        db_truck = Truck(**truck.dict())
+        db.add(db_truck)
+        db.commit()
+        db.refresh(db_truck)
+        return db_truck
+    except HTTPException:
+        raise
+    except Exception as e:
+        db.rollback()
+        if "UNIQUE constraint failed" in str(e) or "duplicate key value" in str(e).lower():
+            raise HTTPException(
+                status_code=400,
+                detail=f"Truck with number '{truck.number}' already exists"
+            )
+        raise HTTPException(status_code=500, detail="Failed to create truck")
 
 @router.get("/trucks/", response_model=List[TruckSchema])
 async def read_trucks(
@@ -374,16 +470,39 @@ def update_truck(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user)
 ):
-    db_truck = db.query(Truck).filter(Truck.id == truck_id).first()
-    if not db_truck:
-        raise HTTPException(status_code=404, detail="Truck not found")
-    
-    for key, value in truck.dict().items():
-        setattr(db_truck, key, value)
-    
-    db.commit()
-    db.refresh(db_truck)
-    return db_truck
+    try:
+        db_truck = db.query(Truck).filter(Truck.id == truck_id).first()
+        if not db_truck:
+            raise HTTPException(status_code=404, detail="Truck not found")
+        
+        # Check if another truck with same number already exists
+        existing_truck = db.query(Truck).filter(
+            Truck.number == truck.number,
+            Truck.id != truck_id
+        ).first()
+        
+        if existing_truck:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Truck with number '{truck.number}' already exists"
+            )
+        
+        for key, value in truck.dict().items():
+            setattr(db_truck, key, value)
+        
+        db.commit()
+        db.refresh(db_truck)
+        return db_truck
+    except HTTPException:
+        raise
+    except Exception as e:
+        db.rollback()
+        if "UNIQUE constraint failed" in str(e) or "duplicate key value" in str(e).lower():
+            raise HTTPException(
+                status_code=400,
+                detail=f"Truck with number '{truck.number}' already exists"
+            )
+        raise HTTPException(status_code=500, detail="Failed to update truck")
 
 @router.delete("/trucks/{truck_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_truck(
@@ -405,11 +524,33 @@ def create_trailer(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user)
 ):
-    db_trailer = Trailer(**trailer.dict())
-    db.add(db_trailer)
-    db.commit()
-    db.refresh(db_trailer)
-    return db_trailer
+    try:
+        # Check if trailer with same number already exists
+        existing_trailer = db.query(Trailer).filter(
+            Trailer.number == trailer.number
+        ).first()
+        
+        if existing_trailer:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Trailer with number '{trailer.number}' already exists"
+            )
+        
+        db_trailer = Trailer(**trailer.dict())
+        db.add(db_trailer)
+        db.commit()
+        db.refresh(db_trailer)
+        return db_trailer
+    except HTTPException:
+        raise
+    except Exception as e:
+        db.rollback()
+        if "UNIQUE constraint failed" in str(e) or "duplicate key value" in str(e).lower():
+            raise HTTPException(
+                status_code=400,
+                detail=f"Trailer with number '{trailer.number}' already exists"
+            )
+        raise HTTPException(status_code=500, detail="Failed to create trailer")
 
 @router.get("/trailers/", response_model=List[TrailerSchema])
 async def read_trailers(
@@ -428,16 +569,39 @@ def update_trailer(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user)
 ):
-    db_trailer = db.query(Trailer).filter(Trailer.id == trailer_id).first()
-    if not db_trailer:
-        raise HTTPException(status_code=404, detail="Trailer not found")
-    
-    for key, value in trailer.dict().items():
-        setattr(db_trailer, key, value)
-    
-    db.commit()
-    db.refresh(db_trailer)
-    return db_trailer
+    try:
+        db_trailer = db.query(Trailer).filter(Trailer.id == trailer_id).first()
+        if not db_trailer:
+            raise HTTPException(status_code=404, detail="Trailer not found")
+        
+        # Check if another trailer with same number already exists
+        existing_trailer = db.query(Trailer).filter(
+            Trailer.number == trailer.number,
+            Trailer.id != trailer_id
+        ).first()
+        
+        if existing_trailer:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Trailer with number '{trailer.number}' already exists"
+            )
+        
+        for key, value in trailer.dict().items():
+            setattr(db_trailer, key, value)
+        
+        db.commit()
+        db.refresh(db_trailer)
+        return db_trailer
+    except HTTPException:
+        raise
+    except Exception as e:
+        db.rollback()
+        if "UNIQUE constraint failed" in str(e) or "duplicate key value" in str(e).lower():
+            raise HTTPException(
+                status_code=400,
+                detail=f"Trailer with number '{trailer.number}' already exists"
+            )
+        raise HTTPException(status_code=500, detail="Failed to update trailer")
 
 @router.delete("/trailers/{trailer_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_trailer(
@@ -459,11 +623,33 @@ def create_fuel_station(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user)
 ):
-    db_fuel_station = FuelStation(**fuel_station.dict())
-    db.add(db_fuel_station)
-    db.commit()
-    db.refresh(db_fuel_station)
-    return db_fuel_station
+    try:
+        # Check if fuel station with same name already exists
+        existing_station = db.query(FuelStation).filter(
+            FuelStation.name == fuel_station.name
+        ).first()
+        
+        if existing_station:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Fuel station with name '{fuel_station.name}' already exists"
+            )
+        
+        db_fuel_station = FuelStation(**fuel_station.dict())
+        db.add(db_fuel_station)
+        db.commit()
+        db.refresh(db_fuel_station)
+        return db_fuel_station
+    except HTTPException:
+        raise
+    except Exception as e:
+        db.rollback()
+        if "UNIQUE constraint failed" in str(e) or "duplicate key value" in str(e).lower():
+            raise HTTPException(
+                status_code=400,
+                detail=f"Fuel station with name '{fuel_station.name}' already exists"
+            )
+        raise HTTPException(status_code=500, detail="Failed to create fuel station")
 
 @router.get("/fuel-stations/", response_model=List[FuelStationSchema])
 async def read_fuel_stations(
@@ -482,16 +668,39 @@ def update_fuel_station(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user)
 ):
-    db_fuel_station = db.query(FuelStation).filter(FuelStation.id == fuel_station_id).first()
-    if not db_fuel_station:
-        raise HTTPException(status_code=404, detail="Fuel station not found")
-    
-    for key, value in fuel_station.dict().items():
-        setattr(db_fuel_station, key, value)
-    
-    db.commit()
-    db.refresh(db_fuel_station)
-    return db_fuel_station
+    try:
+        db_fuel_station = db.query(FuelStation).filter(FuelStation.id == fuel_station_id).first()
+        if not db_fuel_station:
+            raise HTTPException(status_code=404, detail="Fuel station not found")
+        
+        # Check if another fuel station with same name already exists
+        existing_station = db.query(FuelStation).filter(
+            FuelStation.name == fuel_station.name,
+            FuelStation.id != fuel_station_id
+        ).first()
+        
+        if existing_station:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Fuel station with name '{fuel_station.name}' already exists"
+            )
+        
+        for key, value in fuel_station.dict().items():
+            setattr(db_fuel_station, key, value)
+        
+        db.commit()
+        db.refresh(db_fuel_station)
+        return db_fuel_station
+    except HTTPException:
+        raise
+    except Exception as e:
+        db.rollback()
+        if "UNIQUE constraint failed" in str(e) or "duplicate key value" in str(e).lower():
+            raise HTTPException(
+                status_code=400,
+                detail=f"Fuel station with name '{fuel_station.name}' already exists"
+            )
+        raise HTTPException(status_code=500, detail="Failed to update fuel station")
 
 @router.delete("/fuel-stations/{fuel_station_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_fuel_station(
@@ -515,9 +724,10 @@ def get_monthly_change(
 ):
     """Get month-over-month percentage change in expenses for a company."""
     try:
-        now = datetime.now()
+        # Use UTC to avoid timezone issues and ensure consistent month boundaries
+        now = datetime.utcnow()
         
-        # Current month
+        # Current month (based on current date, not data existence)
         current_month_start = datetime(now.year, now.month, 1)
         current_month_end = datetime(now.year, now.month, monthrange(now.year, now.month)[1], 23, 59, 59)
         
@@ -533,17 +743,17 @@ def get_monthly_change(
         prev_month_end = datetime(prev_year, prev_month, monthrange(prev_year, prev_month)[1], 23, 59, 59)
         
         # Calculate current month total
-        current_total = db.query(func.sum(Expense.cost)).filter(
+        current_total = db.query(func.sum(Expense.price)).filter(
             Expense.company == company,
-            Expense.date >= current_month_start,
-            Expense.date <= current_month_end
+            Expense.date >= current_month_start.date(),
+            Expense.date <= current_month_end.date()
         ).scalar() or 0
         
         # Calculate previous month total
-        prev_total = db.query(func.sum(Expense.cost)).filter(
+        prev_total = db.query(func.sum(Expense.price)).filter(
             Expense.company == company,
-            Expense.date >= prev_month_start,
-            Expense.date <= prev_month_end
+            Expense.date >= prev_month_start.date(),
+            Expense.date <= prev_month_end.date()
         ).scalar() or 0
         
         # Calculate percentage change
@@ -565,10 +775,10 @@ def get_monthly_change(
             month_start = datetime(year, month, 1)
             month_end = datetime(year, month, monthrange(year, month)[1], 23, 59, 59)
             
-            month_total = db.query(func.sum(Expense.cost)).filter(
+            month_total = db.query(func.sum(Expense.price)).filter(
                 Expense.company == company,
-                Expense.date >= month_start,
-                Expense.date <= month_end
+                Expense.date >= month_start.date(),
+                Expense.date <= month_end.date()
             ).scalar() or 0
             
             monthly_data.append({
@@ -595,17 +805,17 @@ def get_top_categories(
     """Get top 3 expense categories with monthly trends for a company."""
     try:
         # Get total by category for the last 6 months
-        now = datetime.now()
+        now = datetime.utcnow()
         six_months_ago = now - timedelta(days=180)
         
         # Get category totals
         category_totals = db.query(
             Expense.category,
-            func.sum(Expense.cost).label('total')
+            func.sum(Expense.price).label('total')
         ).filter(
             Expense.company == company,
-            Expense.date >= six_months_ago
-        ).group_by(Expense.category).order_by(func.sum(Expense.cost).desc()).limit(3).all()
+            Expense.date >= six_months_ago.date()
+        ).group_by(Expense.category).order_by(func.sum(Expense.price).desc()).limit(3).all()
         
         # Get monthly trends for each top category
         top_categories_data = []
@@ -625,11 +835,11 @@ def get_top_categories(
                 month_start = datetime(year, month, 1)
                 month_end = datetime(year, month, monthrange(year, month)[1], 23, 59, 59)
                 
-                month_total = db.query(func.sum(Expense.cost)).filter(
+                month_total = db.query(func.sum(Expense.price)).filter(
                     Expense.company == company,
                     Expense.category == category,
-                    Expense.date >= month_start,
-                    Expense.date <= month_end
+                    Expense.date >= month_start.date(),
+                    Expense.date <= month_end.date()
                 ).scalar() or 0
                 
                 monthly_data.append({
@@ -664,7 +874,7 @@ def export_company_data(
     try:
         # Get all expenses for the company with relationships
         expenses = db.query(Expense).options(
-            joinedload(Expense.business_unit),
+            joinedload(Expense.service_provider),
             joinedload(Expense.truck),
             joinedload(Expense.trailer),
             joinedload(Expense.fuel_station)
@@ -678,8 +888,8 @@ def export_company_data(
         
         # Define expense categories and their fields
         categories = {
-            'truck': ['Date', 'Business Unit', 'Truck Number', 'Repair Description', 'Price ($)'],
-            'trailer': ['Date', 'Business Unit', 'Trailer Number', 'Repair Description', 'Price ($)'],
+            'truck': ['Date', 'Service Provider', 'Truck Number', 'Description', 'Price ($)'],
+            'trailer': ['Date', 'Service Provider', 'Trailer Number', 'Description', 'Price ($)'],
             'dmv': ['Date', 'Description', 'Price ($)'],
             'parts': ['Date', 'Description', 'Price ($)'],
             'phone-tracker': ['Date', 'Description', 'Price ($)'],
@@ -721,20 +931,20 @@ def export_company_data(
                 
                 # Category specific fields
                 if category in ['truck', 'trailer']:
-                    # Business Unit
-                    ws.cell(row=row, column=col, value=expense.business_unit.name if expense.business_unit else '')
-                    col += 1
-                    
-                    # Truck/Trailer Number
-                    if category == 'truck':
-                        ws.cell(row=row, column=col, value=expense.truck.number if expense.truck else '')
-                    else:
-                        ws.cell(row=row, column=col, value=expense.trailer.number if expense.trailer else '')
-                    col += 1
-                    
-                    # Repair Description
-                    ws.cell(row=row, column=col, value=expense.repair_description or '')
-                    col += 1
+                     # Service Provider
+                     ws.cell(row=row, column=col, value=expense.service_provider.name if expense.service_provider else '')
+                     col += 1
+                     
+                     # Truck/Trailer Number
+                     if category == 'truck':
+                         ws.cell(row=row, column=col, value=expense.truck.number if expense.truck else '')
+                     else:
+                         ws.cell(row=row, column=col, value=expense.trailer.number if expense.trailer else '')
+                     col += 1
+                     
+                     # Description
+                     ws.cell(row=row, column=col, value=expense.description or '')
+                     col += 1
                     
                 elif category == 'fuel-diesel':
                     # Fuel Station
@@ -751,8 +961,8 @@ def export_company_data(
                     col += 1
                 
                 # Price (always last column) - format as currency
-                cost_cell = ws.cell(row=row, column=col, value=float(expense.cost) if expense.cost else 0)
-                cost_cell.number_format = '"$"#,##0.00'
+                price_cell = ws.cell(row=row, column=col, value=float(expense.price) if expense.price else 0)
+                price_cell.number_format = '"$"#,##0.00'
             
             # Auto-adjust column widths
             for column in ws.columns:
@@ -786,7 +996,7 @@ def export_company_data(
                 if category not in category_totals:
                     category_totals[category] = {'count': 0, 'total': 0}
                 category_totals[category]['count'] += 1
-                category_totals[category]['total'] += float(expense.cost) if expense.cost else 0
+                category_totals[category]['total'] += float(expense.price) if expense.price else 0
             
             # Add summary data
             row = 2
@@ -850,7 +1060,7 @@ def export_company_data(
 @router.get("/pie-chart-data/{company}")
 async def get_pie_chart_data(
     company: CompanyEnum,
-    period: str = Query("total", regex="^(this-month|total)$"),
+    period: str = Query("this-month", regex="^(this-month|total)$"),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user)
 ):
@@ -863,22 +1073,29 @@ async def get_pie_chart_data(
         
         # Filter by period if specified
         if period == "this-month":
-            now = datetime.now()
+            # Use UTC to avoid timezone issues and ensure consistent month boundaries
+            now = datetime.utcnow()
             start_of_month = datetime(now.year, now.month, 1)
-            query = query.filter(Expense.date >= start_of_month.date())
+            end_of_month = datetime(now.year, now.month, monthrange(now.year, now.month)[1], 23, 59, 59)
+            
+            # Filter expenses within the current month (based on current date, not data existence)
+            query = query.filter(
+                Expense.date >= start_of_month.date(),
+                Expense.date <= end_of_month.date()
+            )
         
         expenses = query.all()
         
-        # Group by category and sum costs
+        # Group by category and sum prices
         category_totals = {}
         for expense in expenses:
             category = expense.category.value
-            cost = float(expense.cost or 0)
+            price = float(expense.price or 0)
             
             if category in category_totals:
-                category_totals[category] += cost
+                category_totals[category] += price
             else:
-                category_totals[category] = cost
+                category_totals[category] = price
         
         # Convert to pie chart format with default Mantine colors
         category_colors = {

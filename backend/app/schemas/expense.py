@@ -4,16 +4,16 @@ from typing import Optional
 from ..models.expense import CompanyEnum, ExpenseCategoryEnum
 
 # Base schemas for management entities
-class BusinessUnitBase(BaseModel):
+class ServiceProviderBase(BaseModel):
     name: str = Field(..., min_length=1, max_length=100)
 
-class BusinessUnitCreate(BusinessUnitBase):
+class ServiceProviderCreate(ServiceProviderBase):
     pass
 
-class BusinessUnitUpdate(BusinessUnitBase):
+class ServiceProviderUpdate(ServiceProviderBase):
     pass
 
-class BusinessUnit(BusinessUnitBase):
+class ServiceProvider(ServiceProviderBase):
     id: int
     created_at: datetime
     updated_at: Optional[datetime] = None
@@ -80,20 +80,19 @@ class ExpenseBase(BaseModel):
     company: CompanyEnum
     category: ExpenseCategoryEnum
     date: datetime
-    cost: float = Field(..., gt=0)
+    price: float = Field(..., gt=0)
     description: Optional[str] = Field(None, max_length=500)
-    repair_description: Optional[str] = Field(None, max_length=500)
     gallons: Optional[float] = Field(None, gt=0)
-    business_unit_id: Optional[int] = None
+    service_provider_id: Optional[int] = None
     truck_id: Optional[int] = None
     trailer_id: Optional[int] = None
     fuel_station_id: Optional[int] = None
     attachment_path: Optional[str] = Field(None, max_length=500)
 
-    @validator('cost')
-    def cost_must_be_positive(cls, v):
+    @validator('price')
+    def price_must_be_positive(cls, v):
         if v <= 0:
-            raise ValueError('Cost must be greater than 0')
+            raise ValueError('Price must be greater than 0')
         return round(v, 2)
     
     @validator('gallons')
@@ -109,20 +108,19 @@ class ExpenseUpdate(BaseModel):
     company: Optional[CompanyEnum] = None
     category: Optional[ExpenseCategoryEnum] = None
     date: Optional[datetime] = None
-    cost: Optional[float] = Field(None, gt=0)
+    price: Optional[float] = Field(None, gt=0)
     description: Optional[str] = Field(None, max_length=500)
-    repair_description: Optional[str] = Field(None, max_length=500)
     gallons: Optional[float] = Field(None, gt=0)
-    business_unit_id: Optional[int] = None
+    service_provider_id: Optional[int] = None
     truck_id: Optional[int] = None
     trailer_id: Optional[int] = None
     fuel_station_id: Optional[int] = None
     attachment_path: Optional[str] = Field(None, max_length=500)
 
-    @validator('cost')
-    def cost_must_be_positive(cls, v):
+    @validator('price')
+    def price_must_be_positive(cls, v):
         if v is not None and v <= 0:
-            raise ValueError('Cost must be greater than 0')
+            raise ValueError('Price must be greater than 0')
         return round(v, 2) if v is not None else v
     
     @validator('gallons')
@@ -133,7 +131,7 @@ class ExpenseUpdate(BaseModel):
 
 class Expense(ExpenseBase):
     id: int
-    businessUnit: Optional[BusinessUnit] = None
+    serviceProvider: Optional[ServiceProvider] = None
     truck: Optional[Truck] = None
     trailer: Optional[Trailer] = None
     fuelStation: Optional[FuelStation] = None
