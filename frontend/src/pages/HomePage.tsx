@@ -46,16 +46,9 @@ export function HomePage() {
                 root: {
                   cursor: 'pointer',
                   transition: 'all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
-                  transformStyle: 'preserve-3d',
                   '&:hover': {
-                    transform: 'translateY(-12px) rotateX(5deg) scale(1.05)',
-                    boxShadow: `
-                      0 25px 50px rgba(59, 130, 246, 0.4),
-                      0 15px 35px rgba(0, 0, 0, 0.2),
-                      0 5px 15px rgba(59, 130, 246, 0.3),
-                      inset 0 1px 0 rgba(255, 255, 255, 0.1)
-                    `,
-                    borderColor: 'var(--mantine-color-blue-4)',
+                    transform: 'translateY(-12px) scale(1.05)',
+                    boxShadow: '0 25px 50px rgba(59, 130, 246, 0.4), 0 15px 35px rgba(0, 0, 0, 0.2)',
                   }
                 }
               }}
@@ -69,12 +62,7 @@ export function HomePage() {
                   styles={{
                     root: {
                       fontSize: '2rem',
-                      fontWeight: 700,
-                      transition: 'all 0.3s ease',
-                      '&:hover': {
-                        transform: 'scale(1.1) rotateY(10deg)',
-                        filter: 'brightness(1.1)'
-                      }
+                      fontWeight: 700
                     }
                   }}
                 >
@@ -87,15 +75,6 @@ export function HomePage() {
                   size="lg" 
                   fullWidth
                   radius="lg"
-                  styles={{
-                    root: {
-                      transition: 'all 0.2s ease',
-                      '&:hover': {
-                        transform: 'translateY(-2px)',
-                        filter: 'brightness(1.1)'
-                      }
-                    }
-                  }}
                 >
                   Manage Swatch
                 </Button>
@@ -112,16 +91,9 @@ export function HomePage() {
                 root: {
                   cursor: 'pointer',
                   transition: 'all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
-                  transformStyle: 'preserve-3d',
                   '&:hover': {
-                    transform: 'translateY(-12px) rotateX(5deg) scale(1.05)',
-                    boxShadow: `
-                      0 25px 50px rgba(6, 182, 212, 0.4),
-                      0 15px 35px rgba(0, 0, 0, 0.2),
-                      0 5px 15px rgba(6, 182, 212, 0.3),
-                      inset 0 1px 0 rgba(255, 255, 255, 0.1)
-                    `,
-                    borderColor: 'var(--mantine-color-cyan-4)',
+                    transform: 'translateY(-12px) scale(1.05)',
+                    boxShadow: '0 25px 50px rgba(6, 182, 212, 0.4), 0 15px 35px rgba(0, 0, 0, 0.2)',
                   }
                 }
               }}
@@ -135,12 +107,7 @@ export function HomePage() {
                   styles={{
                     root: {
                       fontSize: '1.5rem',
-                      fontWeight: 700,
-                      transition: 'all 0.3s ease',
-                      '&:hover': {
-                        transform: 'scale(1.1) rotateY(10deg)',
-                        filter: 'brightness(1.1)'
-                      }
+                      fontWeight: 700
                     }
                   }}
                 >
@@ -153,15 +120,6 @@ export function HomePage() {
                   size="lg" 
                   fullWidth
                   radius="lg"
-                  styles={{
-                    root: {
-                      transition: 'all 0.2s ease',
-                      '&:hover': {
-                        transform: 'translateY(-2px)',
-                        filter: 'brightness(1.1)'
-                      }
-                    }
-                  }}
                 >
                   Manage SWS
                 </Button>
