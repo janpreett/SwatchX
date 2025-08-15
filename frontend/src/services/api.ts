@@ -383,4 +383,9 @@ export const managementService = {
   async getTopCategories(company: string) {
     return apiRequest(`/api/v1/analytics/top-categories/${company}`);
   },
+
+  // Pie chart data
+  async getPieChartData(company: string, period: 'this-month' | 'total') {
+    return apiRequest(`/api/v1/pie-chart-data/${company}?period=${period}`);
+  },
 };

@@ -13,11 +13,13 @@ import {
   ActionIcon,
   Flex,
   Loader,
-  Center
+  Center,
+  Modal
 } from '@mantine/core';
-import { LineChart } from '@mantine/charts';
+import { PieChart } from '@mantine/charts';
+import { useDisclosure } from '@mantine/hooks';
 import { useNavigate } from 'react-router-dom';
-import { IconPlus, IconTable, IconSettings, IconArrowLeft, IconTrendingUp, IconTrendingDown } from '@tabler/icons-react';
+import { IconPlus, IconTable, IconSettings, IconArrowLeft, IconTrendingUp, IconTrendingDown, IconChartPie } from '@tabler/icons-react';
 import { Layout } from '../components/Layout';
 import { useCompany } from '../hooks/useCompany';
 import { expenseService, managementService } from '../services/api';
@@ -39,32 +41,25 @@ interface DashboardExpense {
   fuelStation?: { name: string };
 }
 
-interface MonthlyTrendData {
-  month: string;
-  total: number;
-}
-
 interface MonthlyChangeData {
   current_month: number;
   previous_month: number;
   percentage_change: number;
-  monthly_trend: MonthlyTrendData[];
 }
 
-interface CategoryMonthlyData {
-  month: string;
-  amount: number;
-}
-
-interface TopCategoryData {
+interface PieChartDataItem {
   category: string;
-  category_display: string;
-  total: number;
-  monthly_data: CategoryMonthlyData[];
+  name: string;
+  value: number;
+  color: string;
 }
 
-interface TopCategoriesData {
-  top_categories: TopCategoryData[];
+interface PieChartData {
+  company: string;
+  period: string;
+  data: PieChartDataItem[];
+  total_amount: number;
+  category_count: number;
 }
 
 export function DashboardPage() {
@@ -79,7 +74,9 @@ export function DashboardPage() {
     categoryTotals: {} as Record<string, number>
   });
   const [monthlyChange, setMonthlyChange] = useState<MonthlyChangeData | null>(null);
-  const [topCategories, setTopCategories] = useState<TopCategoriesData | null>(null);
+  const [pieChartData, setPieChartData] = useState<PieChartData | null>(null);
+  const [pieChartPeriod, setPieChartPeriod] = useState<'this-month' | 'total'>('total');
+  const [pieModalOpened, { open: openPieModal, close: closePieModal }] = useDisclosure(false);
 
   useEffect(() => {    
     const loadDashboardData = async () => {
@@ -127,18 +124,19 @@ export function DashboardPage() {
         // Load analytics data
         try {
           if (selectedCompany) {
-            const [monthlyChangeData, topCategoriesData] = await Promise.all([
+            const [monthlyChangeData, pieChartData] = await Promise.all([
               managementService.getMonthlyChange(selectedCompany),
-              managementService.getTopCategories(selectedCompany)
+              managementService.getPieChartData(selectedCompany, pieChartPeriod)
             ]);
             
+            console.log('Pie chart data received:', pieChartData);
             setMonthlyChange(monthlyChangeData);
-            setTopCategories(topCategoriesData);
+            setPieChartData(pieChartData);
           }
         } catch (analyticsError) {
           console.error('Analytics failed:', analyticsError);
           setMonthlyChange(null);
-          setTopCategories(null);
+          setPieChartData(null);
         }
         setAnalyticsLoading(false);
         
@@ -146,7 +144,7 @@ export function DashboardPage() {
         console.error('Failed to load dashboard data:', error);
         setRecentExpenses([]);
         setMonthlyChange(null);
-        setTopCategories(null);
+        setPieChartData(null);
       } finally {
         setLoading(false);
         setAnalyticsLoading(false);
@@ -156,7 +154,7 @@ export function DashboardPage() {
     if (selectedCompany) {
       loadDashboardData();
     }
-  }, [selectedCompany]);
+  }, [selectedCompany, pieChartPeriod]);
 
   if (!selectedCompany) {
     // Redirect back to home if no company is selected
@@ -179,6 +177,23 @@ export function DashboardPage() {
 
   const handleManagement = () => {
     navigate('/management');
+  };
+
+  const loadPieChartData = async (period: 'this-month' | 'total') => {
+    if (!selectedCompany) return;
+    
+    try {
+      setAnalyticsLoading(true);
+      const data = await managementService.getPieChartData(selectedCompany, period);
+      console.log('Loading pie chart data:', data);
+      setPieChartData(data);
+      setPieChartPeriod(period);
+    } catch (error) {
+      console.error('Failed to load pie chart data:', error);
+      setPieChartData(null);
+    } finally {
+      setAnalyticsLoading(false);
+    }
   };
 
   return (
@@ -312,29 +327,33 @@ export function DashboardPage() {
                 e.currentTarget.style.transform = 'translateY(0)';
                 e.currentTarget.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.12)';
               }}
+              onClick={openPieModal}
             >
               <Stack gap="sm">
-                <Text size="md" c="dimmed" fw={500}>Monthly Trend</Text>
+                <Group justify="space-between" align="center">
+                  <Text size="md" c="dimmed" fw={500}>Category Breakdown</Text>
+                  <ActionIcon variant="light" color="blue" size="sm">
+                    <IconChartPie size={16} />
+                  </ActionIcon>
+                </Group>
                 {analyticsLoading ? (
                   <Center py="md">
                     <Loader size="sm" />
                   </Center>
-                ) : monthlyChange?.monthly_trend ? (
-                  <LineChart
-                    h={60}
-                    data={monthlyChange.monthly_trend}
-                    dataKey="month"
-                    series={[{ name: 'total', color: 'blue.6' }]}
-                    curveType="linear"
-                    gridAxis="none"
+                ) : pieChartData?.data && pieChartData.data.length > 0 ? (
+                  <PieChart
+                    h={80}
+                    data={pieChartData.data.map(item => ({
+                      ...item,
+                      color: item.color || '#fd7e14'
+                    }))}
                     withTooltip={false}
-                    withDots={false}
-                    strokeWidth={2}
+                    size={80}
                   />
                 ) : (
-                  <Text size="sm" c="dimmed">No trend data</Text>
+                  <Text size="sm" c="dimmed">No category data</Text>
                 )}
-                <Text size="sm" c="dimmed" fw={500}>Last 6 months</Text>
+                <Text size="sm" c="dimmed" fw={500}>Click to expand</Text>
               </Stack>
             </Card>
             
@@ -364,65 +383,82 @@ export function DashboardPage() {
             </Card>
           </SimpleGrid>
 
-          {/* Top 3 Categories */}
-          {!analyticsLoading && topCategories && topCategories.top_categories && topCategories.top_categories.length > 0 && (
-            <Box>
-              <Group justify="space-between" align="center" mb="xl">
-                <Text size="2xl" fw={700} c="dark">
-                  Top 3 Categories
-                </Text>
-                <Badge variant="light" color="orange" size="lg">
-                  Last 6 Months
-                </Badge>
+          {/* Modal for Pie Chart */}
+          <Modal
+            opened={pieModalOpened}
+            onClose={closePieModal}
+            title={
+              <Group gap="sm">
+                <IconChartPie size={24} color="blue" />
+                <Text size="xl" fw={700}>Expense Categories Breakdown</Text>
               </Group>
-              <SimpleGrid cols={{ base: 1, md: 3 }} spacing="lg">
-                {topCategories.top_categories.map((category: TopCategoryData, index: number) => (
-                  <Card 
-                    key={category.category}
-                    shadow="sm" 
-                    padding="xl" 
-                    radius="md"
-                    withBorder
-                  >
-                    <Stack gap="md">
-                      <Group justify="space-between" align="flex-start">
-                        <Box>
-                          <Badge
-                            color={index === 0 ? 'gold' : index === 1 ? 'gray' : 'orange'}
-                            variant="light"
-                            size="sm"
-                          >
-                            #{index + 1}
-                          </Badge>
-                          <Text fw={600} size="lg" mt="xs">
-                            {category.category_display}
-                          </Text>
-                        </Box>
-                        <Text fw={700} size="xl" c="blue">
-                          ${category.total.toFixed(0)}
-                        </Text>
-                      </Group>
-                      
-                      <Box>
-                        <Text size="xs" c="dimmed" mb="sm">Monthly trend:</Text>
-                        <LineChart
-                          h={80}
-                          data={category.monthly_data}
-                          dataKey="month"
-                          series={[{ name: 'amount', color: index === 0 ? 'blue.6' : index === 1 ? 'teal.6' : 'orange.6' }]}
-                          curveType="monotone"
-                          gridAxis="none"
-                          withTooltip={true}
-                          withDots={true}
-                          strokeWidth={2}
-                        />
-                      </Box>
-                    </Stack>
+            }
+            size="xl"
+          >
+            <Stack gap="lg">
+              {/* Period Toggle Buttons */}
+              <Group justify="center" gap="md">
+                <Button
+                  variant={pieChartPeriod === 'this-month' ? 'filled' : 'light'}
+                  color="blue"
+                  onClick={() => loadPieChartData('this-month')}
+                  loading={analyticsLoading}
+                >
+                  This Month
+                </Button>
+                <Button
+                  variant={pieChartPeriod === 'total' ? 'filled' : 'light'}
+                  color="blue"
+                  onClick={() => loadPieChartData('total')}
+                  loading={analyticsLoading}
+                >
+                  Total
+                </Button>
+              </Group>
+
+              {/* Large Pie Chart */}
+              {analyticsLoading ? (
+                <Center py="xl">
+                  <Loader size="lg" />
+                </Center>
+              ) : pieChartData?.data && pieChartData.data.length > 0 ? (
+                <Box>
+                  <Center>
+                    <PieChart
+                      h={400}
+                      data={pieChartData.data.map(item => ({
+                        ...item,
+                        color: item.color || '#fd7e14'
+                      }))}
+                      withTooltip={true}
+                      size={300}
+                      withLabels
+                      labelsType="value"
+                      labelsPosition="outside"
+                    />
+                  </Center>
+                  <Card mt="lg" shadow="xs" padding="lg">
+                    <Group justify="space-between" mb="md">
+                      <Text fw={600}>Summary</Text>
+                      <Badge color="blue" variant="light">
+                        {pieChartData.category_count} Categories
+                      </Badge>
+                    </Group>
+                    <Group justify="space-between">
+                      <Text size="sm" c="dimmed">Total Amount:</Text>
+                      <Text fw={600} size="lg" c="blue">
+                        ${pieChartData.total_amount.toFixed(2)}
+                      </Text>
+                    </Group>
                   </Card>
-                ))}
-              </SimpleGrid>
-            </Box>
-          )}
+                </Box>
+              ) : (
+                <Center py="xl">
+                  <Text size="lg" c="dimmed">No category data available</Text>
+                </Center>
+              )}
+            </Stack>
+          </Modal>
 
           {/* Expense Categories */}
           <Box>

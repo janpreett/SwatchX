@@ -846,3 +846,76 @@ def export_company_data(
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Export failed: {str(e)}")
+
+@router.get("/pie-chart-data/{company}")
+async def get_pie_chart_data(
+    company: CompanyEnum,
+    period: str = Query("total", regex="^(this-month|total)$"),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    """
+    Get pie chart data for expense categories.
+    Period can be 'this-month' or 'total'.
+    """
+    try:
+        query = db.query(Expense).filter(Expense.company == company)
+        
+        # Filter by period if specified
+        if period == "this-month":
+            now = datetime.now()
+            start_of_month = datetime(now.year, now.month, 1)
+            query = query.filter(Expense.date >= start_of_month.date())
+        
+        expenses = query.all()
+        
+        # Group by category and sum costs
+        category_totals = {}
+        for expense in expenses:
+            category = expense.category.value
+            cost = float(expense.cost or 0)
+            
+            if category in category_totals:
+                category_totals[category] += cost
+            else:
+                category_totals[category] = cost
+        
+        # Convert to pie chart format with orange color scheme
+        category_colors = {
+            'fuel_diesel': '#fd7e14',  # orange
+            'vehicle_repair': '#ff8c00',  # dark orange
+            'inventory': '#ff6347',  # tomato
+            'payroll': '#ffa500',  # orange
+            'insurance': '#ff7f50',  # coral
+            'office_supplies': '#ff4500',  # red orange
+            'marketing': '#ff8c69',  # salmon
+            'travel': '#ffa07a',  # light salmon
+            'maintenance': '#f4a460',  # sandy brown
+            'utilities': '#daa520'  # golden rod
+        }
+        
+        pie_data = []
+        for category, total in category_totals.items():
+            if total > 0:  # Only include categories with expenses
+                # Convert category key to display name
+                display_name = category.replace('_', ' ').title()
+                pie_data.append({
+                    "category": category,
+                    "name": display_name,
+                    "value": round(total, 2),
+                    "color": category_colors.get(category, '#868e96')  # default gray
+                })
+        
+        # Sort by value descending
+        pie_data.sort(key=lambda x: x['value'], reverse=True)
+        
+        return {
+            "company": company.value,
+            "period": period,
+            "data": pie_data,
+            "total_amount": round(sum(item['value'] for item in pie_data), 2),
+            "category_count": len(pie_data)
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to get pie chart data: {str(e)}")
