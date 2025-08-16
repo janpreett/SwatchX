@@ -18,8 +18,8 @@ export function PrivacyPolicyPage() {
               <Title order={2} size="h3" mb="sm">1. Introduction</Title>
               <Text>
                 This Privacy Policy describes how SwatchX Fleet Expense Tracker ("we," "our," or "the Service") 
-                collects, uses, and protects your personal information. This is a personal application designed 
-                for individual fleet expense management, and your privacy is important to us.
+                collects, uses, and protects your information. This is a business application designed 
+                for company fleet expense management, and your privacy is important to us.
               </Text>
             </section>
 
@@ -106,7 +106,7 @@ export function PrivacyPolicyPage() {
             <section>
               <Title order={2} size="h3" mb="sm">5. Data Sharing and Third Parties</Title>
               <Text>
-                <strong>We do not share your data with third parties.</strong> This is a personal application, 
+                <strong>We do not share your data with third parties.</strong> This is a business application, 
                 and all data remains on your local system. We do not:
               </Text>
               <Text component="ul" pl="md" mt="xs">
@@ -115,6 +115,10 @@ export function PrivacyPolicyPage() {
                 <li>Use your data for advertising or marketing purposes</li>
                 <li>Transmit data to remote servers or cloud services</li>
                 <li>Provide data to government agencies (except as required by law)</li>
+              </Text>
+              <Text mt="sm">
+                <strong>Note:</strong> Company expense data may be accessible to other authorized users within 
+                the same company (Swatch or SWS) for business purposes.
               </Text>
             </section>
 
@@ -130,12 +134,19 @@ export function PrivacyPolicyPage() {
 
               <Title order={3} size="h4" mt="md" mb="xs">6.2 Deletion Rights</Title>
               <Text component="ul" pl="md">
-                <li><strong>Individual Records:</strong> Delete specific expense entries at any time</li>
-                <li><strong>Bulk Deletion:</strong> Remove multiple records simultaneously</li>
-                <li><strong>Complete Account Deletion:</strong> Request full account and data removal</li>
-                <li><strong>File Removal:</strong> Delete uploaded attachments and documents</li>
+                <li><strong>Individual Records:</strong> Delete specific expense entries you created (subject to company policies)</li>
+                <li><strong>Bulk Deletion:</strong> Remove multiple records you created simultaneously</li>
+                <li><strong>Account Deletion:</strong> Request removal of your user account only</li>
+                <li><strong>File Removal:</strong> Delete uploaded attachments and documents you added</li>
               </Text>
+              <Text mt="sm" c="red" fw={500}>
+                <strong>Important:</strong> When you delete your account, only your user account is removed. 
+                Company expense data, fleet information, and business records remain intact and accessible 
+                to other authorized users of the company. This data belongs to the business entity, not individual users.
+              </Text>
+            </section>
 
+            <section>
               <Title order={3} size="h4" mt="md" mb="xs">6.3 Data Portability</Title>
               <Text>
                 You can request your data in a structured, commonly used format for transfer 
@@ -146,14 +157,19 @@ export function PrivacyPolicyPage() {
             <section>
               <Title order={2} size="h3" mb="sm">7. Data Retention</Title>
               <Text>
-                We retain your data for as long as your account is active or as needed to provide services. 
-                You can request data deletion at any time:
+                We retain company data for business continuity purposes. You can request account deletion at any time:
               </Text>
               <Text component="ul" pl="md" mt="xs">
-                <li><strong>Individual Records:</strong> Deleted immediately when requested</li>
-                <li><strong>Account Data:</strong> Removed within 30 days of account deletion request</li>
-                <li><strong>File Attachments:</strong> Deleted immediately with associated records</li>
-                <li><strong>Backup Data:</strong> Removed from any backup systems within 90 days</li>
+                <li><strong>Individual Records:</strong> Deleted immediately when requested (subject to company policies)</li>
+                <li><strong>User Account Data:</strong> Removed within 30 days of account deletion request</li>
+                <li><strong>File Attachments:</strong> Deleted immediately with associated records you created</li>
+                <li><strong>Company Business Data:</strong> <strong>NOT deleted</strong> - preserved for business continuity</li>
+                <li><strong>Backup Data:</strong> Company data remains in backup systems for business purposes</li>
+              </Text>
+              <Text mt="sm" c="blue" fw={500}>
+                <strong>Business Data Preservation:</strong> Company expense records, fleet information, and 
+                business data are preserved indefinitely as they belong to the business entity (Swatch or SWS), 
+                not individual user accounts.
               </Text>
             </section>
 

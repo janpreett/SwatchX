@@ -53,30 +53,34 @@ export function TermsOfServicePage() {
             <section>
               <Title order={2} size="h3" mb="sm">4. Data and Privacy</Title>
               <Text>
-                This is a personal application designed for individual fleet management. We collect and store:
+                This is a business application designed for company fleet expense management. We collect and store:
               </Text>
               <Text component="ul" pl="md" mt="xs">
                 <li>Account information (email address and encrypted password)</li>
-                <li>Expense data you input (dates, amounts, descriptions, categories)</li>
+                <li>Company expense data (dates, amounts, descriptions, categories)</li>
                 <li>Fleet management data (truck numbers, trailer numbers, business units)</li>
                 <li>Optional file attachments (receipts, invoices, documentation)</li>
               </Text>
               <Text mt="sm">
-                Your data is stored locally and is not shared with third parties. You maintain full 
-                control over your data and can request deletion at any time.
+                <strong>Important:</strong> Company expense data belongs to the business entity (Swatch or SWS) and is 
+                preserved for business purposes. When you delete your account, only your user account is removed. 
+                Company expense data, fleet information, and business records remain intact and accessible to other 
+                authorized users of the company.
               </Text>
             </section>
 
             <section>
               <Title order={2} size="h3" mb="sm">5. Data Retention and Deletion</Title>
               <Text>
-                As this is a personal application:
+                As this is a business application for company expense management:
               </Text>
               <Text component="ul" pl="md" mt="xs">
-                <li>You can delete individual expense records at any time</li>
-                <li>You can request complete account and data deletion</li>
-                <li>Data deletion is permanent and cannot be recovered</li>
-                <li>Backup and export features may be available for data preservation</li>
+                <li>You can delete individual expense records you created (subject to company policies)</li>
+                <li>You can request deletion of your user account</li>
+                <li><strong>Company expense data is NOT deleted when you delete your account</strong></li>
+                <li>Company data belongs to the business entity and is preserved for business continuity</li>
+                <li>Fleet information, service providers, and business records remain accessible to other users</li>
+                <li>Backup and export features are available for company data preservation</li>
               </Text>
             </section>
 

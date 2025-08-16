@@ -27,19 +27,7 @@ import { useThemeColors } from '../hooks/useThemeColors';
 import { expenseService, managementService } from '../services/api';
 import { EXPENSE_CATEGORIES } from '../constants/expenseCategories';
 
-interface DashboardExpense {
-  id: number;
-  date: string;
-  category: string;
-  company: string;
-  price: number;
-  description?: string;
-  gallons?: number;
-  serviceProvider?: { name: string };
-  truck?: { number: string };
-  trailer?: { number: string };
-  fuelStation?: { name: string };
-}
+
 
 interface MonthlyChangeData {
   current_month: number;
@@ -66,7 +54,6 @@ export function DashboardPage() {
   const navigate = useNavigate();
   const { selectedCompany, clearSelectedCompany } = useCompany();
   const themeColors = useThemeColors();
-  const [recentExpenses, setRecentExpenses] = useState<DashboardExpense[]>([]);
   const [loading, setLoading] = useState(true);
   const [analyticsLoading, setAnalyticsLoading] = useState(true);
   const [totals, setTotals] = useState({
@@ -90,11 +77,6 @@ export function DashboardPage() {
         const expenses = await expenseService.getAll();
         const companyExpenses = expenses
           .filter((expense: DashboardExpense) => expense.company === selectedCompany);
-        
-        const recentExpenses = companyExpenses
-          .sort((a: DashboardExpense, b: DashboardExpense) => new Date(b.date).getTime() - new Date(a.date).getTime())
-          .slice(0, 5);
-        setRecentExpenses(recentExpenses);
 
         // Calculate totals
         const now = new Date();
@@ -147,7 +129,6 @@ export function DashboardPage() {
         
       } catch (error) {
         console.error('Failed to load dashboard data:', error);
-        setRecentExpenses([]);
         setMonthlyChange(null);
         setPieChartData(null);
       } finally {
@@ -525,7 +506,7 @@ export function DashboardPage() {
           </Modal>
 
           {/* Expense Categories */}
-          <Box>
+          <Box mt="3rem">
             <Group justify="space-between" align="center" mb="xl">
               <Text size="5xl" fw={700} {...themeColors.getGradientOrSolid({ from: 'blue', to: 'cyan', deg: 45 })}>
                 Expense Categories
@@ -545,10 +526,12 @@ export function DashboardPage() {
                     style={{ 
                       cursor: 'pointer',
                       transition: 'all 0.2s ease',
+                      boxShadow: '0 1px 3px rgba(0, 0, 0, 0.12)',
                     }}
                     onMouseEnter={(e) => {
                       e.currentTarget.style.transform = 'translateY(-2px)';
-                      e.currentTarget.style.boxShadow = '0 8px 20px rgba(0, 0, 0, 0.12)';
+                      const baseColor = category.color.split('.')[0];
+                      e.currentTarget.style.boxShadow = `0 8px 24px var(--mantine-color-${baseColor}-3)`;
                     }}
                     onMouseLeave={(e) => {
                       e.currentTarget.style.transform = 'translateY(0)';
@@ -594,99 +577,7 @@ export function DashboardPage() {
             </Grid>
           </Box>
 
-          {/* Recent Activity */}
-          <Box>
-            <Group justify="space-between" align="center" mb="xl">
-              <Text size="5xl" fw={700} {...themeColors.getGradientOrSolid({ from: 'green', to: 'teal', deg: 45 })}>
-                Recent Activity
-              </Text>
-              <Badge variant="light" color="green" size="lg">
-                Last 5 Expenses
-              </Badge>
-            </Group>
-            <Card shadow="sm" padding="2xl" radius="md">
-              {loading ? (
-                <Stack align="center" gap="md" py="xl">
-                  <Text size="lg" c={themeColors.secondaryText}>Loading recent expenses...</Text>
-                </Stack>
-              ) : recentExpenses.length === 0 ? (
-                <Stack align="center" gap="md" py="xl">
-                  <Text size="lg" c={themeColors.secondaryText}>No recent expenses</Text>
-                  <Text size="sm" c={themeColors.secondaryText} ta="center">
-                    Start adding expenses to see recent activity here
-                  </Text>
-                </Stack>
-              ) : (
-                <Stack gap="md">
-                  {recentExpenses.map((expense: DashboardExpense, index: number) => (
-                    <Card 
-                      key={expense.id || index} 
-                      withBorder 
-                      shadow="xs" 
-                      padding="lg" 
-                      radius="md"
-                    >
-                      <Group justify="space-between" align="flex-start" mb="sm">
-                        <Box flex={1}>
-                          <Group justify="space-between" align="flex-start" mb="xs">
-                            <Text fw={700} size="lg" c={themeColors.primaryText}>
-                              {expense.category?.charAt(0).toUpperCase() + expense.category?.slice(1) || 'Expense'}
-                            </Text>
-                            <Text size="xs" c={themeColors.secondaryText}>
-                              {new Date(expense.date).toLocaleDateString()}
-                            </Text>
-                          </Group>
-                          <Stack gap="xs">
-                            {expense.serviceProvider && (
-                              <Text size="sm">
-                                <Text fw={600} span c={themeColors.strongText}>Service Provider:</Text> 
-                                <Text span ml="xs" c={themeColors.subtleText}>{expense.serviceProvider.name}</Text>
-                              </Text>
-                            )}
-                            {expense.truck && (
-                              <Text size="sm">
-                                <Text fw={600} span c={themeColors.strongText}>Truck:</Text> 
-                                <Text span ml="xs" c={themeColors.subtleText}>{expense.truck.number}</Text>
-                              </Text>
-                            )}
-                            {expense.trailer && (
-                              <Text size="sm">
-                                <Text fw={600} span c={themeColors.strongText}>Trailer:</Text> 
-                                <Text span ml="xs" c={themeColors.subtleText}>{expense.trailer.number}</Text>
-                              </Text>
-                            )}
-                            {expense.fuelStation && (
-                              <Text size="sm">
-                                <Text fw={600} span c={themeColors.strongText}>Fuel Station:</Text> 
-                                <Text span ml="xs" c={themeColors.subtleText}>{expense.fuelStation.name}</Text>
-                              </Text>
-                            )}
-                            {expense.gallons && (
-                              <Text size="sm">
-                                <Text fw={600} span c={themeColors.strongText}>Gallons:</Text> 
-                                <Text span ml="xs" c={themeColors.subtleText}>{expense.gallons}</Text>
-                              </Text>
-                            )}
-                            {expense.description && (
-                              <Text size="sm">
-                                <Text fw={600} span c={themeColors.strongText}>Description:</Text> 
-                                <Text span ml="xs" c={themeColors.subtleText}>{expense.description}</Text>
-                              </Text>
-                            )}
-                          </Stack>
-                        </Box>
-                        <Badge color="green" variant="filled" size="lg" radius="md">
-                          <Text fw={700} size="sm">
-                            ${Number(expense.price || 0).toFixed(2)}
-                          </Text>
-                        </Badge>
-                      </Group>
-                    </Card>
-                  ))}
-                </Stack>
-              )}
-            </Card>
-          </Box>
+
         </Stack>
       </Container>
     </Layout>

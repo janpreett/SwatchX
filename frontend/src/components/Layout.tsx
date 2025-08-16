@@ -44,7 +44,20 @@ export function Layout({ children }: LayoutProps) {
                 variant="gradient"
                 {...themeColors.getGradientOrSolid({ from: 'blue', to: 'cyan', deg: 90 })}
                 hiddenFrom="sm"
-                style={{ cursor: 'pointer' }}
+                style={{ 
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease',
+                  backgroundSize: '200% 100%',
+                  backgroundPosition: '0% 50%',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundPosition = '100% 50%';
+                  e.currentTarget.style.transform = 'scale(1.05)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundPosition = '0% 50%';
+                  e.currentTarget.style.transform = 'scale(1)';
+                }}
                 onClick={() => navigate('/home')}
               >
                 SwatchX
@@ -55,7 +68,20 @@ export function Layout({ children }: LayoutProps) {
                 variant="gradient"
                 {...themeColors.getGradientOrSolid({ from: 'blue', to: 'cyan', deg: 90 })}
                 visibleFrom="sm"
-                style={{ cursor: 'pointer' }}
+                style={{ 
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease',
+                  backgroundSize: '200% 100%',
+                  backgroundPosition: '0% 50%',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundPosition = '100% 50%';
+                  e.currentTarget.style.transform = 'scale(1.05)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundPosition = '0% 50%';
+                  e.currentTarget.style.transform = 'scale(1)';
+                }}
                 onClick={() => navigate('/home')}
               >
                 SwatchX
@@ -67,13 +93,58 @@ export function Layout({ children }: LayoutProps) {
               <Menu.Target>
                 <UnstyledButton>
                   <Group gap={7}>
-                    <Avatar size={32} radius="xl" color="blue">
+                    <Avatar 
+                      size={32} 
+                      radius="xl" 
+                      color="blue"
+                      style={{
+                        transition: 'all 0.2s ease',
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.transform = 'scale(1.05)';
+                        e.currentTarget.style.boxShadow = '0 2px 8px var(--mantine-color-blue-3)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.transform = 'scale(1)';
+                        e.currentTarget.style.boxShadow = 'none';
+                      }}
+                    >
                       <IconUser size="1rem" />
                     </Avatar>
-                    <Text fw={500} size="sm" lh={1} mr={3} visibleFrom="sm" c={themeColors.primaryText}>
+                    <Text 
+                      fw={500} 
+                      size="sm" 
+                      lh={1} 
+                      mr={3} 
+                      visibleFrom="sm" 
+                      c={themeColors.primaryText}
+                      style={{
+                        transition: 'all 0.2s ease',
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.color = 'var(--mantine-color-blue-6)';
+                        e.currentTarget.style.transform = 'scale(1.05)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.color = themeColors.primaryText;
+                        e.currentTarget.style.transform = 'scale(1)';
+                      }}
+                    >
                       {user?.name || user?.email}
                     </Text>
-                    <IconChevronDown size="0.8rem" stroke={1.5} />
+                    <IconChevronDown 
+                      size="0.8rem" 
+                      stroke={1.5}
+                      style={{
+                        transition: 'all 0.2s ease',
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.color = 'var(--mantine-color-blue-6)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.color = 'inherit';
+                      }}
+                    />
                   </Group>
                 </UnstyledButton>
               </Menu.Target>
